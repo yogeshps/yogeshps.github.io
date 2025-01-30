@@ -27,28 +27,28 @@ export function getAwRates(sprTable: string, age: number, salary: number): { awT
   switch (sprTable) {
     case 'table1':
       return {
-        awTotalPct: TABLE1_2025[ageKey][salaryKey].awTotalPct,
-        awEmpPct:   TABLE1_2025[ageKey][salaryKey].awEmpPct
+        awTotalPct: TABLE1_2025[ageKey as keyof typeof TABLE1_2025][salaryKey as keyof typeof TABLE1_2025['55_below']].awTotalPct,
+        awEmpPct:   TABLE1_2025[ageKey as keyof typeof TABLE1_2025][salaryKey as keyof typeof TABLE1_2025['55_below']].awEmpPct
       };
     case 'table2':
       return {
-        awTotalPct: TABLE2_2025[ageKey][salaryKey].awTotalPct,
-        awEmpPct:   TABLE2_2025[ageKey][salaryKey].awEmpPct
+        awTotalPct: TABLE2_2025[ageKey as keyof typeof TABLE2_2025][salaryKey as keyof typeof TABLE2_2025['55_below']].awTotalPct,
+        awEmpPct:   TABLE2_2025[ageKey as keyof typeof TABLE2_2025][salaryKey as keyof typeof TABLE2_2025['55_below']].awEmpPct
       };
     case 'table3':
       return {
-        awTotalPct: TABLE3_2025[ageKey][salaryKey].awTotalPct,
-        awEmpPct:   TABLE3_2025[ageKey][salaryKey].awEmpPct
+        awTotalPct: TABLE3_2025[ageKey as keyof typeof TABLE3_2025][salaryKey as keyof typeof TABLE3_2025['55_below']].awTotalPct,
+        awEmpPct:   TABLE3_2025[ageKey as keyof typeof TABLE3_2025][salaryKey as keyof typeof TABLE3_2025['55_below']].awEmpPct
       };
     case 'table4':
       return {
-        awTotalPct: TABLE4_2025[ageKey][salaryKey].awTotalPct,
-        awEmpPct:   TABLE4_2025[ageKey][salaryKey].awEmpPct
+        awTotalPct: TABLE4_2025[ageKey as keyof typeof TABLE4_2025][salaryKey as keyof typeof TABLE4_2025['55_below']].awTotalPct,
+        awEmpPct:   TABLE4_2025[ageKey as keyof typeof TABLE4_2025][salaryKey as keyof typeof TABLE4_2025['55_below']].awEmpPct
       };
     case 'table5':
       return {
-        awTotalPct: TABLE5_2025[ageKey][salaryKey].awTotalPct,
-        awEmpPct:   TABLE5_2025[ageKey][salaryKey].awEmpPct
+        awTotalPct: TABLE5_2025[ageKey as keyof typeof TABLE5_2025][salaryKey as keyof typeof TABLE5_2025['55_below']].awTotalPct,
+        awEmpPct:   TABLE5_2025[ageKey as keyof typeof TABLE5_2025][salaryKey as keyof typeof TABLE5_2025['55_below']].awEmpPct
       };
     default:
       throw new Error('Invalid table name provided.');

@@ -278,10 +278,10 @@ export const TABLE2_2025 = {
   
     // (C) If we have { totalOWPct, empOWPct, maxTotalOW, maxEmpOW } => full bracket >$750
     if ('totalOWPct' in bracketData && bracketData.totalOWPct !== undefined) {
-      const totalPct = bracketData.totalOWPct / 100;
-      const empPct   = bracketData.empOWPct   / 100;
+      const totalPct = (bracketData.totalOWPct ?? 0) / 100;
+      const empPct = (bracketData.empOWPct ?? 0) / 100;
       const maxTotal = bracketData.maxTotalOW;
-      const maxEmp   = bracketData.maxEmpOW;
+      const maxEmp = bracketData.maxEmpOW;
   
       const rawTotal = totalPct * owCapped;
       const rawEmp   = empPct   * owCapped;

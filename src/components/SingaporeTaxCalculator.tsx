@@ -14,7 +14,9 @@ import {
   Select,
   Popover,
   FormControlLabel,
-  Checkbox
+  Checkbox,
+  RadioGroup,
+  Radio
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -79,6 +81,14 @@ function computeCpfOnBonus(sprTable: string, age: number, monthlySalary: number,
   };
 }
 
+// Define the type for RSU/ESOP cycle
+interface RsuCycle {
+  shares: string;
+  exercisePrice: string;
+  vestingPrice: string;
+  expanded: boolean;
+}
+
 /***********************************************************
  * Main React Component
  ***********************************************************/
@@ -97,38 +107,27 @@ const SingaporeTakeHomeCalculator = () => {
 
   const [showCPF, setShowCPF] = useState(true);
 
-  // Define the type for RSU cycle
-  interface RsuCycle {
-    shares: string;
-    exercisePrice: string;
-    vestingPrice: string;
-    expanded: boolean;
-  }
-
   // RSU & ESOP arrays
-  const [rsuCycles, setRsuCycles] = useState([]); // Start with an empty array
-  const [esopCycles, setEsopCycles] = useState([]); // Start with an empty array
+  const [rsuCycles, setRsuCycles] = useState<RsuCycle[]>([]);
+  const [esopCycles, setEsopCycles] = useState<RsuCycle[]>([]);
 
   // Results
   const [results, setResults] = useState({
     monthlyTakeHome: 0,
     annualTakeHome: 0,
-    stockGains: 0,
-    esopGains: 0,
+    totalRsuGains: 0,
+    totalEsopGains: 0,
     annualTax: 0,
     totalTaxableIncome: 0,
-
-    // For Employee
     employeeMonthlyCPF: 0,
     employeeAnnualCPF: 0,
     employeeBonusCPF: 0,
     totalEmployeeCPF: 0,
-
-    // For Employer
     employerMonthlyCPF: 0,
     employerAnnualCPF: 0,
     employerBonusCPF: 0,
     totalEmployerCPF: 0,
+    baseIncome: 0
   });
 
   // Inline error state for age
@@ -145,64 +144,178 @@ const SingaporeTakeHomeCalculator = () => {
   const [esopExercisePopoverAnchor, setEsopExercisePopoverAnchor] = useState<null | HTMLElement>(null);
   const [esopVestingPopoverAnchor, setEsopVestingPopoverAnchor] = useState<null | HTMLElement>(null);
 
-  // Add this new state for income sources
-  const [incomeSources, setIncomeSources] = useState<IncomeSources>({
-    employment: false,
+  // Update incomeSources state to have employment checked by default
+  const [incomeSources, setIncomeSources] = useState({
+    employment: true,  // Default to true
     pension: false,
     trade: false,
     rental: false,
     royalties: false,
   });
 
-  // Add these new state variables at the top with other states
-  const [taxReliefs, setTaxReliefs] = useState({
-    earnedIncomeRelief: false,
-    earnedIncomeReliefDisability: false
+  // Add new state for CPF top-up
+  const [cpfTopUp, setCpfTopUp] = useState({
+    enabled: false,  // New parent checkbox state
+    self: true,      // Default to true
+    family: false,
+    selfAmount: '',
+    familyAmount: '',
   });
 
+  // Add state for validation errors
+  const [cpfTopUpErrors, setCpfTopUpErrors] = useState({
+    selfAmount: '',
+    familyAmount: '',
+  });
+
+  // Update validation function to allow decimals
+  const validateAmount = (value: string): string => {
+    if (value === '') return '';
+    // Allow numbers with up to 2 decimal places
+    if (!/^\d*\.?\d{0,2}$/.test(value)) return 'Enter a valid amount.';
+    if (Number(value) < 0) return 'Amount cannot be negative.';
+    return '';
+  };
+
+  // Handler for CPF top-up amount changes
+  const handleCpfTopUpAmountChange = (field: 'selfAmount' | 'familyAmount', value: string) => {
+    const error = validateAmount(value);
+    setCpfTopUpErrors(prev => ({
+      ...prev,
+      [field]: error
+    }));
+    
+    if (!error) {
+      setCpfTopUp(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  // Initial state for tax reliefs
+  const [taxReliefs, setTaxReliefs] = useState({
+    earnedIncomeRelief: true, // Set to true by default
+    earnedIncomeReliefDisability: false,
+    cpfRelief: false
+  });
+
+  // Initial state for disability preference
+  const [preferDisabilityRelief, setPreferDisabilityRelief] = useState(false);
+
+  // Add this near the other state declarations (around line 115)
   const [taxReliefResults, setTaxReliefResults] = useState({
     earnedIncomeRelief: 0,
     earnedIncomeReliefDisability: 0,
+    cpfRelief: 0,
+    cpfTopUpRelief: 0,
+    nsmanRelief: 0,
     totalReliefs: 0
   });
 
-  // Add this new state to track disability preference
-  const [preferDisabilityRelief, setPreferDisabilityRelief] = useState(false);
-
-  // Update the disability handler
-  const handleDisabilityReliefChange = (checked: boolean) => {
-    setPreferDisabilityRelief(checked);
-    setTaxReliefs({
-      earnedIncomeRelief: !checked,
-      earnedIncomeReliefDisability: checked
-    });
-  };
-
-  // Update the useEffect
+  // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
     const hasEligibleIncome = incomeSources.employment || 
                              incomeSources.pension || 
                              incomeSources.trade;
 
     if (!hasEligibleIncome) {
-      setTaxReliefs({
+      setTaxReliefs(prev => ({
+        ...prev,
         earnedIncomeRelief: false,
         earnedIncomeReliefDisability: false
-      });
+      }));
     } else {
-      // Use the preference to determine which relief to apply
-      setTaxReliefs({
+      // Restore previous state or set default when eligible income is selected
+      setTaxReliefs(prev => ({
+        ...prev,
         earnedIncomeRelief: !preferDisabilityRelief,
         earnedIncomeReliefDisability: preferDisabilityRelief
-      });
+      }));
     }
+  }, [incomeSources, preferDisabilityRelief]);
 
-    const reliefs = calculateTaxReliefs(
-      Number(extraInputs.age) || 0,
-      taxReliefs
-    );
-    setTaxReliefResults(reliefs);
-  }, [extraInputs.age, taxReliefs, incomeSources, preferDisabilityRelief]);
+  // Update the disability handler
+  const handleDisabilityReliefChange = (checked: boolean) => {
+    setPreferDisabilityRelief(checked);
+    setTaxReliefs(prev => ({
+      ...prev,
+      earnedIncomeRelief: !checked,
+      earnedIncomeReliefDisability: checked
+    }));
+  };
+
+  // Declare and initialize nsmanRelief
+  const [nsmanRelief, setNsmanRelief] = useState({
+    enabled: false,
+    general: false,
+    key: false,
+    wife: false,
+    parent: false
+  });
+
+  // Add effect to handle CPF Relief based on residency status
+  useEffect(() => {
+    const isCitizenOrPR = extraInputs.sprStatus !== 'ep_pep_spass';
+    setTaxReliefs(prev => ({
+      ...prev,
+      cpfRelief: isCitizenOrPR
+    }));
+  }, [extraInputs.sprStatus]);
+
+  // Calculate base income first
+  useEffect(() => {
+    const baseIncome = Number(inputs.monthlySalary || 0) * 12 +
+      Number(inputs.annualBonus || 0) +
+      rsuCycles.reduce((acc, cycle) => acc + Number(cycle.shares || 0), 0) +
+      esopCycles.reduce((acc, cycle) => acc + Number(cycle.shares || 0), 0);
+    
+    setResults(prev => ({
+      ...prev,
+      baseIncome: baseIncome
+    }));
+  }, [inputs.monthlySalary, inputs.annualBonus, rsuCycles, esopCycles]);
+
+  // Then calculate tax reliefs based on base income
+  useEffect(() => {
+    const reliefs = calculateTaxReliefs({
+      age: Number(extraInputs.age) || 0,
+      taxReliefs,
+      cpfTopUpInputs: cpfTopUp,
+      nsmanRelief,
+      employeeCPF: results.totalEmployeeCPF || 0,
+      annualIncome: results.baseIncome || 0  // Use baseIncome instead of totalTaxableIncome
+    });
+
+    setTaxReliefResults(prev => {
+      const newResults = {
+        earnedIncomeRelief: reliefs.earnedIncomeRelief || 0,
+        earnedIncomeReliefDisability: reliefs.earnedIncomeReliefDisability || 0,
+        cpfRelief: reliefs.cpfRelief || 0,
+        cpfTopUpRelief: reliefs.cpfTopUpRelief || 0,
+        nsmanRelief: reliefs.nsmanRelief || 0,
+        totalReliefs: reliefs.totalReliefs || 0
+      };
+      return newResults;
+    });
+  }, [
+    extraInputs.age,
+    taxReliefs,
+    cpfTopUp,
+    nsmanRelief,
+    results.totalEmployeeCPF,
+    results.baseIncome  // Changed dependency
+  ]);
+
+  // Finally calculate taxable income after all reliefs
+  useEffect(() => {
+    const finalTaxableIncome = Math.max(0, (results.baseIncome || 0) - (taxReliefResults.totalReliefs || 0));
+    
+    setResults(prev => ({
+      ...prev,
+      totalTaxableIncome: finalTaxableIncome
+    }));
+  }, [results.baseIncome, taxReliefResults.totalReliefs]);
 
   // Add this new handler for checkbox changes
   const handleIncomeSourceChange = (source: keyof IncomeSources) => {
@@ -328,20 +441,12 @@ const SingaporeTakeHomeCalculator = () => {
     // Calculate total taxable income
     const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains;
 
-    // tax
-    const annualTax = calculateTax(totalTaxableIncome);
-
-    // net
-    const annualTakeHome = totalTaxableIncome - empAnnualBase - annualTax;
-    const monthlyTakeHome = annualTakeHome / 12;
-
     // store in results
     setResults({
-      monthlyTakeHome,
-      annualTakeHome,
+      monthlyTakeHome: totalTaxableIncome / 12,
+      annualTakeHome: totalTaxableIncome,
       totalRsuGains,
       totalEsopGains,
-      annualTax,
       totalTaxableIncome,
 
       employeeMonthlyCPF: empMonth,
@@ -352,7 +457,9 @@ const SingaporeTakeHomeCalculator = () => {
       employerMonthlyCPF: erMonth,
       employerAnnualCPF: erAnnualBase,
       employerBonusCPF: erBonus,
-      totalEmployerCPF: erAnnualBase + erBonus
+      totalEmployerCPF: erAnnualBase + erBonus,
+
+      baseIncome: totalTaxableIncome
     });
   };
 
@@ -394,8 +501,7 @@ const SingaporeTakeHomeCalculator = () => {
   };
 
   // ESOP inputs
-  const handleEsopInputChange = (e, index: number) => {
-    const { name, value } = e.target;
+  const handleEsopChange = (index: number, name: keyof RsuCycle, value: string) => {
     const arr = [...esopCycles];
     arr[index][name] = value;
     setEsopCycles(arr);
@@ -422,6 +528,82 @@ const SingaporeTakeHomeCalculator = () => {
       maximumFractionDigits: 2
     }).format(amount);
   };
+
+  // Handler for main CPF top-up checkbox
+  const handleCpfTopUpChange = (checked: boolean) => {
+    setCpfTopUp(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
+  // Handler for NSman relief checkbox
+  const handleNSmanReliefChange = (checked: boolean) => {
+    setNsmanRelief(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
+  // Handler for NSman relief type radio buttons
+  const handleNsmanChange = (type: 'general' | 'key' | 'wife' | 'parent') => {
+    setNsmanRelief(prev => {
+      const newState = { ...prev };
+      
+      // Handle mutual exclusivity for general and key
+      if (type === 'general' || type === 'key') {
+        if (type === 'general') {
+          newState.general = !prev.general;
+          newState.key = false;
+        } else {
+          newState.key = !prev.key;
+          newState.general = false;
+        }
+      } else {
+        // For wife and parent, just toggle the value
+        newState[type] = !prev[type];
+      }
+      
+      return newState;
+    });
+  };
+
+  // Effect to calculate annual tax
+  useEffect(() => {
+    // Ensure we have a valid number
+    const taxableIncome = Number(results.totalTaxableIncome) || 0;
+    const annualTax = calculateTax(taxableIncome);
+    setResults(prev => ({
+      ...prev,
+      annualTax
+    }));
+  }, [results.totalTaxableIncome]);
+
+  // Effect to calculate take-home pay after CPF and tax
+  useEffect(() => {
+    // Calculate take-home pay after CPF and tax
+    const annualGross = Number(inputs.monthlySalary || 0) * 12 + 
+                       Number(inputs.annualBonus || 0) +
+                       results.totalRsuGains +
+                       results.totalEsopGains;
+                       
+    const totalDeductions = results.totalEmployeeCPF + results.annualTax;
+    const annualTakeHome = annualGross - totalDeductions;
+    const monthlyTakeHome = annualTakeHome / 12;
+
+    setResults(prev => ({
+      ...prev,
+      monthlyTakeHome,
+      annualTakeHome
+    }));
+  }, [
+    inputs.monthlySalary,
+    inputs.annualBonus,
+    results.totalRsuGains,
+    results.totalEsopGains,
+    results.totalEmployeeCPF,
+    results.annualTax
+  ]);
 
   // Render
   return (
@@ -618,7 +800,7 @@ const SingaporeTakeHomeCalculator = () => {
                   onChange={() => handleIncomeSourceChange('employment')}
                 />
               }
-              label="Employment"
+              label="Salaried employment"
             />
             <FormControlLabel
               control={
@@ -664,13 +846,15 @@ const SingaporeTakeHomeCalculator = () => {
           Tax Reliefs
         </Typography>
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+          {/* EIR Section */}
           {(incomeSources.employment || incomeSources.pension || incomeSources.trade) && (
-            <>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
               <FormControlLabel
                 control={
                   <Checkbox
                     checked={taxReliefs.earnedIncomeRelief}
-                    disabled={true}
+                    disabled={true}  // Always disabled
+                    onChange={() => {}} // No-op since it's disabled
                   />
                 }
                 label="Earned Income Relief"
@@ -684,6 +868,139 @@ const SingaporeTakeHomeCalculator = () => {
                 }
                 label="Earned Income Relief (Disability)"
               />
+            </Box>
+          )}
+          {extraInputs.sprStatus !== 'ep_pep_spass' && (
+            <>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={taxReliefs.cpfRelief}
+                    disabled={true}
+                  />
+                }
+                label="CPF/Provident Fund Relief"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={cpfTopUp.enabled}
+                    onChange={(e) => handleCpfTopUpChange(e.target.checked)}
+                  />
+                }
+                label="CPF Cash Top-Up Relief"
+              />
+              {cpfTopUp.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={cpfTopUp.self}
+                        onChange={(e) => setCpfTopUp(prev => ({
+                          ...prev,
+                          self: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Contribution to my own CPF"
+                  />
+                  {cpfTopUp.self && (
+                    <TextField
+                      size="small"
+                      value={cpfTopUp.selfAmount}
+                      onChange={(e) => handleCpfTopUpAmountChange('selfAmount', e.target.value)}
+                      placeholder="Enter amount"
+                      error={!!cpfTopUpErrors.selfAmount}
+                      helperText={cpfTopUpErrors.selfAmount}
+                      inputProps={{ 
+                        inputMode: 'decimal',
+                        pattern: '[0-9]*\.?[0-9]{0,2}'
+                      }}
+                      sx={{ ml: 4, width: '200px' }}
+                    />
+                  )}
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={cpfTopUp.family}
+                        onChange={(e) => setCpfTopUp(prev => ({
+                          ...prev,
+                          family: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Contribution to my family member's CPF"
+                  />
+                  {cpfTopUp.family && (
+                    <TextField
+                      size="small"
+                      value={cpfTopUp.familyAmount}
+                      onChange={(e) => handleCpfTopUpAmountChange('familyAmount', e.target.value)}
+                      placeholder="Enter amount"
+                      error={!!cpfTopUpErrors.familyAmount}
+                      helperText={cpfTopUpErrors.familyAmount}
+                      inputProps={{ 
+                        inputMode: 'decimal',
+                        pattern: '[0-9]*\.?[0-9]{0,2}'
+                      }}
+                      sx={{ ml: 4, width: '200px' }}
+                    />
+                  )}
+                </Box>
+              )}
+            </>
+          )}
+          {extraInputs.sprStatus !== 'ep_pep_spass' && (
+            <>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={nsmanRelief.enabled}
+                    onChange={(e) => handleNSmanReliefChange(e.target.checked)}
+                  />
+                }
+                label="NSman Relief"
+              />
+              {nsmanRelief.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={nsmanRelief.general}
+                        onChange={() => handleNsmanChange('general')}
+                      />
+                    }
+                    label="NSman Self Relief (General population)"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={nsmanRelief.key}
+                        onChange={() => handleNsmanChange('key')}
+                      />
+                    }
+                    label="NSman Self Relief (Key command/staff appointment holder)"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={nsmanRelief.wife}
+                        onChange={() => handleNsmanChange('wife')}
+                      />
+                    }
+                    label="NSman Wife Relief"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={nsmanRelief.parent}
+                        onChange={() => handleNsmanChange('parent')}
+                      />
+                    }
+                    label="NSman Parent Relief"
+                  />
+                </Box>
+              )}
             </>
           )}
         </Box>
@@ -822,7 +1139,7 @@ const SingaporeTakeHomeCalculator = () => {
                     fullWidth
                     name="shares"
                     value={cycle.shares}
-                    onChange={(e) => handleEsopInputChange(e, idx)}
+                    onChange={(e) => handleEsopChange(idx, 'shares', e.target.value)}
                     sx={{ mb: 2 }}
                   />
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -851,7 +1168,7 @@ const SingaporeTakeHomeCalculator = () => {
                     fullWidth
                     name="exercisePrice"
                     value={cycle.exercisePrice}
-                    onChange={(e) => handleEsopInputChange(e, idx)}
+                    onChange={(e) => handleEsopChange(idx, 'exercisePrice', e.target.value)}
                     sx={{ mb: 2 }}
                   />
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -880,7 +1197,7 @@ const SingaporeTakeHomeCalculator = () => {
                     fullWidth
                     name="vestingPrice"
                     value={cycle.vestingPrice}
-                    onChange={(e) => handleEsopInputChange(e, idx)}
+                    onChange={(e) => handleEsopChange(idx, 'vestingPrice', e.target.value)}
                   />
                 </Box>
               </Collapse>
@@ -990,6 +1307,7 @@ const SingaporeTakeHomeCalculator = () => {
 
         <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>Annual Tax</Typography>
         <Typography>{formatCurrency(results.annualTax)}</Typography>
+
         {extraInputs.sprStatus !== 'ep_pep_spass' && (
           <>
             {/* Updated Total CPF Contributions Section */}
@@ -1002,24 +1320,36 @@ const SingaporeTakeHomeCalculator = () => {
         <Box sx={{ mb: 3 }} />
 
         {/* Tax Relief Summary Box */}
-        {(taxReliefs.earnedIncomeRelief || taxReliefs.earnedIncomeReliefDisability) && (
+        {taxReliefResults.totalReliefs > 0 && (
           <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
               Tax Reliefs
             </Typography>
-            
-            {taxReliefs.earnedIncomeRelief && (
+            {taxReliefs.earnedIncomeRelief && taxReliefResults.earnedIncomeRelief > 0 && (
               <Typography>
                 Earned Income Relief: {formatCurrency(taxReliefResults.earnedIncomeRelief)}
               </Typography>
             )}
-            
-            {taxReliefs.earnedIncomeReliefDisability && (
+            {taxReliefs.earnedIncomeReliefDisability && taxReliefResults.earnedIncomeReliefDisability > 0 && (
               <Typography>
                 Earned Income Relief (Disability): {formatCurrency(taxReliefResults.earnedIncomeReliefDisability)}
               </Typography>
             )}
-            
+            {taxReliefs.cpfRelief && taxReliefResults.cpfRelief > 0 && (
+              <Typography>
+                CPF Relief: {formatCurrency(taxReliefResults.cpfRelief)}
+              </Typography>
+            )}
+            {cpfTopUp.enabled && taxReliefResults.cpfTopUpRelief > 0 && (
+              <Typography>
+                CPF Cash Top-Up Relief: {formatCurrency(taxReliefResults.cpfTopUpRelief)}
+              </Typography>
+            )}
+            {nsmanRelief.enabled && taxReliefResults.nsmanRelief > 0 && (
+              <Typography>
+                NSman Relief: {formatCurrency(taxReliefResults.nsmanRelief)}
+              </Typography>
+            )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                 Total Tax Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}
@@ -1027,6 +1357,9 @@ const SingaporeTakeHomeCalculator = () => {
             </Box>
           </Box>
         )}
+
+        {/* Add margin/padding between sections */}
+        <Box sx={{ mb: 3 }} />
       </CardContent>
     </Card>
   );
