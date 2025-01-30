@@ -12,7 +12,9 @@ import {
   Collapse,
   MenuItem,
   Select,
-  Popover
+  Popover,
+  FormControlLabel,
+  Checkbox
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -26,9 +28,19 @@ import { computeMonthlyCpfTable5 } from './Table5.ts';
 import { getAwRates } from './AwRates'; // Import the new function
 //import { getAgeKey } from './CpfUtils'; // Adjust the path as needed
 import { calculateTax } from './TaxLogic'; // Adjust the path as needed
+import { calculateTaxReliefs } from '../utils/TaxReliefCalculator';
 
 // Global variable for popover max width
 const POPOVER_MAX_WIDTH = '480px';
+
+// Add this interface near the top of the file, after imports
+interface IncomeSources {
+  employment: boolean;
+  pension: boolean;
+  trade: boolean;
+  rental: boolean;
+  royalties: boolean;
+}
 
 /***********************************************************
  * Round to Nearest Dollar
@@ -132,6 +144,73 @@ const SingaporeTakeHomeCalculator = () => {
   const [esopSharesPopoverAnchor, setEsopSharesPopoverAnchor] = useState<null | HTMLElement>(null);
   const [esopExercisePopoverAnchor, setEsopExercisePopoverAnchor] = useState<null | HTMLElement>(null);
   const [esopVestingPopoverAnchor, setEsopVestingPopoverAnchor] = useState<null | HTMLElement>(null);
+
+  // Add this new state for income sources
+  const [incomeSources, setIncomeSources] = useState<IncomeSources>({
+    employment: false,
+    pension: false,
+    trade: false,
+    rental: false,
+    royalties: false,
+  });
+
+  // Add these new state variables at the top with other states
+  const [taxReliefs, setTaxReliefs] = useState({
+    earnedIncomeRelief: false,
+    earnedIncomeReliefDisability: false
+  });
+
+  const [taxReliefResults, setTaxReliefResults] = useState({
+    earnedIncomeRelief: 0,
+    earnedIncomeReliefDisability: 0,
+    totalReliefs: 0
+  });
+
+  // Add this new state to track disability preference
+  const [preferDisabilityRelief, setPreferDisabilityRelief] = useState(false);
+
+  // Update the disability handler
+  const handleDisabilityReliefChange = (checked: boolean) => {
+    setPreferDisabilityRelief(checked);
+    setTaxReliefs({
+      earnedIncomeRelief: !checked,
+      earnedIncomeReliefDisability: checked
+    });
+  };
+
+  // Update the useEffect
+  useEffect(() => {
+    const hasEligibleIncome = incomeSources.employment || 
+                             incomeSources.pension || 
+                             incomeSources.trade;
+
+    if (!hasEligibleIncome) {
+      setTaxReliefs({
+        earnedIncomeRelief: false,
+        earnedIncomeReliefDisability: false
+      });
+    } else {
+      // Use the preference to determine which relief to apply
+      setTaxReliefs({
+        earnedIncomeRelief: !preferDisabilityRelief,
+        earnedIncomeReliefDisability: preferDisabilityRelief
+      });
+    }
+
+    const reliefs = calculateTaxReliefs(
+      Number(extraInputs.age) || 0,
+      taxReliefs
+    );
+    setTaxReliefResults(reliefs);
+  }, [extraInputs.age, taxReliefs, incomeSources, preferDisabilityRelief]);
+
+  // Add this new handler for checkbox changes
+  const handleIncomeSourceChange = (source: keyof IncomeSources) => {
+    setIncomeSources(prev => ({
+      ...prev,
+      [source]: !prev[source]
+    }));
+  };
 
   const handlePopoverClick = (event: React.MouseEvent<HTMLElement>, setter: React.Dispatch<React.SetStateAction<null | HTMLElement>>) => {
     setter(event.currentTarget);
@@ -430,7 +509,7 @@ const SingaporeTakeHomeCalculator = () => {
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-              Monthly Salary
+              Monthly Income
               <IconButton onClick={(e) => handlePopoverClick(e, setMonthlySalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
               </IconButton>
@@ -460,7 +539,7 @@ const SingaporeTakeHomeCalculator = () => {
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-              Annual Salary
+              Annual Income
               <IconButton onClick={(e) => handlePopoverClick(e, setAnnualSalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
               </IconButton>
@@ -521,6 +600,92 @@ const SingaporeTakeHomeCalculator = () => {
             onChange={(e) => setInputs({ ...inputs, annualBonus: e.target.value })}
             sx={{ mt: 1 }}
           />
+        </Box>
+
+        {/* Add this new section after RSU and before Annual Cash Bonus */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Income Sources
+          </Typography>
+          <Typography variant="body1" sx={{mb: 1 }}>
+            Select all that apply.
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={incomeSources.employment}
+                  onChange={() => handleIncomeSourceChange('employment')}
+                />
+              }
+              label="Employment"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={incomeSources.pension}
+                  onChange={() => handleIncomeSourceChange('pension')}
+                />
+              }
+              label="Pension"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={incomeSources.trade}
+                  onChange={() => handleIncomeSourceChange('trade')}
+                />
+              }
+              label="Trade, business, profession or vocation"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={incomeSources.rental}
+                  onChange={() => handleIncomeSourceChange('rental')}
+                />
+              }
+              label="Rent from property ownership"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={incomeSources.royalties}
+                  onChange={() => handleIncomeSourceChange('royalties')}
+                />
+              }
+              label="Royalties, charge, estate/trust"
+            />
+          </Box>
+        </Box>
+
+        {/* Tax Reliefs */}
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+          Tax Reliefs
+        </Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
+          {(incomeSources.employment || incomeSources.pension || incomeSources.trade) && (
+            <>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={taxReliefs.earnedIncomeRelief}
+                    disabled={true}
+                  />
+                }
+                label="Earned Income Relief"
+              />
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={taxReliefs.earnedIncomeReliefDisability}
+                    onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
+                  />
+                }
+                label="Earned Income Relief (Disability)"
+              />
+            </>
+          )}
         </Box>
 
         {/* RSU Section */}
@@ -606,7 +771,7 @@ const SingaporeTakeHomeCalculator = () => {
               </Collapse>
             </Box>
           ))}
-          <Button variant="outlined" onClick={addRsuCycle}>+ Add RSU Vesting Cycle</Button>
+          <Button variant="outlined" onClick={addRsuCycle} sx={{ color: '#9370DB', borderColor: '#9370DB' }}>+ Add RSU Vesting Cycle</Button>
         </Box>
 
         {/* ESOP Section */}
@@ -721,7 +886,7 @@ const SingaporeTakeHomeCalculator = () => {
               </Collapse>
             </Box>
           ))}
-          <Button variant="outlined" onClick={addEsopCycle}>+ Add ESOP Vesting Cycle</Button>
+          <Button variant="outlined" onClick={addEsopCycle} sx={{ color: 'primary.main', borderColor: 'primary.main' }}>+ Add ESOP Vesting Cycle</Button>
         </Box>
 
         {/* Results */}
@@ -736,31 +901,31 @@ const SingaporeTakeHomeCalculator = () => {
           <Typography>Annual: {formatCurrency(results.annualTakeHome)}</Typography>
         </Box>
 
-          {/* Results */}
+        {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           Detailed Income Breakdown
         </Typography>
 
-          {/* RSU Gains Section */}
-          <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-                RSU Gains
-            </Typography>
-            {rsuCycles.map((cycle, idx) => {
-                const shares = Number(cycle.shares) || 0;
-                const vestingPrice = Number(cycle.vestingPrice) || 0;
-                const gain = shares * vestingPrice;
-                return (
-                    <Typography key={idx}>
-                        RSU Vesting Cycle {idx + 1}: {formatCurrency(gain)}
-                    </Typography>
-                );
-            })}
-            <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Total RSU Gains: {formatCurrency(results.totalRsuGains)}
-                </Typography>
-            </Box>
+        {/* RSU Gains Section */}
+        <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+              RSU Gains
+          </Typography>
+          {rsuCycles.map((cycle, idx) => {
+              const shares = Number(cycle.shares) || 0;
+              const vestingPrice = Number(cycle.vestingPrice) || 0;
+              const gain = shares * vestingPrice;
+              return (
+                  <Typography key={idx}>
+                      RSU Vesting Cycle {idx + 1}: {formatCurrency(gain)}
+                  </Typography>
+              );
+          })}
+          <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                  Total RSU Gains: {formatCurrency(results.totalRsuGains)}
+              </Typography>
+          </Box>
         </Box>
 
         {/* ESOP Gains Section */}
@@ -785,7 +950,6 @@ const SingaporeTakeHomeCalculator = () => {
                 </Typography>
             </Box>
         </Box>
-
 
         {extraInputs.sprStatus !== 'ep_pep_spass' && (
           <>
@@ -832,6 +996,36 @@ const SingaporeTakeHomeCalculator = () => {
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 2 }}>Total CPF Contributions</Typography>
             <Typography>{formatCurrency(results.totalEmployeeCPF + results.totalEmployerCPF)}</Typography>
           </>
+        )}
+
+        {/* Add margin/padding between sections */}
+        <Box sx={{ mb: 3 }} />
+
+        {/* Tax Relief Summary Box */}
+        {(taxReliefs.earnedIncomeRelief || taxReliefs.earnedIncomeReliefDisability) && (
+          <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+              Tax Reliefs
+            </Typography>
+            
+            {taxReliefs.earnedIncomeRelief && (
+              <Typography>
+                Earned Income Relief: {formatCurrency(taxReliefResults.earnedIncomeRelief)}
+              </Typography>
+            )}
+            
+            {taxReliefs.earnedIncomeReliefDisability && (
+              <Typography>
+                Earned Income Relief (Disability): {formatCurrency(taxReliefResults.earnedIncomeReliefDisability)}
+              </Typography>
+            )}
+            
+            <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                Total Tax Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}
+              </Typography>
+            </Box>
+          </Box>
         )}
       </CardContent>
     </Card>
