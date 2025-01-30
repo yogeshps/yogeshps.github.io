@@ -265,10 +265,22 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Calculate base income first
   useEffect(() => {
+    // Calculate base income (before reliefs)
     const baseIncome = Number(inputs.monthlySalary || 0) * 12 +
       Number(inputs.annualBonus || 0) +
-      rsuCycles.reduce((acc, cycle) => acc + Number(cycle.shares || 0), 0) +
-      esopCycles.reduce((acc, cycle) => acc + Number(cycle.shares || 0), 0);
+      // Correct RSU gains calculation
+      rsuCycles.reduce((acc, cycle) => {
+        const shares = Number(cycle.shares || 0);
+        const vestingPrice = Number(cycle.vestingPrice || 0);
+        return acc + (shares * vestingPrice);
+      }, 0) +
+      // Correct ESOP gains calculation
+      esopCycles.reduce((acc, cycle) => {
+        const shares = Number(cycle.shares || 0);
+        const exercisePrice = Number(cycle.exercisePrice || 0);
+        const vestingPrice = Number(cycle.vestingPrice || 0);
+        return acc + Math.max(0, shares * (vestingPrice - exercisePrice));
+      }, 0);
     
     setResults(prev => ({
       ...prev,
@@ -441,10 +453,18 @@ const SingaporeTakeHomeCalculator = () => {
     // Calculate total taxable income
     const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains;
 
-    // store in results
-    setResults({
-      monthlyTakeHome: totalTaxableIncome / 12,
-      annualTakeHome: totalTaxableIncome,
+    // Calculate total deductions
+    const totalDeductions = results.totalEmployeeCPF + results.annualTax;
+
+    // Calculate annual take-home pay
+    const annualTakeHome = totalTaxableIncome - totalDeductions;
+    const monthlyTakeHome = annualTakeHome / 12;
+
+    // Store in results
+    setResults(prev => ({
+      ...prev,
+      monthlyTakeHome,
+      annualTakeHome,
       totalRsuGains,
       totalEsopGains,
       totalTaxableIncome,
@@ -459,8 +479,9 @@ const SingaporeTakeHomeCalculator = () => {
       employerBonusCPF: erBonus,
       totalEmployerCPF: erAnnualBase + erBonus,
 
-      baseIncome: totalTaxableIncome
-    });
+      baseIncome: totalTaxableIncome,
+      annualTax: results.annualTax
+    }));
   };
 
   // Salary input changes
