@@ -220,6 +220,20 @@ const SingaporeTakeHomeCalculator = () => {
     disability: false
   });
 
+  // Update the state to include stayType
+  const [parentRelief, setParentRelief] = useState({
+    enabled: false,
+    dependants: "1",
+    stayType: "with"  // "with" or "without"
+  });
+
+  // Add new state for Parent Relief (Disability)
+  const [parentReliefDisability, setParentReliefDisability] = useState({
+    enabled: false,
+    dependants: "1",
+    stayType: "with"  // "with" or "without"
+  });
+
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
     const hasEligibleIncome = incomeSources.employment || 
@@ -659,6 +673,22 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   }, [rsuCycles, esopCycles]);
 
+  // Handler for Parent Relief
+  const handleParentReliefChange = (checked: boolean) => {
+    setParentRelief(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
+  // Handler for Parent Relief (Disability)
+  const handleParentReliefDisabilityChange = (checked: boolean) => {
+    setParentReliefDisability(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
   // Render
   return (
     <Card sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
@@ -1081,6 +1111,130 @@ const SingaporeTakeHomeCalculator = () => {
               />
             </Box>
           )}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={parentRelief.enabled}
+                onChange={(e) => handleParentReliefChange(e.target.checked)}
+              />
+            }
+            label="Parent Relief"
+          />
+          {/* Error Message for Parent Relief */}
+          {parentRelief.enabled && parentReliefDisability.enabled && 
+            Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
+            <Box sx={{ ml: 4, color: '#D84747' }}>
+              <Typography sx={{ fontSize: '0.75rem' }}>
+                Max 2 dependants allowed for Parent Relief/Parent Relief (Disability).
+              </Typography>
+            </Box>
+          )}
+          {parentRelief.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography>How many dependants do you support?</Typography>
+              <Select
+                size="small"
+                value={parentRelief.dependants}
+                onChange={(e) => setParentRelief(prev => ({
+                  ...prev,
+                  dependants: e.target.value
+                }))}
+                sx={{ width: '120px' }}
+              >
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2">2</MenuItem>
+              </Select>
+              
+              {Array.from({ length: Number(parentRelief.dependants) }).map((_, index) => (
+                <Box key={index} sx={{ mt: 1 }}>
+                  {parentRelief.dependants === "2" && (
+                    <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
+                  )}
+                  <RadioGroup
+                    value={parentRelief.stayType}
+                    onChange={(e) => setParentRelief(prev => ({
+                      ...prev,
+                      stayType: e.target.value
+                    }))}
+                  >
+                    <FormControlLabel 
+                      value="with" 
+                      control={<Radio />} 
+                      label="Dependant stays with me" 
+                    />
+                    <FormControlLabel 
+                      value="without" 
+                      control={<Radio />} 
+                      label="Dependant does not stay with me" 
+                    />
+                  </RadioGroup>
+                </Box>
+              ))}
+            </Box>
+          )}
+
+          {/* Parent Relief (Disability) Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={parentReliefDisability.enabled}
+                onChange={(e) => handleParentReliefDisabilityChange(e.target.checked)}
+              />
+            }
+            label="Parent Relief (Disability)"
+          />
+          {/* Error Message for Parent Relief (Disability) */}
+          {parentRelief.enabled && parentReliefDisability.enabled && 
+            Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
+            <Box sx={{ ml: 4, color: '#D84747' }}>
+              <Typography sx={{ fontSize: '0.75rem' }}>
+                Max 2 dependants allowed for Parent Relief/Parent Relief (Disability).
+              </Typography>
+            </Box>
+          )}
+          {parentReliefDisability.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1}}>
+              <Typography>How many dependants with disabilities do you support?</Typography>
+              <Select
+                size="small"
+                value={parentReliefDisability.dependants}
+                onChange={(e) => setParentReliefDisability(prev => ({
+                  ...prev,
+                  dependants: e.target.value
+                }))}
+                sx={{ width: '120px' }}
+              >
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2">2</MenuItem>
+              </Select>
+              
+              {Array.from({ length: Number(parentReliefDisability.dependants) }).map((_, index) => (
+                <Box key={index} sx={{ mt: 1 }}>
+                  {parentReliefDisability.dependants === "2" && (
+                    <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
+                  )}
+                  <RadioGroup
+                    value={parentReliefDisability.stayType}
+                    onChange={(e) => setParentReliefDisability(prev => ({
+                      ...prev,
+                      stayType: e.target.value
+                    }))}
+                  >
+                    <FormControlLabel 
+                      value="with" 
+                      control={<Radio />} 
+                      label="Dependant stays with me" 
+                    />
+                    <FormControlLabel 
+                      value="without" 
+                      control={<Radio />} 
+                      label="Dependant does not stay with me" 
+                    />
+                  </RadioGroup>
+                </Box>
+              ))}
+            </Box>
+          )}
         </Box>
 
         {/* RSU Section */}
@@ -1435,10 +1589,45 @@ const SingaporeTakeHomeCalculator = () => {
             {spouseRelief.enabled && (
               <Typography>
                 {spouseRelief.disability ? 
-                  "Spouse Relief (Disability): " + formatCurrency(5500) :
-                  "Spouse Relief: " + formatCurrency(2000)
-                }
-              </Typography>
+                "Spouse Relief (Disability): " + formatCurrency(5500) :
+                "Spouse Relief: " + formatCurrency(2000)
+              }
+            </Typography>
+            )}
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={parentRelief.enabled}
+                  onChange={(e) => handleParentReliefChange(e.target.checked)}
+                />
+              }
+              label="Parent Relief"
+            />
+            {/* Error Message for Parent Relief */}
+            {parentRelief.enabled && parentReliefDisability.enabled && 
+              Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
+              <Box sx={{ ml: 4, color: '#D84747' }}>
+                <Typography sx={{ fontSize: '0.75rem' }}>
+                  Max 2 dependants allowed for Parent Relief/Parent Relief (Disability).
+                </Typography>
+              </Box>
+            )}
+            {parentRelief.enabled && (
+              <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <Typography>How many dependants do you support?</Typography>
+                <Select
+                  size="small"
+                  value={parentRelief.dependants}
+                  onChange={(e) => setParentRelief(prev => ({
+                    ...prev,
+                    dependants: e.target.value
+                  }))}
+                  sx={{ width: '120px' }}
+                >
+                  <MenuItem value="1">1</MenuItem>
+                  <MenuItem value="2">2</MenuItem>
+                </Select>
+              </Box>
             )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
