@@ -13,6 +13,7 @@ interface TaxReliefResult {
   totalReliefs: number;
   totalTaxableIncome: number;
   grandparentCaregiverRelief: number;
+  qualifyingChildRelief: number;
 }
 
 interface CpfTopUpInputs {
@@ -60,6 +61,7 @@ interface TaxReliefInputs {
   annualIncome: number;  // Add annual income to inputs
   sprStatus: string;  // Add this parameter
   grandparentCaregiverRelief: { enabled: boolean };
+  qualifyingChildRelief: { enabled: boolean; dependants: string };
 }
 
 export function calculateEarnedIncomeRelief(age: number, isDisability: boolean): number {
@@ -157,6 +159,13 @@ function calculateGrandparentCaregiverRelief(grandparentCaregiverRelief: { enabl
   return grandparentCaregiverRelief?.enabled ? constants.GRANDPARENT_CAREGIVER_RELIEF.AMOUNT : 0;
 }
 
+function calculateQualifyingChildRelief(qualifyingChildRelief?: { enabled: boolean; dependants: string }): number {
+  if (!qualifyingChildRelief?.enabled) return 0;
+  
+  const dependantCount = Number(qualifyingChildRelief.dependants) || 0;
+  return dependantCount * constants.QUALIFYING_CHILD_RELIEF.AMOUNT;
+}
+
 export function calculateTaxReliefs({
   age,
   taxReliefs,
@@ -169,7 +178,8 @@ export function calculateTaxReliefs({
   employeeCPF,
   annualIncome,
   sprStatus,
-  grandparentCaregiverRelief
+  grandparentCaregiverRelief,
+  qualifyingChildRelief
 }: TaxReliefInputs): TaxReliefResult {
   // Existing relief calculations
   let earnedIncomeRelief = 0;
@@ -212,6 +222,8 @@ export function calculateTaxReliefs({
 
   const grandparentCaregiverReliefValue = calculateGrandparentCaregiverRelief(grandparentCaregiverRelief);
 
+  const qualifyingChildReliefValue = calculateQualifyingChildRelief(qualifyingChildRelief);
+
   // Calculate total reliefs (include grandparent caregiver relief)
   const totalReliefs = earnedIncomeRelief +
     earnedIncomeReliefDisability +
@@ -222,7 +234,8 @@ export function calculateTaxReliefs({
     parentReliefValue +
     parentDisabilityReliefValue +
     siblingDisabilityReliefValue +
-    grandparentCaregiverReliefValue;
+    grandparentCaregiverReliefValue +
+    qualifyingChildReliefValue;
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
@@ -238,6 +251,7 @@ export function calculateTaxReliefs({
     parentDisabilityRelief: parentDisabilityReliefValue,
     siblingDisabilityRelief: siblingDisabilityReliefValue,
     grandparentCaregiverRelief: grandparentCaregiverReliefValue,
+    qualifyingChildRelief: qualifyingChildReliefValue,
     totalReliefs,
     totalTaxableIncome
   };

@@ -74,6 +74,7 @@ interface TaxReliefResult {
   parentDisabilityRelief: number;
   siblingDisabilityRelief: number;
   grandparentCaregiverRelief: number;
+  qualifyingChildRelief: number;
 }
 
 interface SingaporeTaxCalculatorViewProps {
@@ -153,6 +154,11 @@ interface SingaporeTaxCalculatorViewProps {
     dependants: string;
   };
   handleGrandparentCaregiverReliefChange: (checked: boolean) => void;
+  qualifyingChildRelief: {
+    enabled: boolean;
+    dependants: string;
+  };
+  setQualifyingChildRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; dependants: string }>>;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -227,6 +233,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   nsmanRelief,
   siblingRelief,
   grandparentCaregiverRelief,
+  qualifyingChildRelief,
   handleClose,
   handlePopoverClick,
   setExtraInputs,
@@ -267,7 +274,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleSiblingReliefChange,
   setSiblingRelief,
   handleParentStayTypeChange,
-  handleGrandparentCaregiverReliefChange
+  handleGrandparentCaregiverReliefChange,
+  setQualifyingChildRelief
 }) => {
   // Render
   return (
@@ -917,6 +925,52 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             }
             label="Grandparent Caregiver Relief"
           />
+
+          {/* Qualifying Child Relief Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="qualifying-child-relief"
+                name="qualifyingChildRelief"
+                checked={qualifyingChildRelief.enabled}
+                onChange={(e) => {
+                  setQualifyingChildRelief(prev => ({
+                    ...prev,
+                    enabled: e.target.checked
+                  }));
+                }}
+              />
+            }
+            label="Qualifying Child Relief"
+          />
+          {qualifyingChildRelief.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography>How many children can you claim for?</Typography>
+              <Select
+                id="qualifying-child-relief-dependants"
+                name="qualifyingChildReliefDependants"
+                size="small"
+                value={qualifyingChildRelief.dependants}
+                onChange={(e) => setQualifyingChildRelief(prev => ({
+                  ...prev,
+                  dependants: e.target.value
+                }))}
+                sx={{ width: '120px' }}
+              >
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2">2</MenuItem>
+                <MenuItem value="3">3</MenuItem>
+                <MenuItem value="4">4</MenuItem>
+                <MenuItem value="5">5</MenuItem>
+              </Select>
+            </Box>
+          )}
+
+          {grandparentCaregiverRelief.enabled && taxReliefResults.grandparentCaregiverRelief > 0 && (
+            <Typography>
+              Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
+            </Typography>
+          )}
         </Box>
 
         {/* RSU Section */}
@@ -1298,6 +1352,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
               </Typography>
             )}
+            {qualifyingChildRelief.enabled && taxReliefResults.qualifyingChildRelief > 0 && (
+              <Typography>
+                Qualifying Child Relief: {formatCurrency(taxReliefResults.qualifyingChildRelief)}
+              </Typography>
+            )}
+
+            
             
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>

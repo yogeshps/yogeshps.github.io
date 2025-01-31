@@ -13,7 +13,7 @@ import { calculateTaxReliefs } from '../utils/TaxReliefCalculator';
 import { SingaporeTaxCalculatorView } from './SingaporeTaxCalculatorView';
 
 // Global variable for popover max width
-const POPOVER_MAX_WIDTH = '480px';
+//const POPOVER_MAX_WIDTH = '480px';
 
 // Add this interface near the top of the file, after imports
 interface IncomeSources {
@@ -208,7 +208,8 @@ const SingaporeTakeHomeCalculator = () => {
     parentRelief: 0,
     parentDisabilityRelief: 0,
     siblingDisabilityRelief: 0,
-    grandparentCaregiverRelief: 0
+    grandparentCaregiverRelief: 0,
+    qualifyingChildRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -248,6 +249,12 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Add this state definition
   const [grandparentCaregiverRelief, setGrandparentCaregiverRelief] = useState({
+    enabled: false,
+    dependants: "1"
+  });
+
+  // Add this state declaration
+  const [qualifyingChildRelief, setQualifyingChildRelief] = useState({
     enabled: false,
     dependants: "1"
   });
@@ -332,9 +339,8 @@ const SingaporeTakeHomeCalculator = () => {
       employeeCPF: results.totalEmployeeCPF || 0,
       annualIncome: results.baseIncome || 0,
       sprStatus: extraInputs.sprStatus,
-      grandparentCaregiverRelief: {
-        enabled: grandparentCaregiverRelief.enabled
-      }
+      grandparentCaregiverRelief,
+      qualifyingChildRelief
     });
 
     setTaxReliefResults(reliefs);
@@ -350,7 +356,8 @@ const SingaporeTakeHomeCalculator = () => {
     results.totalEmployeeCPF,
     results.baseIncome,
     extraInputs.sprStatus,
-    grandparentCaregiverRelief
+    grandparentCaregiverRelief,
+    qualifyingChildRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -797,6 +804,8 @@ const SingaporeTakeHomeCalculator = () => {
       setSiblingRelief={setSiblingRelief}
       grandparentCaregiverRelief={grandparentCaregiverRelief}
       handleGrandparentCaregiverReliefChange={handleGrandparentCaregiverReliefChange}
+      qualifyingChildRelief={qualifyingChildRelief}
+      setQualifyingChildRelief={setQualifyingChildRelief}
     />
   );
 };

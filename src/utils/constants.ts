@@ -14,4 +14,8 @@ export const SIBLING_DISABILITY_RELIEF = 5500;
 
 export const GRANDPARENT_CAREGIVER_RELIEF = {
   AMOUNT: 3000
+} as const;
+
+export const QUALIFYING_CHILD_RELIEF = {
+  AMOUNT: 4000
 } as const; 
