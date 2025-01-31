@@ -1,26 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Box,
-  Grid,
-  Tooltip,
-  IconButton,
-  Button,
-  Collapse,
-  MenuItem,
-  Select,
-  Popover,
-  FormControlLabel,
-  Checkbox,
-  RadioGroup,
-  Radio
-} from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import DeleteIcon from '@mui/icons-material/Delete';
+
 // Import CPF rates for each table
 import { computeMonthlyCpfTable1 } from './Table1.ts';
 import { computeMonthlyCpfTable2 } from './Table2.ts';
@@ -232,14 +211,14 @@ const SingaporeTakeHomeCalculator = () => {
   const [parentRelief, setParentRelief] = useState({
     enabled: false,
     dependants: "1",
-    stayType: "with"  // "with" or "without"
+    stayTypes: ["with", "with"] // Array of stay types for each dependant
   });
 
   // Add new state for Parent Relief (Disability)
   const [parentReliefDisability, setParentReliefDisability] = useState({
     enabled: false,
     dependants: "1",
-    stayType: "with"  // "with" or "without"
+    stayTypes: ["with", "with"] // Array of stay types for each dependant
   });
 
   // Add new state for NSman relief
@@ -325,13 +304,26 @@ const SingaporeTakeHomeCalculator = () => {
       cpfTopUpInputs: cpfTopUp,
       nsmanRelief,
       spouseRelief,
+      parentRelief,
+      parentReliefDisability,
       employeeCPF: results.totalEmployeeCPF || 0,
       annualIncome: results.baseIncome || 0,
       sprStatus: extraInputs.sprStatus
     });
 
     setTaxReliefResults(reliefs);
-  }, [extraInputs.age, taxReliefs, cpfTopUp, nsmanRelief, spouseRelief, results.totalEmployeeCPF, results.baseIncome, extraInputs.sprStatus]);
+  }, [
+    extraInputs.age,
+    taxReliefs,
+    cpfTopUp,
+    nsmanRelief,
+    spouseRelief,
+    parentRelief,
+    parentReliefDisability,
+    results.totalEmployeeCPF,
+    results.baseIncome,
+    extraInputs.sprStatus
+  ]);
 
   // Finally calculate taxable income after all reliefs
   useEffect(() => {
@@ -682,6 +674,17 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
+  // Add handler for stay type changes
+  const handleParentStayTypeChange = (index: number, stayType: "with" | "without", isDisability: boolean) => {
+    console.log('Changing stay type:', { index, stayType, isDisability }); // Debug log
+    
+    const setter = isDisability ? setParentReliefDisability : setParentRelief;
+    setter(prev => ({
+      ...prev,
+      stayTypes: prev.stayTypes.map((type, i) => i === index ? stayType : type)
+    }));
+  };
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -746,6 +749,7 @@ const SingaporeTakeHomeCalculator = () => {
       esopVestingPopoverAnchor={esopVestingPopoverAnchor}
       incomeSources={incomeSources}
       handleDisabilityReliefChange={handleDisabilityReliefChange}
+      handleParentStayTypeChange={handleParentStayTypeChange}
     />
   );
 };

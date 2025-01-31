@@ -15,7 +15,8 @@ import {
   Button,
   RadioGroup,
   Radio,
-  Collapse
+  Collapse,
+  FormControl
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -32,7 +33,7 @@ interface CpfTopUp {
 interface ParentRelief {
   enabled: boolean;
   dependants: string;
-  stayType: string;
+  stayTypes: ("with" | "without")[];
 }
 
 interface IncomeSources {
@@ -91,6 +92,8 @@ interface SingaporeTaxCalculatorViewProps {
     nsmanRelief: number;
     totalReliefs: number;
     spouseRelief: number;
+    parentRelief: number;
+    parentDisabilityRelief: number;
   };
   ageError: string;
   agePopoverAnchor: HTMLElement | null;
@@ -107,7 +110,7 @@ interface SingaporeTaxCalculatorViewProps {
   parentReliefDisability: {
     enabled: boolean;
     dependants: string;
-    stayType: string;
+    stayTypes: string[];
   };
   spouseRelief: {
     enabled: boolean;
@@ -276,8 +279,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Popover>
             </Typography>
             <TextField
-              fullWidth
+              id="age"
               name="age"
+              fullWidth
               value={extraInputs.age}
               onChange={(e) => setExtraInputs({ ...extraInputs, age: e.target.value })}
               error={!!ageError}
@@ -310,6 +314,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Popover>
             </Typography>
             <Select
+              id="residency-select"
+              name="residency"
               fullWidth
               value={extraInputs.sprStatus}
               onChange={(e) => setExtraInputs({ ...extraInputs, sprStatus: e.target.value })}
@@ -350,8 +356,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Popover>
             </Typography>
             <TextField
-              fullWidth
+              id="monthly-salary"
               name="monthlySalary"
+              fullWidth
               value={inputs.monthlySalary}
               onChange={handleSalaryChange}
             />
@@ -380,8 +387,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Popover>
             </Typography>
             <TextField
-              fullWidth
+              id="annual-salary"
               name="annualSalary"
+              fullWidth
               value={inputs.annualSalary}
               onChange={handleSalaryChange}
             />
@@ -413,8 +421,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Popover>
           </Typography>
           <TextField
-            fullWidth
+            id="annual-bonus"
             name="annualBonus"
+            fullWidth
             value={inputs.annualBonus}
             onChange={(e) => setInputs({ ...inputs, annualBonus: e.target.value })}
             sx={{ mt: 1 }}
@@ -433,6 +442,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <FormControlLabel
               control={
                 <Checkbox
+                  id="income-employment"
+                  name="incomeEmployment"
                   checked={incomeSources.employment}
                   onChange={() => handleIncomeSourceChange('employment')}
                 />
@@ -442,6 +453,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <FormControlLabel
               control={
                 <Checkbox
+                  id="income-pension"
+                  name="incomePension"
                   checked={incomeSources.pension}
                   onChange={() => handleIncomeSourceChange('pension')}
                 />
@@ -451,6 +464,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <FormControlLabel
               control={
                 <Checkbox
+                  id="income-trade"
+                  name="incomeTrade"
                   checked={incomeSources.trade}
                   onChange={() => handleIncomeSourceChange('trade')}
                 />
@@ -460,6 +475,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <FormControlLabel
               control={
                 <Checkbox
+                  id="income-rental"
+                  name="incomeRental"
                   checked={incomeSources.rental}
                   onChange={() => handleIncomeSourceChange('rental')}
                 />
@@ -469,6 +486,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <FormControlLabel
               control={
                 <Checkbox
+                  id="income-royalties"
+                  name="incomeRoyalties"
                   checked={incomeSources.royalties}
                   onChange={() => handleIncomeSourceChange('royalties')}
                 />
@@ -489,6 +508,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <FormControlLabel
                 control={
                   <Checkbox
+                    id="earned-income-relief"
+                    name="earnedIncomeRelief"
                     checked={taxReliefs.earnedIncomeRelief}
                     disabled={true}  // Always disabled
                     onChange={() => {}} // No-op since it's disabled
@@ -500,6 +521,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 <FormControlLabel
                   control={
                     <Checkbox
+                      id="earned-income-relief-disability"
+                      name="earnedIncomeReliefDisability"
                       checked={taxReliefs.earnedIncomeReliefDisability}
                       onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
                     />
@@ -514,6 +537,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <FormControlLabel
                 control={
                   <Checkbox
+                    id="cpf-relief"
+                    name="cpfRelief"
                     checked={taxReliefs.cpfRelief}
                     disabled={true}
                   />
@@ -523,6 +548,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <FormControlLabel
                 control={
                   <Checkbox
+                    id="cpf-cash-topup-relief"
+                    name="cpfCashTopupRelief"
                     checked={cpfTopUp.enabled}
                     onChange={(e) => handleCpfTopUpChange(e.target.checked)}
                   />
@@ -534,6 +561,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   <FormControlLabel
                     control={
                       <Checkbox
+                        id="cpf-cash-topup-self"
+                        name="cpfCashTopupSelf"
                         checked={cpfTopUp.self}
                         onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
                           ...prev,
@@ -545,6 +574,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   />
                   {cpfTopUp.self && (
                     <TextField
+                      id="cpf-topup-self-amount"
+                      name="cpfTopUpSelfAmount"
                       size="small"
                       value={cpfTopUp.selfAmount}
                       onChange={(e) => handleCpfTopUpAmountChange('selfAmount', e.target.value)}
@@ -561,6 +592,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   <FormControlLabel
                     control={
                       <Checkbox
+                        id="cpf-cash-topup-family"
+                        name="cpfCashTopupFamily"
                         checked={cpfTopUp.family}
                         onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
                           ...prev,
@@ -572,6 +605,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   />
                   {cpfTopUp.family && (
                     <TextField
+                      id="cpf-topup-family-amount"
+                      name="cpfTopUpFamilyAmount"
                       size="small"
                       value={cpfTopUp.familyAmount}
                       onChange={(e) => handleCpfTopUpAmountChange('familyAmount', e.target.value)}
@@ -594,6 +629,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <FormControlLabel
                 control={
                   <Checkbox
+                    id="nsman-relief"
+                    name="nsmanRelief"
                     checked={nsmanRelief.enabled}
                     onChange={(e) => handleNSmanReliefChange(e.target.checked)}
                   />
@@ -606,7 +643,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     control={
                       <Checkbox
                         checked={nsmanRelief.general}
-                        onChange={() => handleNSmanChange('general')}
+                        onChange={(e) => handleNSmanChange('general')}
                       />
                     }
                     label="NSman Self Relief (General population)"
@@ -615,7 +652,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     control={
                       <Checkbox
                         checked={nsmanRelief.key}
-                        onChange={() => handleNSmanChange('key')}
+                        onChange={(e) => handleNSmanChange('key')}
                       />
                     }
                     label="NSman Self Relief (Key command/staff appointment holder)"
@@ -624,7 +661,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     control={
                       <Checkbox
                         checked={nsmanRelief.wife}
-                        onChange={() => handleNSmanChange('wife')}
+                        onChange={(e) => handleNSmanChange('wife')}
                       />
                     }
                     label="NSman Wife Relief"
@@ -633,7 +670,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     control={
                       <Checkbox
                         checked={nsmanRelief.parent}
-                        onChange={() => handleNSmanChange('parent')}
+                        onChange={(e) => handleNSmanChange('parent')}
                       />
                     }
                     label="NSman Parent Relief"
@@ -645,6 +682,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <FormControlLabel
             control={
               <Checkbox
+                id="spouse-relief"
+                name="spouseRelief"
                 checked={spouseRelief.enabled}
                 onChange={(e) => handleSpouseReliefChange(e.target.checked)}
               />
@@ -656,6 +695,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <FormControlLabel
                 control={
                   <Checkbox
+                    id="spouse-relief-disability"
+                    name="spouseReliefDisability"
                     checked={spouseRelief.disability}
                     onChange={(e) => handleSpouseDisabilityChange(e.target.checked)}
                   />
@@ -667,6 +708,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <FormControlLabel
             control={
               <Checkbox
+                id="parent-relief"
+                name="parentRelief"
                 checked={parentRelief.enabled}
                 onChange={(e) => handleParentReliefChange(e.target.checked)}
               />
@@ -678,7 +721,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
             <Box sx={{ ml: 4, color: '#D84747' }}>
               <Typography sx={{ fontSize: '0.75rem' }}>
-                Max 2 dependants allowed for Parent Relief/Parent Relief (Disability).
+                Total of 2 dependants allowed for Parent Relief/Parent Relief (Disability).
               </Typography>
             </Box>
           )}
@@ -686,6 +729,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
               <Typography>How many dependants do you support?</Typography>
               <Select
+                id="parent-relief-dependants"
+                name="parentReliefDependants"
                 size="small"
                 value={parentRelief.dependants}
                 onChange={(e) => setParentRelief((prev: ParentRelief) => ({
@@ -698,30 +743,34 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 <MenuItem value="2">2</MenuItem>
               </Select>
               
+              {/* Parent Relief Stay Type Selection */}
               {Array.from({ length: Number(parentRelief.dependants) }).map((_, index) => (
-                <Box key={index} sx={{ mt: 1 }}>
-                  {parentRelief.dependants === "2" && (
-                    <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
-                  )}
+                <FormControl key={index}>
+                  <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
                   <RadioGroup
-                    value={parentRelief.stayType}
-                    onChange={(e) => setParentRelief((prev: ParentRelief) => ({
-                      ...prev,
-                      stayType: e.target.value
-                    }))}
+                    name={`parent-relief-stay-${index}`}
+                    value={parentRelief.stayTypes[index]}
+                    onChange={(e) => {
+                      const newStayTypes = [...parentRelief.stayTypes];
+                      newStayTypes[index] = e.target.value as "with" | "without";
+                      setParentRelief((prev: ParentRelief) => ({
+                        ...prev,
+                        stayTypes: newStayTypes
+                      }));
+                    }}
                   >
-                    <FormControlLabel 
-                      value="with" 
-                      control={<Radio />} 
-                      label="Dependant stays with me" 
+                    <FormControlLabel
+                      value="with"
+                      control={<Radio />}
+                      label="Dependant stays with me"
                     />
-                    <FormControlLabel 
-                      value="without" 
-                      control={<Radio />} 
-                      label="Dependant does not stay with me" 
+                    <FormControlLabel
+                      value="without"
+                      control={<Radio />}
+                      label="Dependant does not stay with me"
                     />
                   </RadioGroup>
-                </Box>
+                </FormControl>
               ))}
             </Box>
           )}
@@ -730,6 +779,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <FormControlLabel
             control={
               <Checkbox
+                id="parent-relief-disability"
+                name="parentReliefDisability"
                 checked={parentReliefDisability.enabled}
                 onChange={(e) => handleParentReliefDisabilityChange(e.target.checked)}
               />
@@ -741,7 +792,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
             <Box sx={{ ml: 4, color: '#D84747' }}>
               <Typography sx={{ fontSize: '0.75rem' }}>
-                Max 2 dependants allowed for Parent Relief/Parent Relief (Disability).
+                Total of 2 dependants allowed for Parent Relief/Parent Relief (Disability).
               </Typography>
             </Box>
           )}
@@ -749,6 +800,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1}}>
               <Typography>How many dependants with disabilities do you support?</Typography>
               <Select
+                id="parent-relief-disability-dependants"
+                name="parentReliefDisabilityDependants"
                 size="small"
                 value={parentReliefDisability.dependants}
                 onChange={(e) => setParentReliefDisability((prev: ParentRelief) => ({
@@ -761,30 +814,34 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 <MenuItem value="2">2</MenuItem>
               </Select>
               
+              {/* Parent Relief Stay Type Selection */}
               {Array.from({ length: Number(parentReliefDisability.dependants) }).map((_, index) => (
-                <Box key={index} sx={{ mt: 1 }}>
-                  {parentReliefDisability.dependants === "2" && (
-                    <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
-                  )}
+                <FormControl key={index}>
+                  <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
                   <RadioGroup
-                    value={parentReliefDisability.stayType}
-                    onChange={(e) => setParentReliefDisability((prev: ParentRelief) => ({
-                      ...prev,
-                      stayType: e.target.value
-                    }))}
+                    name={`parent-relief-disability-stay-${index}`}
+                    value={parentReliefDisability.stayTypes[index]}
+                    onChange={(e) => {
+                      const newStayTypes = [...parentReliefDisability.stayTypes];
+                      newStayTypes[index] = e.target.value as "with" | "without";
+                      setParentReliefDisability((prev: ParentRelief) => ({
+                        ...prev,
+                        stayTypes: newStayTypes
+                      }));
+                    }}
                   >
-                    <FormControlLabel 
-                      value="with" 
-                      control={<Radio />} 
-                      label="Dependant stays with me" 
+                    <FormControlLabel
+                      value="with"
+                      control={<Radio />}
+                      label="Dependant stays with me"
                     />
-                    <FormControlLabel 
-                      value="without" 
-                      control={<Radio />} 
-                      label="Dependant does not stay with me" 
+                    <FormControlLabel
+                      value="without"
+                      control={<Radio />}
+                      label="Dependant does not stay with me"
                     />
                   </RadioGroup>
-                </Box>
+                </FormControl>
               ))}
             </Box>
           )}
@@ -835,8 +892,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     </Popover>
                   </Typography>
                   <TextField
+                    id={`rsu-shares-${idx}`}
+                    name={`rsuShares${idx}`}
                     fullWidth
-                    name="shares"
                     value={cycle.shares}
                     onChange={(e) => handleRsuChange(idx, 'shares', e.target.value)}
                     sx={{ mb: 2 }}
@@ -864,8 +922,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     </Popover>
                   </Typography>
                   <TextField
+                    id={`rsu-vesting-price-${idx}`}
+                    name={`rsuVestingPrice${idx}`}
                     fullWidth
-                    name="vestingPrice"
                     value={cycle.vestingPrice}
                     onChange={(e) => handleRsuChange(idx, 'vestingPrice', e.target.value)}
                   />
@@ -921,8 +980,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     </Popover>
                   </Typography>
                   <TextField
+                    id={`esop-shares-${idx}`}
+                    name={`esopShares${idx}`}
                     fullWidth
-                    name="shares"
                     value={cycle.shares}
                     onChange={(e) => handleEsopChange(idx, 'shares', e.target.value)}
                     sx={{ mb: 2 }}
@@ -950,8 +1010,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     </Popover>
                   </Typography>
                   <TextField
+                    id={`esop-exercise-price-${idx}`}
+                    name={`esopExercisePrice${idx}`}
                     fullWidth
-                    name="exercisePrice"
                     value={cycle.exercisePrice}
                     onChange={(e) => handleEsopChange(idx, 'exercisePrice', e.target.value)}
                     sx={{ mb: 2 }}
@@ -979,8 +1040,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     </Popover>
                   </Typography>
                   <TextField
+                    id={`esop-vesting-price-${idx}`}
+                    name={`esopVestingPrice${idx}`}
                     fullWidth
-                    name="vestingPrice"
                     value={cycle.vestingPrice}
                     onChange={(e) => handleEsopChange(idx, 'vestingPrice', e.target.value)}
                   />
@@ -1142,6 +1204,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {spouseRelief.enabled && (
               <Typography>
                 {spouseRelief.disability ? 'Spouse Relief (Disability)' : 'Spouse Relief'}: {formatCurrency(taxReliefResults.spouseRelief)}
+              </Typography>
+            )}
+            {taxReliefResults.parentRelief > 0 && (
+              <Typography>
+                Parent Relief: {formatCurrency(taxReliefResults.parentRelief)}
+              </Typography>
+            )}
+            {taxReliefResults.parentDisabilityRelief > 0 && (
+              <Typography>
+                Parent Relief (Disability): {formatCurrency(taxReliefResults.parentDisabilityRelief)}
               </Typography>
             )}
             

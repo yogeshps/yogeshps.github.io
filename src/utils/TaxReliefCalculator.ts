@@ -1,3 +1,5 @@
+import { PARENT_RELIEF, PARENT_DISABILITY_RELIEF } from './constants';
+
 interface TaxReliefResult {
   earnedIncomeRelief: number;
   earnedIncomeReliefDisability: number;
@@ -5,6 +7,8 @@ interface TaxReliefResult {
   cpfTopUpRelief: number;
   nsmanRelief: number;
   spouseRelief: number;
+  parentRelief: number;
+  parentDisabilityRelief: number;
   totalReliefs: number;
   totalTaxableIncome: number;
 }
@@ -47,6 +51,8 @@ interface TaxReliefInputs {
     parent: boolean;
   };
   spouseRelief: { enabled: boolean; disability: boolean };
+  parentRelief: { enabled: boolean; dependants: string; stayTypes: string[] };
+  parentReliefDisability: { enabled: boolean; dependants: string; stayTypes: string[] };
   employeeCPF: number;
   annualIncome: number;  // Add annual income to inputs
   sprStatus: string;  // Add this parameter
@@ -98,12 +104,52 @@ export function calculateNSmanRelief(nsmanRelief: NSmanReliefState, sprStatus: s
   return totalRelief;
 }
 
+function calculateParentRelief(parentRelief?: { enabled: boolean; dependants: string; stayTypes: string[] }, 
+                             parentReliefDisability?: { enabled: boolean; dependants: string; stayTypes: string[] }): number {
+  if (!parentRelief?.enabled) return 0;
+  
+  // Check total dependants
+  const totalDependants = Number(parentRelief.dependants) + 
+    (parentReliefDisability?.enabled ? Number(parentReliefDisability.dependants) : 0);
+    
+  if (totalDependants > 2) return 0;
+  
+  const dependantCount = Number(parentRelief.dependants);
+  return parentRelief.stayTypes
+    .slice(0, dependantCount)
+    .reduce((total, stayType) => {
+      const amount = stayType === 'with' ? PARENT_RELIEF.WITH : PARENT_RELIEF.WITHOUT;
+      return total + amount;
+    }, 0);
+}
+
+function calculateParentDisabilityRelief(parentReliefDisability?: { enabled: boolean; dependants: string; stayTypes: string[] },
+                                       parentRelief?: { enabled: boolean; dependants: string; stayTypes: string[] }): number {
+  if (!parentReliefDisability?.enabled) return 0;
+  
+  // Check total dependants
+  const totalDependants = Number(parentReliefDisability.dependants) + 
+    (parentRelief?.enabled ? Number(parentRelief.dependants) : 0);
+    
+  if (totalDependants > 2) return 0;
+  
+  const dependantCount = Number(parentReliefDisability.dependants);
+  return parentReliefDisability.stayTypes
+    .slice(0, dependantCount)
+    .reduce((total, stayType) => {
+      const amount = stayType === 'with' ? PARENT_DISABILITY_RELIEF.WITH : PARENT_DISABILITY_RELIEF.WITHOUT;
+      return total + amount;
+    }, 0);
+}
+
 export function calculateTaxReliefs({
   age,
   taxReliefs,
   cpfTopUpInputs,
   nsmanRelief,
   spouseRelief,
+  parentRelief,
+  parentReliefDisability,
   employeeCPF,
   annualIncome,
   sprStatus
@@ -142,13 +188,18 @@ export function calculateTaxReliefs({
     spouseReliefValue = spouseRelief.disability ? 5500 : 2000;
   }
 
+  const parentReliefValue = calculateParentRelief(parentRelief, parentReliefDisability);
+  const parentDisabilityReliefValue = calculateParentDisabilityRelief(parentReliefDisability, parentRelief);
+
   // Calculate total reliefs (ensure spouse relief is included)
   const totalReliefs = earnedIncomeRelief +
                        earnedIncomeReliefDisability +
                        cpfRelief +
                        cpfTopUpRelief +
                        nsmanDeduction +
-                       spouseReliefValue;
+                       spouseReliefValue +
+                       parentReliefValue +
+                       parentDisabilityReliefValue;
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
@@ -160,6 +211,8 @@ export function calculateTaxReliefs({
     cpfTopUpRelief,
     nsmanRelief: nsmanDeduction,
     spouseRelief: spouseReliefValue,
+    parentRelief: parentReliefValue,
+    parentDisabilityRelief: parentDisabilityReliefValue,
     totalReliefs,
     totalTaxableIncome
   };
