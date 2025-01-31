@@ -136,19 +136,22 @@ export function calculateTaxReliefs({
   // Use the full NSman relief value without limiting it by annual income
   const nsmanDeduction = nsmanReliefValue;
 
-  // Add to the existing relief calculations
+  // Calculate spouse relief
   let spouseReliefValue = 0;
   if (spouseRelief?.enabled) {
     spouseReliefValue = spouseRelief.disability ? 5500 : 2000;
   }
 
-  // Calculate total reliefs
+  // Calculate total reliefs (ensure spouse relief is included)
   const totalReliefs = earnedIncomeRelief +
                        earnedIncomeReliefDisability +
                        cpfRelief +
                        cpfTopUpRelief +
                        nsmanDeduction +
                        spouseReliefValue;
+
+  // Calculate taxable income
+  const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
 
   return {
     earnedIncomeRelief,
@@ -158,6 +161,6 @@ export function calculateTaxReliefs({
     nsmanRelief: nsmanDeduction,
     spouseRelief: spouseReliefValue,
     totalReliefs,
-    totalTaxableIncome: annualIncome
+    totalTaxableIncome
   };
 } 
