@@ -207,7 +207,8 @@ const SingaporeTakeHomeCalculator = () => {
     totalReliefs: 0,
     parentRelief: 0,
     parentDisabilityRelief: 0,
-    siblingDisabilityRelief: 0
+    siblingDisabilityRelief: 0,
+    grandparentCaregiverRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -241,6 +242,12 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Add state
   const [siblingRelief, setSiblingRelief] = useState({
+    enabled: false,
+    dependants: "1"
+  });
+
+  // Add this state definition
+  const [grandparentCaregiverRelief, setGrandparentCaregiverRelief] = useState({
     enabled: false,
     dependants: "1"
   });
@@ -324,7 +331,10 @@ const SingaporeTakeHomeCalculator = () => {
       siblingRelief,
       employeeCPF: results.totalEmployeeCPF || 0,
       annualIncome: results.baseIncome || 0,
-      sprStatus: extraInputs.sprStatus
+      sprStatus: extraInputs.sprStatus,
+      grandparentCaregiverRelief: {
+        enabled: grandparentCaregiverRelief.enabled
+      }
     });
 
     setTaxReliefResults(reliefs);
@@ -339,7 +349,8 @@ const SingaporeTakeHomeCalculator = () => {
     siblingRelief,
     results.totalEmployeeCPF,
     results.baseIncome,
-    extraInputs.sprStatus
+    extraInputs.sprStatus,
+    grandparentCaregiverRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -708,6 +719,14 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
+  // Add this handler function
+  const handleGrandparentCaregiverReliefChange = (checked: boolean) => {
+    setGrandparentCaregiverRelief(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -776,6 +795,8 @@ const SingaporeTakeHomeCalculator = () => {
       siblingRelief={siblingRelief}
       handleSiblingReliefChange={handleSiblingReliefChange}
       setSiblingRelief={setSiblingRelief}
+      grandparentCaregiverRelief={grandparentCaregiverRelief}
+      handleGrandparentCaregiverReliefChange={handleGrandparentCaregiverReliefChange}
     />
   );
 };

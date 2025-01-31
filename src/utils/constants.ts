@@ -10,4 +10,8 @@ export const PARENT_DISABILITY_RELIEF = {
   WITHOUT: 10000
 };
 
-export const SIBLING_DISABILITY_RELIEF = 5500; 
+export const SIBLING_DISABILITY_RELIEF = 5500;
+
+export const GRANDPARENT_CAREGIVER_RELIEF = {
+  AMOUNT: 3000
+} as const; 

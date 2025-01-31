@@ -73,6 +73,7 @@ interface TaxReliefResult {
   parentRelief: number;
   parentDisabilityRelief: number;
   siblingDisabilityRelief: number;
+  grandparentCaregiverRelief: number;
 }
 
 interface SingaporeTaxCalculatorViewProps {
@@ -147,6 +148,11 @@ interface SingaporeTaxCalculatorViewProps {
   siblingRelief: SiblingRelief;
   handleSiblingReliefChange: (checked: boolean) => void;
   setSiblingRelief: React.Dispatch<React.SetStateAction<SiblingRelief>>;
+  grandparentCaregiverRelief: {
+    enabled: boolean;
+    dependants: string;
+  };
+  handleGrandparentCaregiverReliefChange: (checked: boolean) => void;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -220,6 +226,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   cpfTopUpErrors,
   nsmanRelief,
   siblingRelief,
+  grandparentCaregiverRelief,
   handleClose,
   handlePopoverClick,
   setExtraInputs,
@@ -259,7 +266,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setEsopVestingPopoverAnchor,
   handleSiblingReliefChange,
   setSiblingRelief,
-  handleParentStayTypeChange
+  handleParentStayTypeChange,
+  handleGrandparentCaregiverReliefChange
 }) => {
   // Render
   return (
@@ -896,6 +904,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Select>
             </Box>
           )}
+
+          {/* Grandparent Caregiver Relief Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="grandparent-caregiver-relief"
+                name="grandparentCaregiverRelief"
+                checked={grandparentCaregiverRelief.enabled}
+                onChange={(e) => handleGrandparentCaregiverReliefChange(e.target.checked)}
+              />
+            }
+            label="Grandparent Caregiver Relief"
+          />
         </Box>
 
         {/* RSU Section */}
@@ -1270,6 +1291,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {taxReliefResults.siblingDisabilityRelief > 0 && (
               <Typography>
                 Sibling Relief (Disability): {formatCurrency(taxReliefResults.siblingDisabilityRelief)}
+              </Typography>
+            )}
+            {grandparentCaregiverRelief.enabled && taxReliefResults.grandparentCaregiverRelief > 0 && (
+              <Typography>
+                Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
               </Typography>
             )}
             
