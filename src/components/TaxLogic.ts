@@ -18,11 +18,11 @@ export function calculateTax(annualIncome: number): number {
   
     let remaining = annualIncome;
     let totalTax = 0;
-    for (const b of brackets) {
+    for (const bracket of brackets) {
       if (remaining <= 0) break;
-      const portion = Math.min(remaining, b.threshold);
-      totalTax += portion * b.rate;
-      remaining -= portion;
+      const taxableAmount = Math.min(remaining, bracket.threshold);
+      totalTax += taxableAmount * bracket.rate;
+      remaining -= bracket.threshold;
     }
-    return totalTax;
+    return Math.round(totalTax);
   }

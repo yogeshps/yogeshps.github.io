@@ -4,11 +4,13 @@ interface TaxReliefResult {
   cpfRelief: number;
   cpfTopUpRelief: number;
   nsmanRelief: number;
+  spouseRelief: number;
   totalReliefs: number;
   totalTaxableIncome: number;
 }
 
 interface CpfTopUpInputs {
+  enabled: boolean;
   self: boolean;
   family: boolean;
   selfAmount: string;
@@ -31,6 +33,7 @@ interface TaxReliefInputs {
     cpfRelief: boolean;
   };
   cpfTopUpInputs: {
+    enabled: boolean;
     self: boolean;
     family: boolean;
     selfAmount: string;
@@ -43,8 +46,10 @@ interface TaxReliefInputs {
     wife: boolean;
     parent: boolean;
   };
+  spouseRelief: { enabled: boolean; disability: boolean };
   employeeCPF: number;
   annualIncome: number;  // Add annual income to inputs
+  sprStatus: string;  // Add this parameter
 }
 
 export function calculateEarnedIncomeRelief(age: number, isDisability: boolean): number {
@@ -59,7 +64,9 @@ export function calculateEarnedIncomeRelief(age: number, isDisability: boolean):
   }
 }
 
-export function calculateCpfTopUpRelief(inputs: CpfTopUpInputs): number {
+export function calculateCpfTopUpRelief(inputs: CpfTopUpInputs, sprStatus: string): number {
+  if (!inputs.enabled || sprStatus === 'ep_pep_spass') return 0;
+  
   // Parse amounts with decimals and default to 0
   const selfAmount = Number(parseFloat(inputs.selfAmount || '0').toFixed(2)) || 0;
   const familyAmount = Number(parseFloat(inputs.familyAmount || '0').toFixed(2)) || 0;
@@ -70,19 +77,17 @@ export function calculateCpfTopUpRelief(inputs: CpfTopUpInputs): number {
   return Number(totalAmount.toFixed(2));
 }
 
-export function calculateNSmanRelief(nsmanRelief: NSmanReliefState): number {
-  if (!nsmanRelief.enabled) return 0;
+export function calculateNSmanRelief(nsmanRelief: NSmanReliefState, sprStatus: string): number {
+  if (!nsmanRelief.enabled || sprStatus === 'ep_pep_spass') return 0;
   
   let totalRelief = 0;
   
-  // General and Key are mutually exclusive
   if (nsmanRelief.general) {
     totalRelief += 1500;
   } else if (nsmanRelief.key) {
     totalRelief += 3500;
   }
   
-  // Wife and Parent can be added independently
   if (nsmanRelief.wife) {
     totalRelief += 750;
   }
@@ -98,8 +103,10 @@ export function calculateTaxReliefs({
   taxReliefs,
   cpfTopUpInputs,
   nsmanRelief,
+  spouseRelief,
   employeeCPF,
-  annualIncome
+  annualIncome,
+  sprStatus
 }: TaxReliefInputs): TaxReliefResult {
   // Existing relief calculations
   let earnedIncomeRelief = 0;
@@ -115,26 +122,33 @@ export function calculateTaxReliefs({
   }
 
   const cpfRelief = taxReliefs?.cpfRelief ? employeeCPF : 0;
-  const cpfTopUpRelief = calculateCpfTopUpRelief(cpfTopUpInputs || {});
+  const cpfTopUpRelief = calculateCpfTopUpRelief(cpfTopUpInputs || {}, sprStatus);
 
   // NSman Relief Calculation
   let nsmanReliefValue = 0;
-  if (nsmanRelief?.enabled) {
+  if (nsmanRelief?.enabled && sprStatus !== 'ep_pep_spass') {
     if (nsmanRelief.general) nsmanReliefValue += 1500;
     if (nsmanRelief.key) nsmanReliefValue += 3500;
     if (nsmanRelief.wife) nsmanReliefValue += 750;
     if (nsmanRelief.parent) nsmanReliefValue += 750;
   }
 
-  // Ensure nsmanReliefValue doesn't exceed annual income
-  const nsmanDeduction = Math.min(annualIncome, nsmanReliefValue);
+  // Use the full NSman relief value without limiting it by annual income
+  const nsmanDeduction = nsmanReliefValue;
+
+  // Add to the existing relief calculations
+  let spouseReliefValue = 0;
+  if (spouseRelief?.enabled) {
+    spouseReliefValue = spouseRelief.disability ? 5500 : 2000;
+  }
 
   // Calculate total reliefs
   const totalReliefs = earnedIncomeRelief +
                        earnedIncomeReliefDisability +
                        cpfRelief +
                        cpfTopUpRelief +
-                       nsmanDeduction;
+                       nsmanDeduction +
+                       spouseReliefValue;
 
   return {
     earnedIncomeRelief,
@@ -142,6 +156,7 @@ export function calculateTaxReliefs({
     cpfRelief,
     cpfTopUpRelief,
     nsmanRelief: nsmanDeduction,
+    spouseRelief: spouseReliefValue,
     totalReliefs,
     totalTaxableIncome: annualIncome
   };

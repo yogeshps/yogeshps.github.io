@@ -210,7 +210,14 @@ const SingaporeTakeHomeCalculator = () => {
     cpfRelief: 0,
     cpfTopUpRelief: 0,
     nsmanRelief: 0,
+    spouseRelief: 0,
     totalReliefs: 0
+  });
+
+  // Add new state for Spouse Relief
+  const [spouseRelief, setSpouseRelief] = useState({
+    enabled: false,
+    disability: false
   });
 
   // Effect to handle initial EIR setup and income source changes
@@ -295,37 +302,23 @@ const SingaporeTakeHomeCalculator = () => {
       taxReliefs,
       cpfTopUpInputs: cpfTopUp,
       nsmanRelief,
+      spouseRelief,
       employeeCPF: results.totalEmployeeCPF || 0,
-      annualIncome: results.baseIncome || 0  // Use baseIncome instead of totalTaxableIncome
+      annualIncome: results.baseIncome || 0,
+      sprStatus: extraInputs.sprStatus
     });
 
-    setTaxReliefResults(prev => {
-      const newResults = {
-        earnedIncomeRelief: reliefs.earnedIncomeRelief || 0,
-        earnedIncomeReliefDisability: reliefs.earnedIncomeReliefDisability || 0,
-        cpfRelief: reliefs.cpfRelief || 0,
-        cpfTopUpRelief: reliefs.cpfTopUpRelief || 0,
-        nsmanRelief: reliefs.nsmanRelief || 0,
-        totalReliefs: reliefs.totalReliefs || 0
-      };
-      return newResults;
-    });
-  }, [
-    extraInputs.age,
-    taxReliefs,
-    cpfTopUp,
-    nsmanRelief,
-    results.totalEmployeeCPF,
-    results.baseIncome  // Changed dependency
-  ]);
+    setTaxReliefResults(reliefs);
+  }, [extraInputs.age, taxReliefs, cpfTopUp, nsmanRelief, spouseRelief, results.totalEmployeeCPF, results.baseIncome, extraInputs.sprStatus]);
 
   // Finally calculate taxable income after all reliefs
   useEffect(() => {
-    const finalTaxableIncome = Math.max(0, (results.baseIncome || 0) - (taxReliefResults.totalReliefs || 0));
+    const finalTaxableIncome = Math.max(0, results.baseIncome - taxReliefResults.totalReliefs);
     
     setResults(prev => ({
       ...prev,
-      totalTaxableIncome: finalTaxableIncome
+      totalTaxableIncome: finalTaxableIncome,
+      annualTax: calculateTax(finalTaxableIncome)
     }));
   }, [results.baseIncome, taxReliefResults.totalReliefs]);
 
@@ -626,6 +619,22 @@ const SingaporeTakeHomeCalculator = () => {
     results.annualTax
   ]);
 
+  // Handler for main spouse relief checkbox
+  const handleSpouseReliefChange = (checked: boolean) => {
+    setSpouseRelief(prev => ({
+      ...prev,
+      enabled: checked
+    }));
+  };
+
+  // Handler for spouse disability checkbox
+  const handleSpouseDisabilityChange = (checked: boolean) => {
+    setSpouseRelief(prev => ({
+      ...prev,
+      disability: checked
+    }));
+  };
+
   // Render
   return (
     <Card sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
@@ -880,15 +889,17 @@ const SingaporeTakeHomeCalculator = () => {
                 }
                 label="Earned Income Relief"
               />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    checked={taxReliefs.earnedIncomeReliefDisability}
-                    onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
-                  />
-                }
-                label="Earned Income Relief (Disability)"
-              />
+              <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={taxReliefs.earnedIncomeReliefDisability}
+                      onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
+                    />
+                  }
+                  label="Earned Income Relief (Disability)"
+                />
+              </Box>
             </Box>
           )}
           {extraInputs.sprStatus !== 'ep_pep_spass' && (
@@ -1023,6 +1034,28 @@ const SingaporeTakeHomeCalculator = () => {
                 </Box>
               )}
             </>
+          )}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={spouseRelief.enabled}
+                onChange={(e) => handleSpouseReliefChange(e.target.checked)}
+              />
+            }
+            label="Spouse Relief"
+          />
+          {spouseRelief.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={spouseRelief.disability}
+                    onChange={(e) => handleSpouseDisabilityChange(e.target.checked)}
+                  />
+                }
+                label="I am eligible for Spouse Relief (Disability)"
+              />
+            </Box>
           )}
         </Box>
 
@@ -1341,22 +1374,22 @@ const SingaporeTakeHomeCalculator = () => {
         <Box sx={{ mb: 3 }} />
 
         {/* Tax Relief Summary Box */}
-        {taxReliefResults.totalReliefs > 0 && (
+        {(results.baseIncome > 0 && taxReliefResults.totalReliefs > 0) && (
           <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
               Tax Reliefs
             </Typography>
-            {taxReliefs.earnedIncomeRelief && taxReliefResults.earnedIncomeRelief > 0 && (
+            {taxReliefResults.earnedIncomeRelief > 0 && (
               <Typography>
                 Earned Income Relief: {formatCurrency(taxReliefResults.earnedIncomeRelief)}
               </Typography>
             )}
-            {taxReliefs.earnedIncomeReliefDisability && taxReliefResults.earnedIncomeReliefDisability > 0 && (
+            {taxReliefResults.earnedIncomeReliefDisability > 0 && (
               <Typography>
                 Earned Income Relief (Disability): {formatCurrency(taxReliefResults.earnedIncomeReliefDisability)}
               </Typography>
             )}
-            {taxReliefs.cpfRelief && taxReliefResults.cpfRelief > 0 && (
+            {taxReliefResults.cpfRelief > 0 && (
               <Typography>
                 CPF Relief: {formatCurrency(taxReliefResults.cpfRelief)}
               </Typography>
@@ -1366,9 +1399,17 @@ const SingaporeTakeHomeCalculator = () => {
                 CPF Cash Top-Up Relief: {formatCurrency(taxReliefResults.cpfTopUpRelief)}
               </Typography>
             )}
-            {nsmanRelief.enabled && taxReliefResults.nsmanRelief > 0 && (
+            {taxReliefResults.nsmanRelief > 0 && (
               <Typography>
                 NSman Relief: {formatCurrency(taxReliefResults.nsmanRelief)}
+              </Typography>
+            )}
+            {spouseRelief.enabled && (
+              <Typography>
+                {spouseRelief.disability ? 
+                  "Spouse Relief (Disability): " + formatCurrency(5500) :
+                  "Spouse Relief: " + formatCurrency(2000)
+                }
               </Typography>
             )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
