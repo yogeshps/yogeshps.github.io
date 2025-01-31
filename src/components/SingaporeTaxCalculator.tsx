@@ -24,6 +24,12 @@ interface IncomeSources {
   royalties: boolean;
 }
 
+interface ParentRelief {
+  enabled: boolean;
+  dependants: string;
+  stayTypes: ("with" | "without")[];
+}
+
 /***********************************************************
  * Round to Nearest Dollar
  ***********************************************************/
@@ -198,7 +204,10 @@ const SingaporeTakeHomeCalculator = () => {
     cpfTopUpRelief: 0,
     nsmanRelief: 0,
     spouseRelief: 0,
-    totalReliefs: 0
+    totalReliefs: 0,
+    parentRelief: 0,
+    parentDisabilityRelief: 0,
+    siblingDisabilityRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -208,17 +217,17 @@ const SingaporeTakeHomeCalculator = () => {
   });
 
   // Update the state to include stayType
-  const [parentRelief, setParentRelief] = useState({
+  const [parentRelief, setParentRelief] = useState<ParentRelief>({
     enabled: false,
     dependants: "1",
-    stayTypes: ["with", "with"] // Array of stay types for each dependant
+    stayTypes: ["with", "with"] as ("with" | "without")[]
   });
 
   // Add new state for Parent Relief (Disability)
-  const [parentReliefDisability, setParentReliefDisability] = useState({
+  const [parentReliefDisability, setParentReliefDisability] = useState<ParentRelief>({
     enabled: false,
     dependants: "1",
-    stayTypes: ["with", "with"] // Array of stay types for each dependant
+    stayTypes: ["with", "with"] as ("with" | "without")[]
   });
 
   // Add new state for NSman relief
@@ -228,6 +237,12 @@ const SingaporeTakeHomeCalculator = () => {
     key: false,
     wife: false,
     parent: false
+  });
+
+  // Add state
+  const [siblingRelief, setSiblingRelief] = useState({
+    enabled: false,
+    dependants: "1"
   });
 
   // Effect to handle initial EIR setup and income source changes
@@ -306,6 +321,7 @@ const SingaporeTakeHomeCalculator = () => {
       spouseRelief,
       parentRelief,
       parentReliefDisability,
+      siblingRelief,
       employeeCPF: results.totalEmployeeCPF || 0,
       annualIncome: results.baseIncome || 0,
       sprStatus: extraInputs.sprStatus
@@ -320,6 +336,7 @@ const SingaporeTakeHomeCalculator = () => {
     spouseRelief,
     parentRelief,
     parentReliefDisability,
+    siblingRelief,
     results.totalEmployeeCPF,
     results.baseIncome,
     extraInputs.sprStatus
@@ -676,12 +693,18 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Add handler for stay type changes
   const handleParentStayTypeChange = (index: number, stayType: "with" | "without", isDisability: boolean) => {
-    console.log('Changing stay type:', { index, stayType, isDisability }); // Debug log
-    
     const setter = isDisability ? setParentReliefDisability : setParentRelief;
     setter(prev => ({
       ...prev,
       stayTypes: prev.stayTypes.map((type, i) => i === index ? stayType : type)
+    }));
+  };
+
+  // Add handler for sibling relief checkbox
+  const handleSiblingReliefChange = (checked: boolean) => {
+    setSiblingRelief(prev => ({
+      ...prev,
+      enabled: checked
     }));
   };
 
@@ -750,6 +773,9 @@ const SingaporeTakeHomeCalculator = () => {
       incomeSources={incomeSources}
       handleDisabilityReliefChange={handleDisabilityReliefChange}
       handleParentStayTypeChange={handleParentStayTypeChange}
+      siblingRelief={siblingRelief}
+      handleSiblingReliefChange={handleSiblingReliefChange}
+      setSiblingRelief={setSiblingRelief}
     />
   );
 };

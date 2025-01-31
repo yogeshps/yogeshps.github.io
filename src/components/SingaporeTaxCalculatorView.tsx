@@ -57,6 +57,24 @@ interface EsopCycle {
   expanded: boolean;
 }
 
+interface SiblingRelief {
+  enabled: boolean;
+  dependants: string;
+}
+
+interface TaxReliefResult {
+  earnedIncomeRelief: number;
+  earnedIncomeReliefDisability: number;
+  cpfRelief: number;
+  cpfTopUpRelief: number;
+  nsmanRelief: number;
+  totalReliefs: number;
+  spouseRelief: number;
+  parentRelief: number;
+  parentDisabilityRelief: number;
+  siblingDisabilityRelief: number;
+}
+
 interface SingaporeTaxCalculatorViewProps {
   extraInputs: {
     age: string;
@@ -84,17 +102,7 @@ interface SingaporeTaxCalculatorViewProps {
     annualTax: number;
     baseIncome: number;
   };
-  taxReliefResults: {
-    earnedIncomeRelief: number;
-    earnedIncomeReliefDisability: number;
-    cpfRelief: number;
-    cpfTopUpRelief: number;
-    nsmanRelief: number;
-    totalReliefs: number;
-    spouseRelief: number;
-    parentRelief: number;
-    parentDisabilityRelief: number;
-  };
+  taxReliefResults: TaxReliefResult;
   ageError: string;
   agePopoverAnchor: HTMLElement | null;
   residencyPopoverAnchor: HTMLElement | null;
@@ -136,6 +144,9 @@ interface SingaporeTaxCalculatorViewProps {
     wife: boolean;
     parent: boolean;
   };
+  siblingRelief: SiblingRelief;
+  handleSiblingReliefChange: (checked: boolean) => void;
+  setSiblingRelief: React.Dispatch<React.SetStateAction<SiblingRelief>>;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -177,6 +188,7 @@ interface SingaporeTaxCalculatorViewProps {
   setEsopSharesPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   setEsopExercisePopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   setEsopVestingPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
+  handleParentStayTypeChange: (index: number, stayType: "with" | "without", isDisability: boolean) => void;
 }
 
 const POPOVER_MAX_WIDTH = '480px';
@@ -207,6 +219,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   taxReliefs,
   cpfTopUpErrors,
   nsmanRelief,
+  siblingRelief,
   handleClose,
   handlePopoverClick,
   setExtraInputs,
@@ -243,7 +256,10 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   removeEsopCycle,
   setEsopSharesPopoverAnchor,
   setEsopExercisePopoverAnchor,
-  setEsopVestingPopoverAnchor
+  setEsopVestingPopoverAnchor,
+  handleSiblingReliefChange,
+  setSiblingRelief,
+  handleParentStayTypeChange
 }) => {
   // Render
   return (
@@ -845,6 +861,41 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               ))}
             </Box>
           )}
+
+          {/* Sibling Relief (Disability) Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="sibling-disability-relief"
+                name="siblingDisabilityRelief"
+                checked={siblingRelief.enabled}
+                onChange={(e) => handleSiblingReliefChange(e.target.checked)}
+              />
+            }
+            label="Sibling Relief (Disability)"
+          />
+          {siblingRelief.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography>How many siblings/sibling-in-laws will you claim reliefs for?</Typography>
+              <Select
+                id="sibling-disability-relief-dependants"
+                name="siblingDisabilityReliefDependants"
+                size="small"
+                value={siblingRelief.dependants}
+                onChange={(e) => setSiblingRelief((prev: SiblingRelief) => ({
+                  ...prev,
+                  dependants: e.target.value
+                }))}
+                sx={{ width: '120px' }}
+              >
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2">2</MenuItem>
+                <MenuItem value="3">3</MenuItem>
+                <MenuItem value="4">4</MenuItem>
+                <MenuItem value="5">5</MenuItem>
+              </Select>
+            </Box>
+          )}
         </Box>
 
         {/* RSU Section */}
@@ -1214,6 +1265,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {taxReliefResults.parentDisabilityRelief > 0 && (
               <Typography>
                 Parent Relief (Disability): {formatCurrency(taxReliefResults.parentDisabilityRelief)}
+              </Typography>
+            )}
+            {taxReliefResults.siblingDisabilityRelief > 0 && (
+              <Typography>
+                Sibling Relief (Disability): {formatCurrency(taxReliefResults.siblingDisabilityRelief)}
               </Typography>
             )}
             

@@ -8,4 +8,6 @@ export const PARENT_RELIEF = {
 export const PARENT_DISABILITY_RELIEF = {
   WITH: 14000,
   WITHOUT: 10000
-}; 
+};
+
+export const SIBLING_DISABILITY_RELIEF = 5500; 

@@ -1,4 +1,4 @@
-import { PARENT_RELIEF, PARENT_DISABILITY_RELIEF } from './constants';
+import * as constants from './constants';
 
 interface TaxReliefResult {
   earnedIncomeRelief: number;
@@ -9,6 +9,7 @@ interface TaxReliefResult {
   spouseRelief: number;
   parentRelief: number;
   parentDisabilityRelief: number;
+  siblingDisabilityRelief: number;
   totalReliefs: number;
   totalTaxableIncome: number;
 }
@@ -53,6 +54,7 @@ interface TaxReliefInputs {
   spouseRelief: { enabled: boolean; disability: boolean };
   parentRelief: { enabled: boolean; dependants: string; stayTypes: string[] };
   parentReliefDisability: { enabled: boolean; dependants: string; stayTypes: string[] };
+  siblingRelief: { enabled: boolean; dependants: string };
   employeeCPF: number;
   annualIncome: number;  // Add annual income to inputs
   sprStatus: string;  // Add this parameter
@@ -118,7 +120,7 @@ function calculateParentRelief(parentRelief?: { enabled: boolean; dependants: st
   return parentRelief.stayTypes
     .slice(0, dependantCount)
     .reduce((total, stayType) => {
-      const amount = stayType === 'with' ? PARENT_RELIEF.WITH : PARENT_RELIEF.WITHOUT;
+      const amount = stayType === 'with' ? constants.PARENT_RELIEF.WITH : constants.PARENT_RELIEF.WITHOUT;
       return total + amount;
     }, 0);
 }
@@ -137,9 +139,16 @@ function calculateParentDisabilityRelief(parentReliefDisability?: { enabled: boo
   return parentReliefDisability.stayTypes
     .slice(0, dependantCount)
     .reduce((total, stayType) => {
-      const amount = stayType === 'with' ? PARENT_DISABILITY_RELIEF.WITH : PARENT_DISABILITY_RELIEF.WITHOUT;
+      const amount = stayType === 'with' ? constants.PARENT_DISABILITY_RELIEF.WITH : constants.PARENT_DISABILITY_RELIEF.WITHOUT;
       return total + amount;
     }, 0);
+}
+
+function calculateSiblingRelief(siblingRelief?: { enabled: boolean; dependants: string }): number {
+  if (!siblingRelief?.enabled) return 0;
+  
+  const dependantCount = Number(siblingRelief.dependants) || 0;
+  return (dependantCount * constants.SIBLING_DISABILITY_RELIEF);
 }
 
 export function calculateTaxReliefs({
@@ -150,6 +159,7 @@ export function calculateTaxReliefs({
   spouseRelief,
   parentRelief,
   parentReliefDisability,
+  siblingRelief,
   employeeCPF,
   annualIncome,
   sprStatus
@@ -191,15 +201,18 @@ export function calculateTaxReliefs({
   const parentReliefValue = calculateParentRelief(parentRelief, parentReliefDisability);
   const parentDisabilityReliefValue = calculateParentDisabilityRelief(parentReliefDisability, parentRelief);
 
-  // Calculate total reliefs (ensure spouse relief is included)
+  const siblingDisabilityReliefValue = calculateSiblingRelief(siblingRelief);
+
+  // Calculate total reliefs (include sibling relief)
   const totalReliefs = earnedIncomeRelief +
-                       earnedIncomeReliefDisability +
-                       cpfRelief +
-                       cpfTopUpRelief +
-                       nsmanDeduction +
-                       spouseReliefValue +
-                       parentReliefValue +
-                       parentDisabilityReliefValue;
+    earnedIncomeReliefDisability +
+    cpfRelief +
+    cpfTopUpRelief +
+    nsmanDeduction +
+    spouseReliefValue +
+    parentReliefValue +
+    parentDisabilityReliefValue +
+    siblingDisabilityReliefValue;
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
@@ -213,7 +226,8 @@ export function calculateTaxReliefs({
     spouseRelief: spouseReliefValue,
     parentRelief: parentReliefValue,
     parentDisabilityRelief: parentDisabilityReliefValue,
+    siblingDisabilityRelief: siblingDisabilityReliefValue,
     totalReliefs,
-    totalTaxableIncome
+    totalTaxableIncome: Math.max(0, annualIncome - totalReliefs)
   };
 } 
