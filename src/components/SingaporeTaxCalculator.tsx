@@ -313,13 +313,15 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Finally calculate taxable income after all reliefs
   useEffect(() => {
-    const finalTaxableIncome = Math.max(0, results.baseIncome - taxReliefResults.totalReliefs);
-    
-    setResults(prev => ({
-      ...prev,
-      totalTaxableIncome: finalTaxableIncome,
-      annualTax: calculateTax(finalTaxableIncome)
-    }));
+    if (results.baseIncome > 0) {
+      const finalTaxableIncome = Math.max(0, results.baseIncome - taxReliefResults.totalReliefs);
+      
+      setResults(prev => ({
+        ...prev,
+        totalTaxableIncome: finalTaxableIncome,
+        annualTax: calculateTax(finalTaxableIncome)
+      }));
+    }
   }, [results.baseIncome, taxReliefResults.totalReliefs]);
 
   // Add this new handler for checkbox changes
@@ -634,6 +636,28 @@ const SingaporeTakeHomeCalculator = () => {
       disability: checked
     }));
   };
+
+  // Calculate RSU and ESOP gains
+  useEffect(() => {
+    const totalRsuGains = rsuCycles.reduce((acc, cycle) => {
+      const shares = Number(cycle.shares || 0);
+      const vestingPrice = Number(cycle.vestingPrice || 0);
+      return acc + (shares * vestingPrice);
+    }, 0);
+
+    const totalEsopGains = esopCycles.reduce((acc, cycle) => {
+      const shares = Number(cycle.shares || 0);
+      const exercisePrice = Number(cycle.exercisePrice || 0);
+      const vestingPrice = Number(cycle.vestingPrice || 0);
+      return acc + Math.max(0, shares * (vestingPrice - exercisePrice));
+    }, 0);
+
+    setResults(prev => ({
+      ...prev,
+      totalRsuGains,  // Store total RSU gains
+      totalEsopGains, // Store total ESOP gains
+    }));
+  }, [rsuCycles, esopCycles]);
 
   // Render
   return (
@@ -1278,49 +1302,53 @@ const SingaporeTakeHomeCalculator = () => {
         </Typography>
 
         {/* RSU Gains Section */}
-        <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-              RSU Gains
-          </Typography>
-          {rsuCycles.map((cycle, idx) => {
-              const shares = Number(cycle.shares) || 0;
-              const vestingPrice = Number(cycle.vestingPrice) || 0;
-              const gain = shares * vestingPrice;
-              return (
-                  <Typography key={idx}>
-                      RSU Vesting Cycle {idx + 1}: {formatCurrency(gain)}
-                  </Typography>
-              );
-          })}
-          <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                  Total RSU Gains: {formatCurrency(results.totalRsuGains)}
-              </Typography>
-          </Box>
-        </Box>
-
-        {/* ESOP Gains Section */}
-        <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+        {results.totalRsuGains > 0 && (
+          <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-                ESOP Gains
+                RSU Gains
             </Typography>
-            {esopCycles.map((cycle, idx) => {
+            {rsuCycles.map((cycle, idx) => {
                 const shares = Number(cycle.shares) || 0;
-                const exercisePrice = Number(cycle.exercisePrice) || 0;
                 const vestingPrice = Number(cycle.vestingPrice) || 0;
-                const gain = Math.max(shares * (vestingPrice - exercisePrice), 0);
+                const gain = shares * vestingPrice;
                 return (
                     <Typography key={idx}>
-                        ESOP Vesting Cycle {idx + 1}: {formatCurrency(gain)}
+                        RSU Vesting Cycle {idx + 1}: {formatCurrency(gain)}
                     </Typography>
                 );
             })}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Total ESOP Gains: {formatCurrency(results.totalEsopGains)}
+                    Total RSU Gains: {formatCurrency(results.totalRsuGains)}
                 </Typography>
             </Box>
-        </Box>
+          </Box>
+        )}
+
+        {/* ESOP Gains Section */}
+        {results.totalEsopGains > 0 && (
+          <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+                  ESOP Gains
+              </Typography>
+              {esopCycles.map((cycle, idx) => {
+                  const shares = Number(cycle.shares) || 0;
+                  const exercisePrice = Number(cycle.exercisePrice) || 0;
+                  const vestingPrice = Number(cycle.vestingPrice) || 0;
+                  const gain = Math.max(shares * (vestingPrice - exercisePrice), 0);
+                  return (
+                      <Typography key={idx}>
+                          ESOP Vesting Cycle {idx + 1}: {formatCurrency(gain)}
+                      </Typography>
+                  );
+              })}
+              <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                      Total ESOP Gains: {formatCurrency(results.totalEsopGains)}
+                  </Typography>
+              </Box>
+          </Box>
+        )}
 
         {extraInputs.sprStatus !== 'ep_pep_spass' && (
           <>
