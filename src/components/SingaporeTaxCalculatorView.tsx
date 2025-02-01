@@ -634,23 +634,27 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }
                     label="Contribution to my own CPF"
                   />
-                  {cpfTopUp.self && (
-                    <TextField
-                      id="cpf-topup-self-amount"
-                      name="cpfTopUpSelfAmount"
-                      size="small"
-                      value={cpfTopUp.selfAmount}
-                      onChange={(e) => handleCpfTopUpAmountChange('selfAmount', e.target.value)}
-                      placeholder="Enter amount"
-                      error={!!cpfTopUpErrors.selfAmount}
-                      helperText={cpfTopUpErrors.selfAmount}
-                      inputProps={{ 
-                        inputMode: 'decimal',
-                        pattern: '[0-9]*\.?[0-9]{0,2}'
-                      }}
-                      sx={{ ml: 4, width: '200px' }}
-                    />
-                  )}
+                  <TextField
+                    id="cpf-topup-self-amount"
+                    name="cpfTopUpSelfAmount"
+                    size="small"
+                    value={cpfTopUp.selfAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setCpfTopUp(prev => ({
+                          ...prev,
+                          selfAmount: value
+                        }));
+                      }
+                    }}
+                    placeholder="Enter amount"
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    sx={{ ml: 4, width: '200px' }}
+                  />
                   <FormControlLabel
                     control={
                       <Checkbox
@@ -665,23 +669,27 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }
                     label="Contribution to my family member's CPF"
                   />
-                  {cpfTopUp.family && (
-                    <TextField
-                      id="cpf-topup-family-amount"
-                      name="cpfTopUpFamilyAmount"
-                      size="small"
-                      value={cpfTopUp.familyAmount}
-                      onChange={(e) => handleCpfTopUpAmountChange('familyAmount', e.target.value)}
-                      placeholder="Enter amount"
-                      error={!!cpfTopUpErrors.familyAmount}
-                      helperText={cpfTopUpErrors.familyAmount}
-                      inputProps={{ 
-                        inputMode: 'decimal',
-                        pattern: '[0-9]*\.?[0-9]{0,2}'
-                      }}
-                      sx={{ ml: 4, width: '200px' }}
-                    />
-                  )}
+                  <TextField
+                    id="cpf-topup-family-amount"
+                    name="cpfTopUpFamilyAmount"
+                    size="small"
+                    value={cpfTopUp.familyAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setCpfTopUp(prev => ({
+                          ...prev,
+                          familyAmount: value
+                        }));
+                      }
+                    }}
+                    placeholder="Enter amount"
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    sx={{ ml: 4, width: '200px' }}
+                  />
                 </Box>
               )}
             </>
@@ -1062,19 +1070,20 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 value={workingMothersChildRelief.amount}
                 onChange={(e) => {
                   const value = e.target.value;
-                  const isValid = /^[0-9]*\.?[0-9]*$/.test(value) && Number(value) >= 0;
-
-                  setWorkingMothersChildRelief(prev => ({
-                    ...prev,
-                    amount: value,
-                    error: isValid ? '' : 'Enter a valid amount.'
-                  }));
+                  if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    setWorkingMothersChildRelief(prev => ({
+                      ...prev,
+                      amount: value
+                    }));
+                  }
+                }}
+                inputProps={{ 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
                 }}
                 variant="outlined"
                 size="small"
                 sx={{ ml: 4, width: '200px' }}
-                error={!!workingMothersChildRelief.error}
-                helperText={workingMothersChildRelief.error}
               />
             </Box>
           )}

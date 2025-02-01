@@ -248,7 +248,7 @@ export function calculateTaxReliefs({
 
   const workingMothersChildReliefValue = calculateWorkingMothersChildRelief({
     enabled: workingMothersChildRelief.enabled,
-    amount: Number(workingMothersChildRelief.amount) || 0
+    amount: workingMothersChildRelief.amount  // Keep as string, conversion happens inside calculateWorkingMothersChildRelief
   });
 
   // Calculate total reliefs (include grandparent caregiver relief)
