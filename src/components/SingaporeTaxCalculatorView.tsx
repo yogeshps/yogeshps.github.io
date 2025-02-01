@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -75,9 +75,11 @@ interface TaxReliefResult {
   siblingDisabilityRelief: number;
   grandparentCaregiverRelief: number;
   qualifyingChildRelief: number;
+  qualifyingChildReliefDisability: number;
+  workingMothersChildRelief: number;
 }
 
-interface SingaporeTaxCalculatorViewProps {
+export interface SingaporeTaxCalculatorViewProps {
   extraInputs: {
     age: string;
     sprStatus: string;
@@ -159,6 +161,24 @@ interface SingaporeTaxCalculatorViewProps {
     dependants: string;
   };
   setQualifyingChildRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; dependants: string }>>;
+  qualifyingChildReliefDisability: {
+    enabled: boolean;
+    dependants: string;
+  };
+  setQualifyingChildReliefDisability: React.Dispatch<React.SetStateAction<{
+    enabled: boolean;
+    dependants: string;
+  }>>;
+  workingMothersChildRelief: {
+    enabled: boolean;
+    amount: string;
+    error: string;
+  };
+  setWorkingMothersChildRelief: React.Dispatch<React.SetStateAction<{
+    enabled: boolean;
+    amount: string;
+    error: string;
+  }>>;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -234,6 +254,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   siblingRelief,
   grandparentCaregiverRelief,
   qualifyingChildRelief,
+  qualifyingChildReliefDisability,
+  workingMothersChildRelief,
   handleClose,
   handlePopoverClick,
   setExtraInputs,
@@ -275,8 +297,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setSiblingRelief,
   handleParentStayTypeChange,
   handleGrandparentCaregiverReliefChange,
-  setQualifyingChildRelief
+  setQualifyingChildRelief,
+  setQualifyingChildReliefDisability,
+  setWorkingMothersChildRelief
 }) => {
+  const [workingMothersChildReliefState, setWorkingMothersChildReliefState] = useState({
+    enabled: false,
+    amount: '',
+    error: ''
+  });
+
   // Render
   return (
     <Card sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
@@ -966,10 +996,87 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
           )}
 
-          {grandparentCaregiverRelief.enabled && taxReliefResults.grandparentCaregiverRelief > 0 && (
-            <Typography>
-              Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
-            </Typography>
+          {/* Qualifying Child Relief (Disability) Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="qualifying-child-relief-disability"
+                name="qualifyingChildReliefDisability"
+                checked={qualifyingChildReliefDisability.enabled}
+                onChange={(e) => {
+                  setQualifyingChildReliefDisability(prev => ({
+                    ...prev,
+                    enabled: e.target.checked
+                  }));
+                }}
+              />
+            }
+            label="Qualifying Child Relief (Disability)"
+          />
+          {qualifyingChildReliefDisability.enabled && (
+            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <Typography>How many children with disabilities can you claim for?</Typography>
+              <Select
+                id="qualifying-child-relief-disability-dependants"
+                name="qualifyingChildReliefDisabilityDependants"
+                size="small"
+                value={qualifyingChildReliefDisability.dependants}
+                onChange={(e) => setQualifyingChildReliefDisability(prev => ({
+                  ...prev,
+                  dependants: e.target.value
+                }))}
+                sx={{ width: '120px' }}
+              >
+                <MenuItem value="1">1</MenuItem>
+                <MenuItem value="2">2</MenuItem>
+                <MenuItem value="3">3</MenuItem>
+                <MenuItem value="4">4</MenuItem>
+                <MenuItem value="5">5</MenuItem>
+              </Select>
+            </Box>
+          )}
+
+          {/* Working Mother's Child Relief Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="working-mothers-child-relief"
+                name="workingMothersChildRelief"
+                checked={workingMothersChildRelief.enabled}
+                onChange={(e) => {
+                  setWorkingMothersChildRelief(prev => ({
+                    ...prev,
+                    enabled: e.target.checked
+                  }));
+                }}
+              />
+            }
+            label="Working Mother's Child Relief"
+          />
+          {workingMothersChildRelief.enabled && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+              <TextField
+                id="working-mothers-child-relief-amount"
+                name="workingMothersChildReliefAmount"
+                placeholder="Enter amount"
+                value={workingMothersChildRelief.amount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const isValid = /^[0-9]*\.?[0-9]*$/.test(value) && Number(value) >= 0;
+
+                  setWorkingMothersChildRelief(prev => ({
+                    ...prev,
+                    amount: value,
+                    error: isValid ? '' : 'Enter a valid amount.'
+                  }));
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ ml: 4, width: '200px' }}
+                error={!!workingMothersChildRelief.error}
+                helperText={workingMothersChildRelief.error}
+              />
+            </Box>
           )}
         </Box>
 
@@ -1357,9 +1464,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 Qualifying Child Relief: {formatCurrency(taxReliefResults.qualifyingChildRelief)}
               </Typography>
             )}
+            {qualifyingChildReliefDisability.enabled && taxReliefResults.qualifyingChildReliefDisability > 0 && (
+              <Typography>
+                Qualifying Child Relief (Disability): {formatCurrency(taxReliefResults.qualifyingChildReliefDisability)}
+              </Typography>
+            )}
 
-            
-            
+            {/* After Qualifying Child Relief (Disability) display */}
+            {workingMothersChildRelief.enabled && taxReliefResults.workingMothersChildRelief > 0 && (
+              <Typography>
+                Working Mother's Child Relief: {formatCurrency(taxReliefResults.workingMothersChildRelief)}
+              </Typography>
+            )}
+
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                 Total Tax Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}

@@ -209,7 +209,9 @@ const SingaporeTakeHomeCalculator = () => {
     parentDisabilityRelief: 0,
     siblingDisabilityRelief: 0,
     grandparentCaregiverRelief: 0,
-    qualifyingChildRelief: 0
+    qualifyingChildRelief: 0,
+    qualifyingChildReliefDisability: 0,
+    workingMothersChildRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -257,6 +259,19 @@ const SingaporeTakeHomeCalculator = () => {
   const [qualifyingChildRelief, setQualifyingChildRelief] = useState({
     enabled: false,
     dependants: "1"
+  });
+
+  // Add this new state declaration
+  const [qualifyingChildReliefDisability, setQualifyingChildReliefDisability] = useState({
+    enabled: false,
+    dependants: "1"
+  });
+
+  // Add this new state for Working Mother's Child Relief
+  const [workingMothersChildRelief, setWorkingMothersChildRelief] = useState({
+    enabled: false,
+    amount: '',
+    error: ''
   });
 
   // Effect to handle initial EIR setup and income source changes
@@ -340,7 +355,9 @@ const SingaporeTakeHomeCalculator = () => {
       annualIncome: results.baseIncome || 0,
       sprStatus: extraInputs.sprStatus,
       grandparentCaregiverRelief,
-      qualifyingChildRelief
+      qualifyingChildRelief,
+      qualifyingChildReliefDisability,
+      workingMothersChildRelief
     });
 
     setTaxReliefResults(reliefs);
@@ -357,7 +374,9 @@ const SingaporeTakeHomeCalculator = () => {
     results.baseIncome,
     extraInputs.sprStatus,
     grandparentCaregiverRelief,
-    qualifyingChildRelief
+    qualifyingChildRelief,
+    qualifyingChildReliefDisability,
+    workingMothersChildRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -806,6 +825,10 @@ const SingaporeTakeHomeCalculator = () => {
       handleGrandparentCaregiverReliefChange={handleGrandparentCaregiverReliefChange}
       qualifyingChildRelief={qualifyingChildRelief}
       setQualifyingChildRelief={setQualifyingChildRelief}
+      qualifyingChildReliefDisability={qualifyingChildReliefDisability}
+      setQualifyingChildReliefDisability={setQualifyingChildReliefDisability}
+      workingMothersChildRelief={workingMothersChildRelief}
+      setWorkingMothersChildRelief={setWorkingMothersChildRelief}
     />
   );
 };
