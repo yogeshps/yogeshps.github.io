@@ -282,6 +282,12 @@ const SingaporeTakeHomeCalculator = () => {
     error: ''
   });
 
+  // Add new state for Life Insurance Relief
+  const [lifeInsuranceRelief, setLifeInsuranceRelief] = useState({
+    enabled: false,
+    amount: ''
+  });
+
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
     const hasEligibleIncome = incomeSources.employment || 
@@ -850,6 +856,8 @@ const SingaporeTakeHomeCalculator = () => {
       setWorkingMothersChildRelief={setWorkingMothersChildRelief}
       srsContributionRelief={srsContributionRelief}
       setSrsContributionRelief={setSrsContributionRelief}
+      lifeInsuranceRelief={lifeInsuranceRelief}
+      setLifeInsuranceRelief={setLifeInsuranceRelief}
     />
   );
 };

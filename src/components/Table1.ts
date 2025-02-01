@@ -234,75 +234,82 @@ export function computeMonthlyCpfTable1(
   monthlyOW: number,
   age: number
 ): CpfCalculationResult {
-  // 1) Cap at $7,400
+  // Cap OW at 7400
   const owCapped = Math.min(monthlyOW, 7400);
-
-  // 2) Identify the correct bracket
+  
+  // Get bracket based on wage
   const bracketKey = getWageBracket(owCapped);
-  const ageKey     = getAgeKeyForTable1(age);
+  const ageKey = getAgeKeyForTable1(age);
   const bracketObj = TABLE1_2025[ageKey][bracketKey];
 
-  // If the bracket data is purely { totalPct, empPct }, handle that:
-  if ('totalPct' in bracketObj && bracketObj.totalPct !== undefined) {
-    const totalPct = bracketObj.totalPct / 100;
-    const empPct   = (bracketObj.empPct || 0) / 100;
+  // For wages <= $50, no CPF
+  if (owCapped <= 50) {
+    return {
+      empCPF: 0,
+      erCPF: 0,
+      totalCPF: 0,
+      totalPct: 0,
+      empPct: 0,
+      rawEmp: 0,
+      rawTotal: 0
+    };
+  }
 
-    const rawTotal = totalPct * owCapped;
-    const rawEmp   = empPct * owCapped;
-    let total = roundToNearestDollar(rawTotal);
-    let emp   = roundToNearestDollar(rawEmp);
-    let er    = total - emp;
+  // If employer-only contribution (50-500 bracket)
+  if ('totalPct' in bracketObj && bracketObj.empPct === 0) {
+    const rawTotal = (bracketObj.totalPct / 100) * owCapped;
+    const total = roundToNearestDollar(rawTotal);
+
+    return {
+      empCPF: 0,
+      erCPF: total,
+      totalCPF: total,
+      totalPct: bracketObj.totalPct / 100,
+      empPct: 0,
+      rawEmp: 0,
+      rawTotal
+    };
+  }
+
+  // If graduated formula (500-750 bracket)
+  if ('totalFormula' in bracketObj && bracketObj.totalFormula !== undefined) {
+    const rawTotal = bracketObj.totalFormula(owCapped);
+    const rawEmp = bracketObj.empFormula ? bracketObj.empFormula(owCapped) : 0;
+
+    // 1. Round total first
+    const total = roundToNearestDollar(rawTotal);
+    // 2. Floor employee contribution
+    const emp = Math.floor(rawEmp);
+    // 3. Calculate employer portion as difference
+    const er = Math.max(0, total - emp);
 
     return {
       empCPF: emp,
-      erCPF:  er,
+      erCPF: er,
       totalCPF: total,
-      totalPct: totalPct || 0,
-      empPct: empPct || 0,
-
-      // debug info
-      rawEmp: rawEmp,
-      rawTotal: rawTotal
+      totalPct: (rawTotal / owCapped) || 0,
+      empPct: (rawEmp / owCapped) || 0,
+      rawEmp,
+      rawTotal
     };
   }
-  // If we have { totalFormula, empFormula } (partial bracket)
-  else if ('totalFormula' in bracketObj && bracketObj.totalFormula !== undefined) {
-    const totalRaw = bracketObj.totalFormula(owCapped);
-    const empRaw   = bracketObj.empFormula(owCapped);
-    let total = roundToNearestDollar(totalRaw);
-    let emp   = roundToNearestDollar(empRaw);
-    let er    = total - emp;
 
-    // Compute effective percentages
-    const effectiveTotalPct = owCapped > 0 ? (total / owCapped) * 100 : 0;
-    const effectiveEmpPct   = owCapped > 0 ? (emp   / owCapped) * 100 : 0;
-
-    return {
-      empCPF: emp,
-      erCPF:  er,
-      totalCPF: total,
-      totalPct: effectiveTotalPct,
-      empPct:   effectiveEmpPct,
-
-      rawEmp: empRaw,
-      rawTotal: totalRaw
-    };
-  }
-  // If we have { totalOWPct, empOWPct, maxTotalOW, maxEmpOW } (>$750 bracket)
-  else if ('totalOWPct' in bracketObj && bracketObj.totalOWPct !== undefined) {
+  // If percentage rates (>$750 bracket)
+  if ('totalOWPct' in bracketObj && bracketObj.totalOWPct !== undefined) {
     const totalPct = bracketObj.totalOWPct / 100;
-    const empPct   = bracketObj.empOWPct   / 100;
+    const empPct = bracketObj.empOWPct / 100;
     const maxTotal = bracketObj.maxTotalOW;
-    const maxEmp   = bracketObj.maxEmpOW;
+    const maxEmp = bracketObj.maxEmpOW;
 
     const rawTotal = totalPct * owCapped;
-    const rawEmp   = empPct * owCapped;
+    const rawEmp = empPct * owCapped;
 
-    // Round first
+    // 1. Round total first
     let total = roundToNearestDollar(rawTotal);
-    let emp   = roundToNearestDollar(rawEmp);
+    // 2. Floor employee contribution
+    let emp = Math.floor(rawEmp);
 
-    // Then check the monthly "max"
+    // Apply monthly maximums if specified
     if (maxTotal && total > maxTotal) {
       total = maxTotal;
     }
@@ -310,31 +317,29 @@ export function computeMonthlyCpfTable1(
       emp = maxEmp;
     }
 
-    let er = total - emp;
-    // If that difference is negative (due to employee capping?), clamp to 0
-    if (er < 0) er = 0;
+    // 3. Calculate employer portion as difference
+    const er = Math.max(0, total - emp);
 
     return {
       empCPF: emp,
-      erCPF:  er,
+      erCPF: er,
       totalCPF: total,
       totalPct: totalPct || 0,
       empPct: empPct || 0,
-
-      rawEmp: rawEmp,
-      rawTotal: rawTotal
+      rawEmp,
+      rawTotal
     };
   }
 
-  // fallback if somehow bracket not found
+  // fallback if bracket not found
   return {
     empCPF: 0,
-    erCPF:  0,
+    erCPF: 0,
     totalCPF: 0,
     totalPct: 0,
     empPct: 0,
-    rawEmp:  0,
-    rawTotal:0
+    rawEmp: 0,
+    rawTotal: 0
   };
 }
 

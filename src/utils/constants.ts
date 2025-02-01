@@ -1,6 +1,3 @@
-import React from "react";
-import { SingaporeTaxCalculatorViewProps } from "../components/SingaporeTaxCalculatorView";
-
 // Parent Relief amounts
 export const PARENT_RELIEF = {
   WITH: 9000,
@@ -26,3 +23,5 @@ export const QUALIFYING_CHILD_RELIEF = {
 
 export const MAX_SRS_CONTRIBUTION_EP = 15300;
 export const MAX_SRS_CONTRIBUTION_CITIZEN_PR = 35700;
+
+export const LIFE_INSURANCE_LIMIT = 5000;

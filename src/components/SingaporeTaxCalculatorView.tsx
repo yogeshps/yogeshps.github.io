@@ -21,7 +21,7 @@ import {
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { MAX_SRS_CONTRIBUTION_EP, MAX_SRS_CONTRIBUTION_CITIZEN_PR } from '../utils/constants';
+import * as constants from '../utils/constants';
 
 interface CpfTopUp {
   enabled: boolean;
@@ -191,6 +191,14 @@ export interface SingaporeTaxCalculatorViewProps {
     amount: string;
     error: string;
   }>>;
+  lifeInsuranceRelief: {
+    enabled: boolean;
+    amount: string;
+  };
+  setLifeInsuranceRelief: React.Dispatch<React.SetStateAction<{
+    enabled: boolean;
+    amount: string;
+  }>>;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -313,7 +321,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleGrandparentCaregiverReliefChange,
   setQualifyingChildRelief,
   setQualifyingChildReliefDisability,
-  setWorkingMothersChildRelief
+  setWorkingMothersChildRelief,
+  lifeInsuranceRelief,
+  setLifeInsuranceRelief
 }) => {
 
 
@@ -1124,8 +1134,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   const value = e.target.value;
                   const numericValue = parseFloat(value);
                   const maxAmount = extraInputs.sprStatus === 'ep_pep_spass' 
-                    ? MAX_SRS_CONTRIBUTION_EP 
-                    : MAX_SRS_CONTRIBUTION_CITIZEN_PR;
+                    ? constants.MAX_SRS_CONTRIBUTION_EP 
+                    : constants.MAX_SRS_CONTRIBUTION_CITIZEN_PR;
 
                   if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
                     if (value === '' || isNaN(numericValue) || numericValue <= maxAmount) {
@@ -1163,6 +1173,44 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   {srsContributionRelief.error}
                 </Typography>
               )}
+            </Box>
+          )}
+
+          {results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
+            <FormControlLabel
+              control={
+                <Checkbox
+                  id="life-insurance-relief"
+                  name="lifeInsuranceRelief"
+                  checked={lifeInsuranceRelief.enabled}
+                  onChange={(e) => setLifeInsuranceRelief(prev => ({
+                    ...prev,
+                    enabled: e.target.checked
+                  }))}
+                />
+              }
+              label="Life Insurance Relief"
+            />
+          )}
+          {lifeInsuranceRelief.enabled && results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+              <TextField
+                id="life-insurance-amount"
+                name="lifeInsuranceAmount"
+                placeholder="Enter amount"
+                value={lifeInsuranceRelief.amount}
+                onChange={(e) => setLifeInsuranceRelief(prev => ({
+                  ...prev,
+                  amount: e.target.value
+                }))}
+                inputProps={{
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ width: '200px' }}
+              />
             </Box>
           )}
         </Box>
