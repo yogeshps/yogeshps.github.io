@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -16,7 +16,11 @@ import {
   RadioGroup,
   Radio,
   Collapse,
-  FormControl
+  FormControl,
+  InputLabel,
+  Input,
+  InputAdornment,
+  FormHelperText
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -79,6 +83,7 @@ interface TaxReliefResult {
   qualifyingChildReliefDisability: number;
   workingMothersChildRelief: number;
   srsContributionRelief: number;
+  lifeInsuranceRelief: number;
 }
 
 export interface SingaporeTaxCalculatorViewProps {
@@ -194,11 +199,14 @@ export interface SingaporeTaxCalculatorViewProps {
   lifeInsuranceRelief: {
     enabled: boolean;
     amount: string;
+    error?: string;
   };
   setLifeInsuranceRelief: React.Dispatch<React.SetStateAction<{
     enabled: boolean;
     amount: string;
+    error?: string;
   }>>;
+  handleLifeInsuranceChange: (value: string) => void;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -323,9 +331,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setQualifyingChildReliefDisability,
   setWorkingMothersChildRelief,
   lifeInsuranceRelief,
-  setLifeInsuranceRelief
+  setLifeInsuranceRelief,
+  handleLifeInsuranceChange
 }) => {
-
 
   // Render
   return (
@@ -673,6 +681,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       inputMode: 'decimal',
                       pattern: '[0-9]*\.?[0-9]{0,2}'
                     }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
                     sx={{ ml: 4, width: '200px' }}
                   />
                   <FormControlLabel
@@ -707,6 +718,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     inputProps={{ 
                       inputMode: 'decimal',
                       pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
                     }}
                     sx={{ ml: 4, width: '200px' }}
                   />
@@ -1101,6 +1115,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   inputMode: 'decimal',
                   pattern: '[0-9]*\.?[0-9]{0,2}'
                 }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
                 variant="outlined"
                 size="small"
                 sx={{ ml: 4, width: '200px' }}
@@ -1156,13 +1173,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                           ...current,
                           error: ''
                         }));
-                      }, 4000);
+                      }, 5000);
                     }
                   }
                 }}
                 inputProps={{ 
                   inputMode: 'decimal',
                   pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
                 }}
                 variant="outlined"
                 size="small"
@@ -1176,42 +1196,76 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
           )}
 
+          {/* Life Insurance Relief Section */}
           {results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
-            <FormControlLabel
-              control={
-                <Checkbox
-                  id="life-insurance-relief"
-                  name="lifeInsuranceRelief"
-                  checked={lifeInsuranceRelief.enabled}
-                  onChange={(e) => setLifeInsuranceRelief(prev => ({
-                    ...prev,
-                    enabled: e.target.checked
-                  }))}
-                />
-              }
-              label="Life Insurance Relief"
-            />
-          )}
-          {lifeInsuranceRelief.enabled && results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
-              <TextField
-                id="life-insurance-amount"
-                name="lifeInsuranceAmount"
-                placeholder="Enter amount"
-                value={lifeInsuranceRelief.amount}
-                onChange={(e) => setLifeInsuranceRelief(prev => ({
-                  ...prev,
-                  amount: e.target.value
-                }))}
-                inputProps={{
-                  inputMode: 'decimal',
-                  pattern: '[0-9]*\.?[0-9]{0,2}'
-                }}
-                variant="outlined"
-                size="small"
-                sx={{ width: '200px' }}
+            <>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="life-insurance-relief"
+                    name="lifeInsuranceRelief"
+                    checked={lifeInsuranceRelief.enabled}
+                    onChange={(e) => setLifeInsuranceRelief(prev => ({
+                      ...prev,
+                      enabled: e.target.checked
+                    }))}
+                  />
+                }
+                label="Life Insurance Relief"
               />
-            </Box>
+              {lifeInsuranceRelief.enabled && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="life-insurance-amount"
+                    name="lifeInsuranceAmount"
+                    placeholder="Enter amount"
+                    value={lifeInsuranceRelief.amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numericValue = parseFloat(value);
+
+                      if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+                        if (value === '' || isNaN(numericValue) || numericValue <= constants.LIFE_INSURANCE_LIMIT) {
+                          setLifeInsuranceRelief(prev => ({
+                            ...prev,
+                            amount: value,
+                            error: ''
+                          }));
+                        } else {
+                          setLifeInsuranceRelief(prev => ({
+                            ...prev,
+                            error: `Max relief allowed is ${formatCurrency(constants.LIFE_INSURANCE_LIMIT)}`
+                          }));
+
+                          // Clear the error after 5 seconds
+                          setTimeout(() => {
+                            setLifeInsuranceRelief(current => ({
+                              ...current,
+                              error: ''
+                            }));
+                          }, 5000);
+                        }
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                  />
+                  {lifeInsuranceRelief.error && (
+                    <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                      {lifeInsuranceRelief.error}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+            </>
           )}
         </Box>
 
@@ -1615,6 +1669,12 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {taxReliefResults.srsContributionRelief > 0 && (
               <Typography>
                 SRS Contribution Relief: {formatCurrency(taxReliefResults.srsContributionRelief)}
+              </Typography>
+            )}
+
+            {lifeInsuranceRelief.enabled && taxReliefResults.lifeInsuranceRelief > 0 && (
+              <Typography>
+                Life Insurance Relief: {formatCurrency(taxReliefResults.lifeInsuranceRelief)}
               </Typography>
             )}
 

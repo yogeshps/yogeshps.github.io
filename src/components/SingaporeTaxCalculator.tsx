@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as constants from '../utils/constants';
 
 // Import CPF rates for each table
 import { computeMonthlyCpfTable1 } from './Table1.ts';
@@ -212,7 +213,8 @@ const SingaporeTakeHomeCalculator = () => {
     qualifyingChildRelief: 0,
     qualifyingChildReliefDisability: 0,
     workingMothersChildRelief: 0,
-    srsContributionRelief: 0
+    srsContributionRelief: 0,
+    lifeInsuranceRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -262,7 +264,7 @@ const SingaporeTakeHomeCalculator = () => {
     dependants: "1"
   });
 
-  // Add this new state declaration
+  // Add this state declaration
   const [qualifyingChildReliefDisability, setQualifyingChildReliefDisability] = useState({
     enabled: false,
     dependants: "1"
@@ -283,10 +285,17 @@ const SingaporeTakeHomeCalculator = () => {
   });
 
   // Add new state for Life Insurance Relief
-  const [lifeInsuranceRelief, setLifeInsuranceRelief] = useState({
+  const [lifeInsuranceRelief, setLifeInsuranceRelief] = useState<{ enabled: boolean; amount: string; error?: string }>({
     enabled: false,
-    amount: ''
+    amount: '',
+    error: ''
   });
+
+  // Add state to remember previous life insurance relief settings
+  const [previousLifeInsuranceState, setPreviousLifeInsuranceState] = useState<{
+    enabled: boolean;
+    amount: string;
+  } | null>(null);
 
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
@@ -372,10 +381,14 @@ const SingaporeTakeHomeCalculator = () => {
       qualifyingChildRelief,
       qualifyingChildReliefDisability,
       workingMothersChildRelief,
-      srsContributionRelief: srsContributionRelief
+      srsContributionRelief: srsContributionRelief,
+      lifeInsuranceRelief
     });
 
-    setTaxReliefResults(reliefs);
+    setTaxReliefResults(prev => ({
+      ...prev,
+      ...reliefs
+    }));
   }, [
     extraInputs.age,
     taxReliefs,
@@ -392,7 +405,8 @@ const SingaporeTakeHomeCalculator = () => {
     qualifyingChildRelief,
     qualifyingChildReliefDisability,
     workingMothersChildRelief,
-    srsContributionRelief
+    srsContributionRelief,
+    lifeInsuranceRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -769,14 +783,42 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
-  // Add this useEffect to monitor residency status changes
+  // Monitor CPF contributions
   useEffect(() => {
-    setSrsContributionRelief(prev => ({
+    if (results.totalEmployeeCPF > constants.LIFE_INSURANCE_LIMIT) {
+      // Store current state before disabling
+      setPreviousLifeInsuranceState({
+        enabled: lifeInsuranceRelief.enabled,
+        amount: lifeInsuranceRelief.amount
+      });
+      
+      // Disable the relief
+      setLifeInsuranceRelief(prev => ({
+        ...prev,
+        enabled: false,
+        amount: '',
+        error: ''
+      }));
+    } else if (previousLifeInsuranceState !== null) {
+      // Restore previous state when becoming eligible again
+      setLifeInsuranceRelief(prev => ({
+        ...prev,
+        enabled: previousLifeInsuranceState.enabled,
+        amount: previousLifeInsuranceState.amount,
+        error: ''
+      }));
+      // Clear the stored state
+      setPreviousLifeInsuranceState(null);
+    }
+  }, [results.totalEmployeeCPF]);
+
+  // Add the handler function
+  const handleLifeInsuranceChange = (value: string) => {
+    setLifeInsuranceRelief(prev => ({
       ...prev,
-      amount: '',
-      error: ''
+      enabled: value === 'true'
     }));
-  }, [extraInputs.sprStatus]);
+  };
 
   return (
     <SingaporeTaxCalculatorView
@@ -858,6 +900,7 @@ const SingaporeTakeHomeCalculator = () => {
       setSrsContributionRelief={setSrsContributionRelief}
       lifeInsuranceRelief={lifeInsuranceRelief}
       setLifeInsuranceRelief={setLifeInsuranceRelief}
+      handleLifeInsuranceChange={handleLifeInsuranceChange}
     />
   );
 };

@@ -17,6 +17,7 @@ interface TaxReliefResult {
   qualifyingChildReliefDisability: number;
   workingMothersChildRelief: number;
   srsContributionRelief: number;
+  lifeInsuranceRelief: number;
 }
 
 interface CpfTopUpInputs {
@@ -71,6 +72,10 @@ interface TaxReliefInputs {
     amount: string;  // Keep as string in input
   };
   srsContributionRelief?: { enabled: boolean; amount: string };
+  lifeInsuranceRelief: {
+    enabled: boolean;
+    amount: string;
+  };
 }
 
 export function calculateEarnedIncomeRelief(age: number, isDisability: boolean): number {
@@ -208,7 +213,8 @@ export function calculateTaxReliefs({
   qualifyingChildRelief,
   qualifyingChildReliefDisability,
   workingMothersChildRelief,
-  srsContributionRelief
+  srsContributionRelief,
+  lifeInsuranceRelief
 }: TaxReliefInputs): TaxReliefResult {
   // Existing relief calculations
   let earnedIncomeRelief = 0;
@@ -261,6 +267,9 @@ export function calculateTaxReliefs({
 
   const srsContributionReliefValue = calculateSrsContributionRelief(srsContributionRelief);
 
+  const lifeInsuranceAmount = lifeInsuranceRelief.enabled ? 
+    Math.min(Number(lifeInsuranceRelief.amount) || 0, constants.LIFE_INSURANCE_LIMIT) : 0;
+
   // Calculate total reliefs (include grandparent caregiver relief)
   const totalReliefs = earnedIncomeRelief +
     earnedIncomeReliefDisability +
@@ -275,7 +284,8 @@ export function calculateTaxReliefs({
     qualifyingChildReliefValue +
     qualifyingChildReliefDisabilityValue +
     workingMothersChildReliefValue +
-    srsContributionReliefValue;
+    srsContributionReliefValue +
+    lifeInsuranceAmount;
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
@@ -295,6 +305,7 @@ export function calculateTaxReliefs({
     qualifyingChildReliefDisability: qualifyingChildReliefDisabilityValue,
     workingMothersChildRelief: workingMothersChildReliefValue,
     srsContributionRelief: srsContributionReliefValue,
+    lifeInsuranceRelief: lifeInsuranceAmount,
     totalReliefs,
     totalTaxableIncome
   };
