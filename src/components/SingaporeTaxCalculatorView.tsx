@@ -21,6 +21,7 @@ import {
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DeleteIcon from '@mui/icons-material/Delete';
+import { MAX_SRS_CONTRIBUTION_EP, MAX_SRS_CONTRIBUTION_CITIZEN_PR } from '../utils/constants';
 
 interface CpfTopUp {
   enabled: boolean;
@@ -77,6 +78,7 @@ interface TaxReliefResult {
   qualifyingChildRelief: number;
   qualifyingChildReliefDisability: number;
   workingMothersChildRelief: number;
+  srsContributionRelief: number;
 }
 
 export interface SingaporeTaxCalculatorViewProps {
@@ -179,6 +181,16 @@ export interface SingaporeTaxCalculatorViewProps {
     amount: string;
     error: string;
   }>>;
+  srsContributionRelief: {
+    enabled: boolean;
+    amount: string;
+    error: string;
+  };
+  setSrsContributionRelief: React.Dispatch<React.SetStateAction<{
+    enabled: boolean;
+    amount: string;
+    error: string;
+  }>>;
   // Handler functions
   handleClose: () => void;
   handlePopoverClick: (
@@ -256,6 +268,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   qualifyingChildRelief,
   qualifyingChildReliefDisability,
   workingMothersChildRelief,
+  srsContributionRelief,
+  setSrsContributionRelief,
   handleClose,
   handlePopoverClick,
   setExtraInputs,
@@ -301,11 +315,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setQualifyingChildReliefDisability,
   setWorkingMothersChildRelief
 }) => {
-  const [workingMothersChildReliefState, setWorkingMothersChildReliefState] = useState({
-    enabled: false,
-    amount: '',
-    error: ''
-  });
+
 
   // Render
   return (
@@ -1087,6 +1097,74 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               />
             </Box>
           )}
+
+          {/* SRS Contribution Relief Section */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                id="srs-contribution-relief"
+                name="srsContributionRelief"
+                checked={srsContributionRelief.enabled}
+                onChange={(e) => setSrsContributionRelief(prev => ({
+                  ...prev,
+                  enabled: e.target.checked
+                }))}
+              />
+            }
+            label="SRS Contribution Relief"
+          />
+          {srsContributionRelief.enabled && (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+              <TextField
+                id="srs-contribution-amount"
+                name="srsContributionAmount"
+                placeholder="Enter amount"
+                value={srsContributionRelief.amount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  const numericValue = parseFloat(value);
+                  const maxAmount = extraInputs.sprStatus === 'ep_pep_spass' 
+                    ? MAX_SRS_CONTRIBUTION_EP 
+                    : MAX_SRS_CONTRIBUTION_CITIZEN_PR;
+
+                  if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+                    if (value === '' || isNaN(numericValue) || numericValue <= maxAmount) {
+                      setSrsContributionRelief(prev => ({
+                        ...prev,
+                        amount: value,
+                        error: ''
+                      }));
+                    } else {
+                      setSrsContributionRelief(prev => ({
+                        ...prev,
+                        error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
+                      }));
+
+                      // Clear the error after 5 seconds
+                      setTimeout(() => {
+                        setSrsContributionRelief(current => ({
+                          ...current,
+                          error: ''
+                        }));
+                      }, 4000);
+                    }
+                  }
+                }}
+                inputProps={{ 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ width: '200px' }}
+              />
+              {srsContributionRelief.error && (
+                <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                  {srsContributionRelief.error}
+                </Typography>
+              )}
+            </Box>
+          )}
         </Box>
 
         {/* RSU Section */}
@@ -1483,6 +1561,12 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {workingMothersChildRelief.enabled && taxReliefResults.workingMothersChildRelief > 0 && (
               <Typography>
                 Working Mother's Child Relief: {formatCurrency(taxReliefResults.workingMothersChildRelief)}
+              </Typography>
+            )}
+
+            {taxReliefResults.srsContributionRelief > 0 && (
+              <Typography>
+                SRS Contribution Relief: {formatCurrency(taxReliefResults.srsContributionRelief)}
               </Typography>
             )}
 

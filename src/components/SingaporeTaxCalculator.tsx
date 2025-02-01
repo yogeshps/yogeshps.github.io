@@ -211,7 +211,8 @@ const SingaporeTakeHomeCalculator = () => {
     grandparentCaregiverRelief: 0,
     qualifyingChildRelief: 0,
     qualifyingChildReliefDisability: 0,
-    workingMothersChildRelief: 0
+    workingMothersChildRelief: 0,
+    srsContributionRelief: 0
   });
 
   // Add new state for Spouse Relief
@@ -269,6 +270,13 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Add this new state for Working Mother's Child Relief
   const [workingMothersChildRelief, setWorkingMothersChildRelief] = useState({
+    enabled: false,
+    amount: '',
+    error: ''
+  });
+
+  // Add this new state for SRS Contribution Relief
+  const [srsContributionRelief, setSrsContributionRelief] = useState({
     enabled: false,
     amount: '',
     error: ''
@@ -357,7 +365,8 @@ const SingaporeTakeHomeCalculator = () => {
       grandparentCaregiverRelief,
       qualifyingChildRelief,
       qualifyingChildReliefDisability,
-      workingMothersChildRelief
+      workingMothersChildRelief,
+      srsContributionRelief: srsContributionRelief
     });
 
     setTaxReliefResults(reliefs);
@@ -376,7 +385,8 @@ const SingaporeTakeHomeCalculator = () => {
     grandparentCaregiverRelief,
     qualifyingChildRelief,
     qualifyingChildReliefDisability,
-    workingMothersChildRelief
+    workingMothersChildRelief,
+    srsContributionRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -753,6 +763,15 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
+  // Add this useEffect to monitor residency status changes
+  useEffect(() => {
+    setSrsContributionRelief(prev => ({
+      ...prev,
+      amount: '',
+      error: ''
+    }));
+  }, [extraInputs.sprStatus]);
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -829,6 +848,8 @@ const SingaporeTakeHomeCalculator = () => {
       setQualifyingChildReliefDisability={setQualifyingChildReliefDisability}
       workingMothersChildRelief={workingMothersChildRelief}
       setWorkingMothersChildRelief={setWorkingMothersChildRelief}
+      srsContributionRelief={srsContributionRelief}
+      setSrsContributionRelief={setSrsContributionRelief}
     />
   );
 };
