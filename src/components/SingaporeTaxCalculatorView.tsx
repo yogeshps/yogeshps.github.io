@@ -1535,8 +1535,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'green' }}>
             Take Home Pay
           </Typography>
-          <Typography>Monthly: {formatCurrency(results.monthlyTakeHome)}</Typography>
-          <Typography>Annual: {formatCurrency(results.annualTakeHome)}</Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography>Monthly</Typography>
+            <Typography>{formatCurrency(results.monthlyTakeHome)}</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography>Annual</Typography>
+            <Typography>{formatCurrency(results.annualTakeHome)}</Typography>
+          </Box>
         </Box>
 
         <Divider sx={{ my: 2 }} />
@@ -1558,15 +1564,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 const vestingPrice = Number(cycle.vestingPrice) || 0;
                 const gain = shares * vestingPrice;
                 return (
-                    <Typography key={idx}>
-                        RSU Vesting Cycle {idx + 1}: {formatCurrency(gain)}
-                    </Typography>
+                    <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography>RSU Vesting Cycle {idx + 1}</Typography>
+                        <Typography>{formatCurrency(gain)}</Typography>
+                    </Box>
                 );
             })}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Total RSU Gains: {formatCurrency(results.totalRsuGains)}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total RSU Gains</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(results.totalRsuGains)}</Typography>
+                </Box>
             </Box>
           </Box>
         )}
@@ -1583,15 +1591,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   const vestingPrice = Number(cycle.vestingPrice) || 0;
                   const gain = Math.max(shares * (vestingPrice - exercisePrice), 0);
                   return (
-                      <Typography key={idx}>
-                          ESOP Vesting Cycle {idx + 1}: {formatCurrency(gain)}
-                      </Typography>
+                      <Box key={idx} sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography>ESOP Vesting Cycle {idx + 1}</Typography>
+                          <Typography>{formatCurrency(gain)}</Typography>
+                      </Box>
                   );
               })}
               <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                      Total ESOP Gains: {formatCurrency(results.totalEsopGains)}
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total ESOP Gains</Typography>
+                      <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(results.totalEsopGains)}</Typography>
+                  </Box>
               </Box>
           </Box>
         )}
@@ -1603,13 +1613,23 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
                 CPF Employee Contribution
               </Typography>
-              <Typography>Monthly CPF Contribution: {formatCurrency(results.employeeMonthlyCPF)}</Typography>
-              <Typography>Annual CPF Contribution: {formatCurrency(results.employeeAnnualCPF)}</Typography>
-              <Typography>Bonus CPF Contribution: {formatCurrency(results.employeeBonusCPF)}</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Monthly CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employeeMonthlyCPF)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Annual CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employeeAnnualCPF)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Bonus CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employeeBonusCPF)}</Typography>
+              </Box>
               <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Total CPF Contributions (Employee): {formatCurrency(results.totalEmployeeCPF)}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total CPF Contributions (Employee)</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
+                </Box>
               </Box>
             </Box>
 
@@ -1618,29 +1638,44 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
                 CPF Employer Contribution
               </Typography>
-              <Typography>Monthly CPF Contribution: {formatCurrency(results.employerMonthlyCPF)}</Typography>
-              <Typography>Annual CPF Contribution: {formatCurrency(results.employerAnnualCPF)}</Typography>
-              <Typography>Bonus CPF Contribution: {formatCurrency(results.employerBonusCPF)}</Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Monthly CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employerMonthlyCPF)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Annual CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employerAnnualCPF)}</Typography>
+              </Box>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Bonus CPF Contribution</Typography>
+                <Typography>{formatCurrency(results.employerBonusCPF)}</Typography>
+              </Box>
               <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                    Total CPF Contributions (Employer): {formatCurrency(results.totalEmployerCPF)}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total CPF Contributions (Employer)</Typography>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
+                </Box>
               </Box>
             </Box>
           </>
         )}
 
-        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>Annual Taxable Income</Typography>
-        <Typography>{formatCurrency(results.totalTaxableIncome)}</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Annual Taxable Income</Typography>
+          <Typography>{formatCurrency(results.totalTaxableIncome)}</Typography>
+        </Box>
 
-        <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mt: 2 }}>Annual Tax</Typography>
-        <Typography>{formatCurrency(results.annualTax)}</Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Annual Tax</Typography>
+          <Typography>{formatCurrency(results.annualTax)}</Typography>
+        </Box>
 
         {extraInputs.sprStatus !== 'ep_pep_spass' && (
           <>
-            {/* Updated Total CPF Contributions Section */}
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mt: 2 }}>Total CPF Contributions</Typography>
-            <Typography>{formatCurrency(results.totalEmployeeCPF + results.totalEmployerCPF)}</Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
+              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>Total CPF Contributions</Typography>
+              <Typography>{formatCurrency(results.totalEmployeeCPF + results.totalEmployerCPF)}</Typography>
+            </Box>
           </>
         )}
 
@@ -1654,105 +1689,125 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               Tax Reliefs
             </Typography>
             {taxReliefResults.earnedIncomeRelief > 0 && (
-              <Typography>
-                Earned Income Relief: {formatCurrency(taxReliefResults.earnedIncomeRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Earned Income Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.earnedIncomeRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.earnedIncomeReliefDisability > 0 && (
-              <Typography>
-                Earned Income Relief (Disability): {formatCurrency(taxReliefResults.earnedIncomeReliefDisability)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Earned Income Relief (Disability)</Typography>
+                <Typography>{formatCurrency(taxReliefResults.earnedIncomeReliefDisability)}</Typography>
+              </Box>
             )}
             {taxReliefResults.cpfRelief > 0 && (
-              <Typography>
-                CPF Relief: {formatCurrency(taxReliefResults.cpfRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>CPF Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.cpfRelief)}</Typography>
+              </Box>
             )}
             {cpfTopUp.enabled && taxReliefResults.cpfTopUpRelief > 0 && (
-              <Typography>
-                CPF Cash Top-Up Relief: {formatCurrency(taxReliefResults.cpfTopUpRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>CPF Cash Top-Up Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.cpfTopUpRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.nsmanRelief > 0 && (
-              <Typography>
-                NSman Relief: {formatCurrency(taxReliefResults.nsmanRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>NSman Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.nsmanRelief)}</Typography>
+              </Box>
             )}
             {spouseRelief.enabled && (
-              <Typography>
-                {spouseRelief.disability ? 'Spouse Relief (Disability)' : 'Spouse Relief'}: {formatCurrency(taxReliefResults.spouseRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>{spouseRelief.disability ? 'Spouse Relief (Disability)' : 'Spouse Relief'}</Typography>
+                <Typography>{formatCurrency(taxReliefResults.spouseRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.parentRelief > 0 && (
-              <Typography>
-                Parent Relief: {formatCurrency(taxReliefResults.parentRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Parent Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.parentRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.parentDisabilityRelief > 0 && (
-              <Typography>
-                Parent Relief (Disability): {formatCurrency(taxReliefResults.parentDisabilityRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Parent Relief (Disability)</Typography>
+                <Typography>{formatCurrency(taxReliefResults.parentDisabilityRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.siblingDisabilityRelief > 0 && (
-              <Typography>
-                Sibling Disability Relief: {formatCurrency(taxReliefResults.siblingDisabilityRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Sibling Disability Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.siblingDisabilityRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.grandparentCaregiverRelief > 0 && (
-              <Typography>
-                Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Grandparent Caregiver Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.grandparentCaregiverRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.qualifyingChildRelief > 0 && (
-              <Typography>
-                Qualifying Child Relief: {formatCurrency(taxReliefResults.qualifyingChildRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Qualifying Child Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.qualifyingChildRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.qualifyingChildReliefDisability > 0 && (
-              <Typography>
-                Qualifying Child Relief (Disability): {formatCurrency(taxReliefResults.qualifyingChildReliefDisability)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Qualifying Child Relief (Disability)</Typography>
+                <Typography>{formatCurrency(taxReliefResults.qualifyingChildReliefDisability)}</Typography>
+              </Box>
             )}
             {workingMothersChildRelief.enabled && taxReliefResults.workingMothersChildRelief > 0 && (
-              <Typography>
-                Working Mother's Child Relief: {formatCurrency(taxReliefResults.workingMothersChildRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Working Mother's Child Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.workingMothersChildRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.srsContributionRelief > 0 && (
-              <Typography>
-                SRS Contribution Relief: {formatCurrency(taxReliefResults.srsContributionRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>SRS Contribution Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.srsContributionRelief)}</Typography>
+              </Box>
             )}
             {taxReliefResults.lifeInsuranceRelief > 0 && (
-              <Typography>
-                Life Insurance Relief: {formatCurrency(taxReliefResults.lifeInsuranceRelief)}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Life Insurance Relief</Typography>
+                <Typography>{formatCurrency(taxReliefResults.lifeInsuranceRelief)}</Typography>
+              </Box>
             )}
             {courseFeesRelief.enabled && courseFeesRelief.amount && (
-              <Typography>
-                Course Fees Relief: {formatCurrency(parseFloat(courseFeesRelief.amount))}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Course Fees Relief</Typography>
+                <Typography>{formatCurrency(parseFloat(courseFeesRelief.amount))}</Typography>
+              </Box>
             )}
             {fdwlRelief.enabled && fdwlRelief.amount && (
-              <Typography>
-                Foreign Domestic Worker Levy (FDWL) Relief: {formatCurrency(parseFloat(fdwlRelief.amount))}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Foreign Domestic Worker Levy Relief</Typography>
+                <Typography>{formatCurrency(parseFloat(fdwlRelief.amount))}</Typography>
+              </Box>
             )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               {taxReliefResults.totalReliefs == MAX_TAX_RELIEF && (
                 <>
-                  <Typography>
-                    Total Eligible Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}
-                  </Typography>
-                  <Typography>
-                    Tax Relief Cap: {formatCurrency(MAX_TAX_RELIEF)}
-                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Total Eligible Reliefs</Typography>
+                    <Typography>{formatCurrency(taxReliefResults.totalReliefs)}</Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Tax Relief Cap</Typography>
+                    <Typography>{formatCurrency(MAX_TAX_RELIEF)}</Typography>
+                  </Box>
                   <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }} />
                 </>
               )}
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                Total Tax Reliefs: {formatCurrency(Math.min(taxReliefResults.totalReliefs, MAX_TAX_RELIEF))}
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Tax Reliefs</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(Math.min(taxReliefResults.totalReliefs, MAX_TAX_RELIEF))}</Typography>
+              </Box>
             </Box>
           </Box>
         )}
