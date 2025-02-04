@@ -15,6 +15,8 @@ interface TaxReliefResult {
   workingMothersChildRelief: number;
   srsContributionRelief: number;
   lifeInsuranceRelief: number;
+  courseFeesRelief: number;
+  fdwlRelief: number;
   totalReliefs: number;
   totalTaxableIncome: number;
 }
@@ -64,20 +66,22 @@ interface TaxReliefInputs {
   };
   siblingRelief: { enabled: boolean; dependants: string };
   employeeCPF: number;
-  annualIncome: number;  // Add annual income to inputs
-  sprStatus: string;  // Add this parameter
+  annualIncome: number;
+  sprStatus: string;
   grandparentCaregiverRelief: { enabled: boolean };
   qualifyingChildRelief: { enabled: boolean; dependants: string };
   qualifyingChildReliefDisability: { enabled: boolean; dependants: string };
   workingMothersChildRelief: {
     enabled: boolean;
-    amount: string;  // Keep as string in input
+    amount: string;
   };
   srsContributionRelief?: { enabled: boolean; amount: string };
   lifeInsuranceRelief: {
     enabled: boolean;
     amount: string;
   };
+  courseFeesRelief: { enabled: boolean; amount: string };
+  fdwlRelief: { enabled: boolean; amount: string };
 }
 
 interface ParentDependant {
@@ -200,7 +204,9 @@ export function calculateTaxReliefs({
   qualifyingChildReliefDisability,
   workingMothersChildRelief,
   srsContributionRelief,
-  lifeInsuranceRelief
+  lifeInsuranceRelief,
+  courseFeesRelief,
+  fdwlRelief
 }: TaxReliefInputs): TaxReliefResult {
   // Existing relief calculations
   let earnedIncomeRelief = 0;
@@ -255,7 +261,19 @@ export function calculateTaxReliefs({
   const lifeInsuranceAmount = lifeInsuranceRelief.enabled ? 
     Math.min(Number(lifeInsuranceRelief.amount) || 0, constants.LIFE_INSURANCE_LIMIT) : 0;
 
-  // Calculate total reliefs (include grandparent caregiver relief)
+  // Calculate Course Fees Relief
+  let courseFeesReliefValue = 0;
+  if (courseFeesRelief.enabled && courseFeesRelief.amount) {
+    courseFeesReliefValue = Number(courseFeesRelief.amount) || 0;
+  }
+
+  // Calculate FDWL Relief
+  let fdwlReliefValue = 0;
+  if (fdwlRelief.enabled && fdwlRelief.amount) {
+    fdwlReliefValue = Number(fdwlRelief.amount) || 0;
+  }
+
+  // Calculate total reliefs
   const totalReliefs = earnedIncomeRelief +
     earnedIncomeReliefDisability +
     cpfRelief +
@@ -269,10 +287,20 @@ export function calculateTaxReliefs({
     qualifyingChildReliefDisabilityValue +
     workingMothersChildReliefValue +
     srsContributionReliefValue +
-    lifeInsuranceAmount;
+    lifeInsuranceAmount +
+    courseFeesReliefValue +
+    fdwlReliefValue;
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
+
+  console.log('Tax Relief Debug:', {
+    courseFeesReliefValue,
+    fdwlReliefValue,
+    totalReliefs,
+    annualIncome,
+    totalTaxableIncome
+  });
 
   return {
     earnedIncomeRelief,
@@ -289,6 +317,8 @@ export function calculateTaxReliefs({
     workingMothersChildRelief: workingMothersChildReliefValue,
     srsContributionRelief: srsContributionReliefValue,
     lifeInsuranceRelief: lifeInsuranceAmount,
+    courseFeesRelief: courseFeesReliefValue,
+    fdwlRelief: fdwlReliefValue,
     totalReliefs,
     totalTaxableIncome
   };

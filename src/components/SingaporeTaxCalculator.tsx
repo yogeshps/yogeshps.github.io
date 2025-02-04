@@ -295,6 +295,20 @@ const SingaporeTakeHomeCalculator = () => {
     amount: string;
   } | null>(null);
 
+  // Add state for Course Fees Relief
+  const [courseFeesRelief, setCourseFeesRelief] = useState({
+    enabled: false,
+    amount: '',
+    error: ''
+  });
+
+  // Add state for FDWL Relief
+  const [fdwlRelief, setFdwlRelief] = useState({
+    enabled: false,
+    amount: '',
+    error: ''
+  });
+
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
     const hasEligibleIncome = incomeSources.employment || 
@@ -382,8 +396,10 @@ const SingaporeTakeHomeCalculator = () => {
       qualifyingChildRelief,
       qualifyingChildReliefDisability,
       workingMothersChildRelief,
-      srsContributionRelief: srsContributionRelief,
-      lifeInsuranceRelief
+      srsContributionRelief,
+      lifeInsuranceRelief,
+      courseFeesRelief,
+      fdwlRelief
     });
 
     setTaxReliefResults(prev => ({
@@ -406,7 +422,9 @@ const SingaporeTakeHomeCalculator = () => {
     qualifyingChildReliefDisability,
     workingMothersChildRelief,
     srsContributionRelief,
-    lifeInsuranceRelief
+    lifeInsuranceRelief,
+    courseFeesRelief,
+    fdwlRelief
   ]);
 
   // Finally calculate taxable income after all reliefs
@@ -923,6 +941,10 @@ const SingaporeTakeHomeCalculator = () => {
       lifeInsuranceRelief={lifeInsuranceRelief}
       setLifeInsuranceRelief={setLifeInsuranceRelief}
       handleLifeInsuranceChange={handleLifeInsuranceChange}
+      courseFeesRelief={courseFeesRelief}
+      setCourseFeesRelief={setCourseFeesRelief}
+      fdwlRelief={fdwlRelief}
+      setFdwlRelief={setFdwlRelief}
     />
   );
 };

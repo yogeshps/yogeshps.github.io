@@ -250,6 +250,10 @@ export interface SingaporeTaxCalculatorViewProps {
   setEsopExercisePopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   setEsopVestingPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
   handleParentStayTypeChange: (index: number, stayType: "with" | "without", isDisability: boolean) => void;
+  courseFeesRelief: { enabled: boolean; amount: string; error: string };
+  setCourseFeesRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
+  fdwlRelief: { enabled: boolean; amount: string; error: string };
+  setFdwlRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
 }
 
 const POPOVER_MAX_WIDTH = '480px';
@@ -331,7 +335,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setWorkingMothersChildRelief,
   lifeInsuranceRelief,
   setLifeInsuranceRelief,
-  handleLifeInsuranceChange
+  handleLifeInsuranceChange,
+  courseFeesRelief,
+  setCourseFeesRelief,
+  fdwlRelief,
+  setFdwlRelief
 }) => {
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
@@ -1410,6 +1418,108 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   )}
                 </>
               )}
+
+              {/* Course Fees Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="course-fees-relief"
+                    name="courseFeesRelief"
+                    checked={courseFeesRelief.enabled}
+                    onChange={(e) => setCourseFeesRelief(prev => ({
+                      ...prev,
+                      enabled: e.target.checked
+                    }))}
+                  />
+                }
+                label="Course Fees Relief"
+              />
+              {courseFeesRelief.enabled && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="course-fees-amount"
+                    name="courseFeesAmount"
+                    placeholder="Enter amount"
+                    value={courseFeesRelief.amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setCourseFeesRelief(prev => ({
+                          ...prev,
+                          amount: value,
+                          error: ''
+                        }));
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                  />
+                  {courseFeesRelief.error && (
+                    <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                      {courseFeesRelief.error}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+
+              {/* Foreign Domestic Worker Levy (FDWL) Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="fdwl-relief"
+                    name="fdwlRelief"
+                    checked={fdwlRelief.enabled}
+                    onChange={(e) => setFdwlRelief(prev => ({
+                      ...prev,
+                      enabled: e.target.checked
+                    }))}
+                  />
+                }
+                label="Foreign Domestic Worker Levy (FDWL) Relief"
+              />
+              {fdwlRelief.enabled && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="fdwl-amount"
+                    name="fdwlAmount"
+                    placeholder="Enter amount"
+                    value={fdwlRelief.amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setFdwlRelief(prev => ({
+                          ...prev,
+                          amount: value,
+                          error: ''
+                        }));
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                  />
+                  {fdwlRelief.error && (
+                    <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                      {fdwlRelief.error}
+                    </Typography>
+                  )}
+                </Box>
+              )}
             </Box>
           </Collapse>
         </Box>
@@ -1615,6 +1725,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             {taxReliefResults.lifeInsuranceRelief > 0 && (
               <Typography>
                 Life Insurance Relief: {formatCurrency(taxReliefResults.lifeInsuranceRelief)}
+              </Typography>
+            )}
+            {courseFeesRelief.enabled && courseFeesRelief.amount && (
+              <Typography>
+                Course Fees Relief: {formatCurrency(parseFloat(courseFeesRelief.amount))}
+              </Typography>
+            )}
+            {fdwlRelief.enabled && fdwlRelief.amount && (
+              <Typography>
+                Foreign Domestic Worker Levy (FDWL) Relief: {formatCurrency(parseFloat(fdwlRelief.amount))}
               </Typography>
             )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
