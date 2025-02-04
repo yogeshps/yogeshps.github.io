@@ -20,10 +20,12 @@ import {
   InputLabel,
   Input,
   InputAdornment,
-  FormHelperText
+  FormHelperText,
+  Divider
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DeleteIcon from '@mui/icons-material/Delete';
 import * as constants from '../utils/constants';
 
@@ -35,10 +37,15 @@ interface CpfTopUp {
   familyAmount: string;
 }
 
+interface ParentDependant {
+  staysWithMe: boolean;
+  hasDisability: boolean;
+}
+
 interface ParentRelief {
   enabled: boolean;
   dependants: string;
-  stayTypes: ("with" | "without")[];
+  dependantDetails: ParentDependant[];
 }
 
 interface IncomeSources {
@@ -126,11 +133,6 @@ export interface SingaporeTaxCalculatorViewProps {
   esopExercisePopoverAnchor: HTMLElement | null;
   esopVestingPopoverAnchor: HTMLElement | null;
   parentRelief: ParentRelief;
-  parentReliefDisability: {
-    enabled: boolean;
-    dependants: string;
-    stayTypes: string[];
-  };
   spouseRelief: {
     enabled: boolean;
     disability: boolean;
@@ -217,9 +219,8 @@ export interface SingaporeTaxCalculatorViewProps {
   handleSalaryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   setInputs: (value: any) => void;
   handleParentReliefChange: (checked: boolean) => void;
-  handleParentReliefDisabilityChange: (checked: boolean) => void;
-  setParentRelief: (value: any) => void;
-  setParentReliefDisability: (value: any) => void;
+  handleParentDependantChange: (index: number, field: keyof ParentDependant, value: boolean) => void;
+  handleParentDependantsChange: (newCount: string) => void;
   handleIncomeSourceChange: (source: keyof IncomeSources) => void;
   handleRsuChange: (index: number, name: keyof RsuCycle, value: string) => void;
   handleEsopChange: (index: number, name: keyof EsopCycle, value: string) => void;
@@ -270,7 +271,6 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   esopExercisePopoverAnchor,
   esopVestingPopoverAnchor,
   parentRelief,
-  parentReliefDisability,
   spouseRelief,
   cpfTopUp,
   incomeSources,
@@ -292,9 +292,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleSalaryChange,
   setInputs,
   handleParentReliefChange,
-  handleParentReliefDisabilityChange,
-  setParentRelief,
-  setParentReliefDisability,
+  handleParentDependantChange,
+  handleParentDependantsChange,
   handleIncomeSourceChange,
   handleRsuChange,
   handleEsopChange,
@@ -334,6 +333,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setLifeInsuranceRelief,
   handleLifeInsuranceChange
 }) => {
+  // Add state for tax relief section expansion
+  const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
 
   // Render
   return (
@@ -587,686 +588,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           </Box>
         </Box>
 
-        {/* Tax Reliefs */}
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Tax Reliefs
-        </Typography>
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 3 }}>
-          {/* EIR Section */}
-          {(incomeSources.employment || incomeSources.pension || incomeSources.trade) && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="earned-income-relief"
-                    name="earnedIncomeRelief"
-                    checked={taxReliefs.earnedIncomeRelief}
-                    disabled={true}  // Always disabled
-                    onChange={() => {}} // No-op since it's disabled
-                  />
-                }
-                label="Earned Income Relief"
-              />
-              <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      id="earned-income-relief-disability"
-                      name="earnedIncomeReliefDisability"
-                      checked={taxReliefs.earnedIncomeReliefDisability}
-                      onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
-                    />
-                  }
-                  label="Earned Income Relief (Disability)"
-                />
-              </Box>
-            </Box>
-          )}
-          {extraInputs.sprStatus !== 'ep_pep_spass' && (
-            <>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="cpf-relief"
-                    name="cpfRelief"
-                    checked={taxReliefs.cpfRelief}
-                    disabled={true}
-                  />
-                }
-                label="CPF/Provident Fund Relief"
-              />
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="cpf-cash-topup-relief"
-                    name="cpfCashTopupRelief"
-                    checked={cpfTopUp.enabled}
-                    onChange={(e) => handleCpfTopUpChange(e.target.checked)}
-                  />
-                }
-                label="CPF Cash Top-Up Relief"
-              />
-              {cpfTopUp.enabled && (
-                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        id="cpf-cash-topup-self"
-                        name="cpfCashTopupSelf"
-                        checked={cpfTopUp.self}
-                        onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
-                          ...prev,
-                          self: e.target.checked
-                        }))}
-                      />
-                    }
-                    label="Contribution to my own CPF"
-                  />
-                  <TextField
-                    id="cpf-topup-self-amount"
-                    name="cpfTopUpSelfAmount"
-                    size="small"
-                    value={cpfTopUp.selfAmount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                        setCpfTopUp(prev => ({
-                          ...prev,
-                          selfAmount: value
-                        }));
-                      }
-                    }}
-                    placeholder="Enter amount"
-                    inputProps={{ 
-                      inputMode: 'decimal',
-                      pattern: '[0-9]*\.?[0-9]{0,2}'
-                    }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>
-                    }}
-                    sx={{ ml: 4, width: '200px' }}
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        id="cpf-cash-topup-family"
-                        name="cpfCashTopupFamily"
-                        checked={cpfTopUp.family}
-                        onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
-                          ...prev,
-                          family: e.target.checked
-                        }))}
-                      />
-                    }
-                    label="Contribution to my family member's CPF"
-                  />
-                  <TextField
-                    id="cpf-topup-family-amount"
-                    name="cpfTopUpFamilyAmount"
-                    size="small"
-                    value={cpfTopUp.familyAmount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                        setCpfTopUp(prev => ({
-                          ...prev,
-                          familyAmount: value
-                        }));
-                      }
-                    }}
-                    placeholder="Enter amount"
-                    inputProps={{ 
-                      inputMode: 'decimal',
-                      pattern: '[0-9]*\.?[0-9]{0,2}'
-                    }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>
-                    }}
-                    sx={{ ml: 4, width: '200px' }}
-                  />
-                </Box>
-              )}
-            </>
-          )}
-          {extraInputs.sprStatus !== 'ep_pep_spass' && (
-            <>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="nsman-relief"
-                    name="nsmanRelief"
-                    checked={nsmanRelief.enabled}
-                    onChange={(e) => handleNSmanReliefChange(e.target.checked)}
-                  />
-                }
-                label="NSman Relief"
-              />
-              {nsmanRelief.enabled && (
-                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={nsmanRelief.general}
-                        onChange={(e) => handleNSmanChange('general')}
-                      />
-                    }
-                    label="NSman Self Relief (General population)"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={nsmanRelief.key}
-                        onChange={(e) => handleNSmanChange('key')}
-                      />
-                    }
-                    label="NSman Self Relief (Key command/staff appointment holder)"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={nsmanRelief.wife}
-                        onChange={(e) => handleNSmanChange('wife')}
-                      />
-                    }
-                    label="NSman Wife Relief"
-                  />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={nsmanRelief.parent}
-                        onChange={(e) => handleNSmanChange('parent')}
-                      />
-                    }
-                    label="NSman Parent Relief"
-                  />
-                </Box>
-              )}
-            </>
-          )}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="spouse-relief"
-                name="spouseRelief"
-                checked={spouseRelief.enabled}
-                onChange={(e) => handleSpouseReliefChange(e.target.checked)}
-              />
-            }
-            label="Spouse Relief"
-          />
-          {spouseRelief.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="spouse-relief-disability"
-                    name="spouseReliefDisability"
-                    checked={spouseRelief.disability}
-                    onChange={(e) => handleSpouseDisabilityChange(e.target.checked)}
-                  />
-                }
-                label="I am eligible for Spouse Relief (Disability)"
-              />
-            </Box>
-          )}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="parent-relief"
-                name="parentRelief"
-                checked={parentRelief.enabled}
-                onChange={(e) => handleParentReliefChange(e.target.checked)}
-              />
-            }
-            label="Parent Relief"
-          />
-          {/* Error Message for Parent Relief */}
-          {parentRelief.enabled && parentReliefDisability.enabled && 
-            Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
-            <Box sx={{ ml: 4, color: '#D84747' }}>
-              <Typography sx={{ fontSize: '0.75rem' }}>
-                Total of 2 dependants allowed for Parent Relief/Parent Relief (Disability).
-              </Typography>
-            </Box>
-          )}
-          {parentRelief.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography>How many dependants do you support?</Typography>
-              <Select
-                id="parent-relief-dependants"
-                name="parentReliefDependants"
-                size="small"
-                value={parentRelief.dependants}
-                onChange={(e) => setParentRelief((prev: ParentRelief) => ({
-                  ...prev,
-                  dependants: e.target.value
-                }))}
-                sx={{ width: '120px' }}
-              >
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-              </Select>
-              
-              {/* Parent Relief Stay Type Selection */}
-              {Array.from({ length: Number(parentRelief.dependants) }).map((_, index) => (
-                <FormControl key={index}>
-                  <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
-                  <RadioGroup
-                    name={`parent-relief-stay-${index}`}
-                    value={parentRelief.stayTypes[index]}
-                    onChange={(e) => {
-                      const newStayTypes = [...parentRelief.stayTypes];
-                      newStayTypes[index] = e.target.value as "with" | "without";
-                      setParentRelief((prev: ParentRelief) => ({
-                        ...prev,
-                        stayTypes: newStayTypes
-                      }));
-                    }}
-                  >
-                    <FormControlLabel
-                      value="with"
-                      control={<Radio />}
-                      label="Dependant stays with me"
-                    />
-                    <FormControlLabel
-                      value="without"
-                      control={<Radio />}
-                      label="Dependant does not stay with me"
-                    />
-                  </RadioGroup>
-                </FormControl>
-              ))}
-            </Box>
-          )}
 
-          {/* Parent Relief (Disability) Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="parent-relief-disability"
-                name="parentReliefDisability"
-                checked={parentReliefDisability.enabled}
-                onChange={(e) => handleParentReliefDisabilityChange(e.target.checked)}
-              />
-            }
-            label="Parent Relief (Disability)"
-          />
-          {/* Error Message for Parent Relief (Disability) */}
-          {parentRelief.enabled && parentReliefDisability.enabled && 
-            Number(parentRelief.dependants) + Number(parentReliefDisability.dependants) > 2 && (
-            <Box sx={{ ml: 4, color: '#D84747' }}>
-              <Typography sx={{ fontSize: '0.75rem' }}>
-                Total of 2 dependants allowed for Parent Relief/Parent Relief (Disability).
-              </Typography>
-            </Box>
-          )}
-          {parentReliefDisability.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1}}>
-              <Typography>How many dependants with disabilities do you support?</Typography>
-              <Select
-                id="parent-relief-disability-dependants"
-                name="parentReliefDisabilityDependants"
-                size="small"
-                value={parentReliefDisability.dependants}
-                onChange={(e) => setParentReliefDisability((prev: ParentRelief) => ({
-                  ...prev,
-                  dependants: e.target.value
-                }))}
-                sx={{ width: '120px' }}
-              >
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-              </Select>
-              
-              {/* Parent Relief Stay Type Selection */}
-              {Array.from({ length: Number(parentReliefDisability.dependants) }).map((_, index) => (
-                <FormControl key={index}>
-                  <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
-                  <RadioGroup
-                    name={`parent-relief-disability-stay-${index}`}
-                    value={parentReliefDisability.stayTypes[index]}
-                    onChange={(e) => {
-                      const newStayTypes = [...parentReliefDisability.stayTypes];
-                      newStayTypes[index] = e.target.value as "with" | "without";
-                      setParentReliefDisability((prev: ParentRelief) => ({
-                        ...prev,
-                        stayTypes: newStayTypes
-                      }));
-                    }}
-                  >
-                    <FormControlLabel
-                      value="with"
-                      control={<Radio />}
-                      label="Dependant stays with me"
-                    />
-                    <FormControlLabel
-                      value="without"
-                      control={<Radio />}
-                      label="Dependant does not stay with me"
-                    />
-                  </RadioGroup>
-                </FormControl>
-              ))}
-            </Box>
-          )}
-
-          {/* Sibling Relief (Disability) Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="sibling-disability-relief"
-                name="siblingDisabilityRelief"
-                checked={siblingRelief.enabled}
-                onChange={(e) => handleSiblingReliefChange(e.target.checked)}
-              />
-            }
-            label="Sibling Relief (Disability)"
-          />
-          {siblingRelief.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography>How many siblings/sibling-in-laws will you claim reliefs for?</Typography>
-              <Select
-                id="sibling-disability-relief-dependants"
-                name="siblingDisabilityReliefDependants"
-                size="small"
-                value={siblingRelief.dependants}
-                onChange={(e) => setSiblingRelief((prev: SiblingRelief) => ({
-                  ...prev,
-                  dependants: e.target.value
-                }))}
-                sx={{ width: '120px' }}
-              >
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-                <MenuItem value="3">3</MenuItem>
-                <MenuItem value="4">4</MenuItem>
-                <MenuItem value="5">5</MenuItem>
-              </Select>
-            </Box>
-          )}
-
-          {/* Grandparent Caregiver Relief Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="grandparent-caregiver-relief"
-                name="grandparentCaregiverRelief"
-                checked={grandparentCaregiverRelief.enabled}
-                onChange={(e) => handleGrandparentCaregiverReliefChange(e.target.checked)}
-              />
-            }
-            label="Grandparent Caregiver Relief"
-          />
-
-          {/* Qualifying Child Relief Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="qualifying-child-relief"
-                name="qualifyingChildRelief"
-                checked={qualifyingChildRelief.enabled}
-                onChange={(e) => {
-                  setQualifyingChildRelief(prev => ({
-                    ...prev,
-                    enabled: e.target.checked
-                  }));
-                }}
-              />
-            }
-            label="Qualifying Child Relief"
-          />
-          {qualifyingChildRelief.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography>How many children can you claim for?</Typography>
-              <Select
-                id="qualifying-child-relief-dependants"
-                name="qualifyingChildReliefDependants"
-                size="small"
-                value={qualifyingChildRelief.dependants}
-                onChange={(e) => setQualifyingChildRelief(prev => ({
-                  ...prev,
-                  dependants: e.target.value
-                }))}
-                sx={{ width: '120px' }}
-              >
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-                <MenuItem value="3">3</MenuItem>
-                <MenuItem value="4">4</MenuItem>
-                <MenuItem value="5">5</MenuItem>
-              </Select>
-            </Box>
-          )}
-
-          {/* Qualifying Child Relief (Disability) Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="qualifying-child-relief-disability"
-                name="qualifyingChildReliefDisability"
-                checked={qualifyingChildReliefDisability.enabled}
-                onChange={(e) => {
-                  setQualifyingChildReliefDisability(prev => ({
-                    ...prev,
-                    enabled: e.target.checked
-                  }));
-                }}
-              />
-            }
-            label="Qualifying Child Relief (Disability)"
-          />
-          {qualifyingChildReliefDisability.enabled && (
-            <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <Typography>How many children with disabilities can you claim for?</Typography>
-              <Select
-                id="qualifying-child-relief-disability-dependants"
-                name="qualifyingChildReliefDisabilityDependants"
-                size="small"
-                value={qualifyingChildReliefDisability.dependants}
-                onChange={(e) => setQualifyingChildReliefDisability(prev => ({
-                  ...prev,
-                  dependants: e.target.value
-                }))}
-                sx={{ width: '120px' }}
-              >
-                <MenuItem value="1">1</MenuItem>
-                <MenuItem value="2">2</MenuItem>
-                <MenuItem value="3">3</MenuItem>
-                <MenuItem value="4">4</MenuItem>
-                <MenuItem value="5">5</MenuItem>
-              </Select>
-            </Box>
-          )}
-
-          {/* Working Mother's Child Relief Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="working-mothers-child-relief"
-                name="workingMothersChildRelief"
-                checked={workingMothersChildRelief.enabled}
-                onChange={(e) => {
-                  setWorkingMothersChildRelief(prev => ({
-                    ...prev,
-                    enabled: e.target.checked
-                  }));
-                }}
-              />
-            }
-            label="Working Mother's Child Relief"
-          />
-          {workingMothersChildRelief.enabled && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-              <TextField
-                id="working-mothers-child-relief-amount"
-                name="workingMothersChildReliefAmount"
-                placeholder="Enter amount"
-                value={workingMothersChildRelief.amount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                    setWorkingMothersChildRelief(prev => ({
-                      ...prev,
-                      amount: value
-                    }));
-                  }
-                }}
-                inputProps={{ 
-                  inputMode: 'decimal',
-                  pattern: '[0-9]*\.?[0-9]{0,2}'
-                }}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>
-                }}
-                variant="outlined"
-                size="small"
-                sx={{ ml: 4, width: '200px' }}
-              />
-            </Box>
-          )}
-
-          {/* SRS Contribution Relief Section */}
-          <FormControlLabel
-            control={
-              <Checkbox
-                id="srs-contribution-relief"
-                name="srsContributionRelief"
-                checked={srsContributionRelief.enabled}
-                onChange={(e) => setSrsContributionRelief(prev => ({
-                  ...prev,
-                  enabled: e.target.checked
-                }))}
-              />
-            }
-            label="SRS Contribution Relief"
-          />
-          {srsContributionRelief.enabled && (
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
-              <TextField
-                id="srs-contribution-amount"
-                name="srsContributionAmount"
-                placeholder="Enter amount"
-                value={srsContributionRelief.amount}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  const numericValue = parseFloat(value);
-                  const maxAmount = extraInputs.sprStatus === 'ep_pep_spass' 
-                    ? constants.MAX_SRS_CONTRIBUTION_EP 
-                    : constants.MAX_SRS_CONTRIBUTION_CITIZEN_PR;
-
-                  if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
-                    if (value === '' || isNaN(numericValue) || numericValue <= maxAmount) {
-                      setSrsContributionRelief(prev => ({
-                        ...prev,
-                        amount: value,
-                        error: ''
-                      }));
-                    } else {
-                      setSrsContributionRelief(prev => ({
-                        ...prev,
-                        error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
-                      }));
-
-                      // Clear the error after 5 seconds
-                      setTimeout(() => {
-                        setSrsContributionRelief(current => ({
-                          ...current,
-                          error: ''
-                        }));
-                      }, 5000);
-                    }
-                  }
-                }}
-                inputProps={{ 
-                  inputMode: 'decimal',
-                  pattern: '[0-9]*\.?[0-9]{0,2}'
-                }}
-                InputProps={{
-                  startAdornment: <InputAdornment position="start">$</InputAdornment>
-                }}
-                variant="outlined"
-                size="small"
-                sx={{ width: '200px' }}
-              />
-              {srsContributionRelief.error && (
-                <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
-                  {srsContributionRelief.error}
-                </Typography>
-              )}
-            </Box>
-          )}
-
-          {/* Life Insurance Relief Section */}
-          {results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
-            <>
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    id="life-insurance-relief"
-                    name="lifeInsuranceRelief"
-                    checked={lifeInsuranceRelief.enabled}
-                    onChange={(e) => setLifeInsuranceRelief(prev => ({
-                      ...prev,
-                      enabled: e.target.checked
-                    }))}
-                  />
-                }
-                label="Life Insurance Relief"
-              />
-              {lifeInsuranceRelief.enabled && (
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
-                  <TextField
-                    id="life-insurance-amount"
-                    name="lifeInsuranceAmount"
-                    placeholder="Enter amount"
-                    value={lifeInsuranceRelief.amount}
-                    onChange={(e) => {
-                      const value = e.target.value;
-                      const numericValue = parseFloat(value);
-
-                      if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
-                        if (value === '' || isNaN(numericValue) || numericValue <= constants.LIFE_INSURANCE_LIMIT) {
-                          setLifeInsuranceRelief(prev => ({
-                            ...prev,
-                            amount: value,
-                            error: ''
-                          }));
-                        } else {
-                          setLifeInsuranceRelief(prev => ({
-                            ...prev,
-                            error: `Max relief allowed is ${formatCurrency(constants.LIFE_INSURANCE_LIMIT)}`
-                          }));
-
-                          // Clear the error after 5 seconds
-                          setTimeout(() => {
-                            setLifeInsuranceRelief(current => ({
-                              ...current,
-                              error: ''
-                            }));
-                          }, 5000);
-                        }
-                      }
-                    }}
-                    inputProps={{ 
-                      inputMode: 'decimal',
-                      pattern: '[0-9]*\.?[0-9]{0,2}'
-                    }}
-                    InputProps={{
-                      startAdornment: <InputAdornment position="start">$</InputAdornment>
-                    }}
-                    variant="outlined"
-                    size="small"
-                    sx={{ width: '200px' }}
-                  />
-                  {lifeInsuranceRelief.error && (
-                    <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
-                      {lifeInsuranceRelief.error}
-                    </Typography>
-                  )}
-                </Box>
-              )}
-            </>
-          )}
+        {/* RSU and ESOP Section */}
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            RSUs and ESOPs
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1 }}>
+            Provide details of your RSU/ESOP vesting cycles.
+          </Typography>
         </Box>
 
         {/* RSU Section */}
@@ -1475,6 +805,617 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <Button variant="outlined" onClick={addEsopCycle} sx={{ color: 'primary.main', borderColor: 'primary.main' }}>+ Add ESOP Vesting Cycle</Button>
         </Box>
 
+        <Divider sx={{ my: 2 }} />
+
+        {/* Tax Reliefs */}
+        <Box sx={{ mb: 3 }}>
+          <Box 
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setTaxReliefExpanded(!taxReliefExpanded)}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Tax Reliefs
+            </Typography>
+            <IconButton>
+              {taxReliefExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+          
+          <Collapse in={taxReliefExpanded}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+              {/* EIR Section */}
+              {(incomeSources.employment || incomeSources.pension || incomeSources.trade) && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="earned-income-relief"
+                        name="earnedIncomeRelief"
+                        checked={taxReliefs.earnedIncomeRelief}
+                        disabled={true}  // Always disabled
+                        onChange={() => {}} // No-op since it's disabled
+                      />
+                    }
+                    label="Earned Income Relief"
+                  />
+                  <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <FormControlLabel
+                      control={
+                        <Checkbox
+                          id="earned-income-relief-disability"
+                          name="earnedIncomeReliefDisability"
+                          checked={taxReliefs.earnedIncomeReliefDisability}
+                          onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
+                        />
+                      }
+                      label="Earned Income Relief (Disability)"
+                    />
+                  </Box>
+                </Box>
+              )}
+              {extraInputs.sprStatus !== 'ep_pep_spass' && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="cpf-relief"
+                        name="cpfRelief"
+                        checked={taxReliefs.cpfRelief}
+                        disabled={true}
+                      />
+                    }
+                    label="CPF/Provident Fund Relief"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="cpf-cash-topup-relief"
+                        name="cpfCashTopupRelief"
+                        checked={cpfTopUp.enabled}
+                        onChange={(e) => handleCpfTopUpChange(e.target.checked)}
+                      />
+                    }
+                    label="CPF Cash Top-Up Relief"
+                  />
+                  {cpfTopUp.enabled && (
+                    <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            id="cpf-cash-topup-self"
+                            name="cpfCashTopupSelf"
+                            checked={cpfTopUp.self}
+                            onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
+                              ...prev,
+                              self: e.target.checked
+                            }))}
+                          />
+                        }
+                        label="Contribution to my own CPF"
+                      />
+                      <TextField
+                        id="cpf-topup-self-amount"
+                        name="cpfTopUpSelfAmount"
+                        size="small"
+                        value={cpfTopUp.selfAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                            setCpfTopUp(prev => ({
+                              ...prev,
+                              selfAmount: value
+                            }));
+                          }
+                        }}
+                        placeholder="Enter amount"
+                        inputProps={{ 
+                          inputMode: 'decimal',
+                          pattern: '[0-9]*\.?[0-9]{0,2}'
+                        }}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>
+                        }}
+                        sx={{ ml: 4, width: '200px' }}
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            id="cpf-cash-topup-family"
+                            name="cpfCashTopupFamily"
+                            checked={cpfTopUp.family}
+                            onChange={(e) => setCpfTopUp((prev: CpfTopUp) => ({
+                              ...prev,
+                              family: e.target.checked
+                            }))}
+                          />
+                        }
+                        label="Contribution to my family member's CPF"
+                      />
+                      <TextField
+                        id="cpf-topup-family-amount"
+                        name="cpfTopUpFamilyAmount"
+                        size="small"
+                        value={cpfTopUp.familyAmount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                            setCpfTopUp(prev => ({
+                              ...prev,
+                              familyAmount: value
+                            }));
+                          }
+                        }}
+                        placeholder="Enter amount"
+                        inputProps={{ 
+                          inputMode: 'decimal',
+                          pattern: '[0-9]*\.?[0-9]{0,2}'
+                        }}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>
+                        }}
+                        sx={{ ml: 4, width: '200px' }}
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+              {extraInputs.sprStatus !== 'ep_pep_spass' && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="nsman-relief"
+                        name="nsmanRelief"
+                        checked={nsmanRelief.enabled}
+                        onChange={(e) => handleNSmanReliefChange(e.target.checked)}
+                      />
+                    }
+                    label="NSman Relief"
+                  />
+                  {nsmanRelief.enabled && (
+                    <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={nsmanRelief.general}
+                            onChange={(e) => handleNSmanChange('general')}
+                          />
+                        }
+                        label="NSman Self Relief (General population)"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={nsmanRelief.key}
+                            onChange={(e) => handleNSmanChange('key')}
+                          />
+                        }
+                        label="NSman Self Relief (Key command/staff appointment holder)"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={nsmanRelief.wife}
+                            onChange={(e) => handleNSmanChange('wife')}
+                          />
+                        }
+                        label="NSman Wife Relief"
+                      />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={nsmanRelief.parent}
+                            onChange={(e) => handleNSmanChange('parent')}
+                          />
+                        }
+                        label="NSman Parent Relief"
+                      />
+                    </Box>
+                  )}
+                </>
+              )}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="spouse-relief"
+                    name="spouseRelief"
+                    checked={spouseRelief.enabled}
+                    onChange={(e) => handleSpouseReliefChange(e.target.checked)}
+                  />
+                }
+                label="Spouse Relief"
+              />
+              {spouseRelief.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="spouse-relief-disability"
+                        name="spouseReliefDisability"
+                        checked={spouseRelief.disability}
+                        onChange={(e) => handleSpouseDisabilityChange(e.target.checked)}
+                      />
+                    }
+                    label="I am eligible for Spouse Relief (Disability)"
+                  />
+                </Box>
+              )}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="parent-relief"
+                    name="parentRelief"
+                    checked={parentRelief.enabled}
+                    onChange={(e) => handleParentReliefChange(e.target.checked)}
+                  />
+                }
+                label="Parent Relief"
+              />
+              {parentRelief.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography>How many dependants do you support?</Typography>
+                  <Select
+                    id="parent-relief-dependants"
+                    name="parentReliefDependants"
+                    size="small"
+                    value={parentRelief.dependants}
+                    onChange={(e) => handleParentDependantsChange(e.target.value)}
+                    sx={{ width: '120px' }}
+                  >
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                  </Select>
+                  
+                  {Array.from({ length: Number(parentRelief.dependants) }).map((_, index) => (
+                    <Box key={index} sx={{ mt: 2 }}>
+                      <Typography sx={{ fontWeight: 'bold' }}>Dependant {index + 1}</Typography>
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={parentRelief.dependantDetails[index].staysWithMe}
+                            onChange={(e) => handleParentDependantChange(index, 'staysWithMe', e.target.checked)}
+                          />
+                        }
+                        label="Dependant lives with me"
+                      />
+                      <br />
+                      <FormControlLabel
+                        control={
+                          <Checkbox
+                            checked={parentRelief.dependantDetails[index].hasDisability}
+                            onChange={(e) => handleParentDependantChange(index, 'hasDisability', e.target.checked)}
+                          />
+                        }
+                        label="Dependant has disabilities"
+                      />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+
+              {/* Sibling Relief (Disability) Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="sibling-disability-relief"
+                    name="siblingDisabilityRelief"
+                    checked={siblingRelief.enabled}
+                    onChange={(e) => handleSiblingReliefChange(e.target.checked)}
+                  />
+                }
+                label="Sibling Relief (Disability)"
+              />
+              {siblingRelief.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography>How many siblings/sibling-in-laws will you claim reliefs for?</Typography>
+                  <Select
+                    id="sibling-relief-dependants"
+                    name="siblingReliefDependants"
+                    size="small"
+                    value={siblingRelief.dependants}
+                    onChange={(e) => setSiblingRelief(prev => ({
+                      ...prev,
+                      dependants: e.target.value
+                    }))}
+                    sx={{ width: '120px' }}
+                  >
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                    <MenuItem value="3">3</MenuItem>
+                    <MenuItem value="4">4</MenuItem>
+                    <MenuItem value="5">5</MenuItem>
+                  </Select>
+                </Box>
+              )}
+
+              {/* Grandparent Caregiver Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="grandparent-caregiver-relief"
+                    name="grandparentCaregiverRelief"
+                    checked={grandparentCaregiverRelief.enabled}
+                    onChange={(e) => handleGrandparentCaregiverReliefChange(e.target.checked)}
+                  />
+                }
+                label="Grandparent Caregiver Relief"
+              />
+
+              {/* Qualifying Child Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="qualifying-child-relief"
+                    name="qualifyingChildRelief"
+                    checked={qualifyingChildRelief.enabled}
+                    onChange={(e) => {
+                      setQualifyingChildRelief(prev => ({
+                        ...prev,
+                        enabled: e.target.checked
+                      }));
+                    }}
+                  />
+                }
+                label="Qualifying Child Relief"
+              />
+              {qualifyingChildRelief.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography>How many children can you claim for?</Typography>
+                  <Select
+                    id="qualifying-child-relief-dependants"
+                    name="qualifyingChildReliefDependants"
+                    size="small"
+                    value={qualifyingChildRelief.dependants}
+                    onChange={(e) => setQualifyingChildRelief(prev => ({
+                      ...prev,
+                      dependants: e.target.value
+                    }))}
+                    sx={{ width: '120px' }}
+                  >
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                    <MenuItem value="3">3</MenuItem>
+                    <MenuItem value="4">4</MenuItem>
+                    <MenuItem value="5">5</MenuItem>
+                  </Select>
+                </Box>
+              )}
+
+              {/* Qualifying Child Relief (Disability) Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="qualifying-child-relief-disability"
+                    name="qualifyingChildReliefDisability"
+                    checked={qualifyingChildReliefDisability.enabled}
+                    onChange={(e) => {
+                      setQualifyingChildReliefDisability(prev => ({
+                        ...prev,
+                        enabled: e.target.checked
+                      }));
+                    }}
+                  />
+                }
+                label="Qualifying Child Relief (Disability)"
+              />
+              {qualifyingChildReliefDisability.enabled && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Typography>How many children with disabilities can you claim for?</Typography>
+                  <Select
+                    id="qualifying-child-relief-disability-dependants"
+                    name="qualifyingChildReliefDisabilityDependants"
+                    size="small"
+                    value={qualifyingChildReliefDisability.dependants}
+                    onChange={(e) => setQualifyingChildReliefDisability(prev => ({
+                      ...prev,
+                      dependants: e.target.value
+                    }))}
+                    sx={{ width: '120px' }}
+                  >
+                    <MenuItem value="1">1</MenuItem>
+                    <MenuItem value="2">2</MenuItem>
+                    <MenuItem value="3">3</MenuItem>
+                    <MenuItem value="4">4</MenuItem>
+                    <MenuItem value="5">5</MenuItem>
+                  </Select>
+                </Box>
+              )}
+
+              {/* Working Mother's Child Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="working-mothers-child-relief"
+                    name="workingMothersChildRelief"
+                    checked={workingMothersChildRelief.enabled}
+                    onChange={(e) => {
+                      setWorkingMothersChildRelief(prev => ({
+                        ...prev,
+                        enabled: e.target.checked
+                      }));
+                    }}
+                  />
+                }
+                label="Working Mother's Child Relief"
+              />
+              {workingMothersChildRelief.enabled && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <TextField
+                    id="working-mothers-child-relief-amount"
+                    name="workingMothersChildReliefAmount"
+                    placeholder="Enter amount"
+                    value={workingMothersChildRelief.amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setWorkingMothersChildRelief(prev => ({
+                          ...prev,
+                          amount: value
+                        }));
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ ml: 4, width: '200px' }}
+                  />
+                </Box>
+              )}
+
+              {/* SRS Contribution Relief Section */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="srs-contribution-relief"
+                    name="srsContributionRelief"
+                    checked={srsContributionRelief.enabled}
+                    onChange={(e) => setSrsContributionRelief(prev => ({
+                      ...prev,
+                      enabled: e.target.checked
+                    }))}
+                  />
+                }
+                label="SRS Contribution Relief"
+              />
+              {srsContributionRelief.enabled && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="srs-contribution-amount"
+                    name="srsContributionAmount"
+                    placeholder="Enter amount"
+                    value={srsContributionRelief.amount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numericValue = parseFloat(value);
+                      const maxAmount = extraInputs.sprStatus === 'ep_pep_spass' 
+                        ? constants.MAX_SRS_CONTRIBUTION_EP 
+                        : constants.MAX_SRS_CONTRIBUTION_CITIZEN_PR;
+
+                      if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+                        if (value === '' || isNaN(numericValue) || numericValue <= maxAmount) {
+                          setSrsContributionRelief(prev => ({
+                            ...prev,
+                            amount: value,
+                            error: ''
+                          }));
+                        } else {
+                          setSrsContributionRelief(prev => ({
+                            ...prev,
+                            error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
+                          }));
+
+                          // Clear the error after 5 seconds
+                          setTimeout(() => {
+                            setSrsContributionRelief(current => ({
+                              ...current,
+                              error: ''
+                            }));
+                          }, 5000);
+                        }
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                  />
+                  {srsContributionRelief.error && (
+                    <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                      {srsContributionRelief.error}
+                    </Typography>
+                  )}
+                </Box>
+              )}
+
+              {/* Life Insurance Relief Section */}
+              {results.totalEmployeeCPF <= constants.LIFE_INSURANCE_LIMIT && (
+                <>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        id="life-insurance-relief"
+                        name="lifeInsuranceRelief"
+                        checked={lifeInsuranceRelief.enabled}
+                        onChange={(e) => setLifeInsuranceRelief(prev => ({
+                          ...prev,
+                          enabled: e.target.checked
+                        }))}
+                      />
+                    }
+                    label="Life Insurance Relief"
+                  />
+                  {lifeInsuranceRelief.enabled && (
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                      <TextField
+                        id="life-insurance-amount"
+                        name="lifeInsuranceAmount"
+                        placeholder="Enter amount"
+                        value={lifeInsuranceRelief.amount}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          const numericValue = parseFloat(value);
+
+                          if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
+                            if (value === '' || isNaN(numericValue) || numericValue <= constants.LIFE_INSURANCE_LIMIT) {
+                              setLifeInsuranceRelief(prev => ({
+                                ...prev,
+                                amount: value,
+                                error: ''
+                              }));
+                            } else {
+                              setLifeInsuranceRelief(prev => ({
+                                ...prev,
+                                error: `Max relief allowed is ${formatCurrency(constants.LIFE_INSURANCE_LIMIT)}`
+                              }));
+
+                              // Clear the error after 5 seconds
+                              setTimeout(() => {
+                                setLifeInsuranceRelief(current => ({
+                                  ...current,
+                                  error: ''
+                                }));
+                              }, 5000);
+                            }
+                          }
+                        }}
+                        inputProps={{ 
+                          inputMode: 'decimal',
+                          pattern: '[0-9]*\.?[0-9]{0,2}'
+                        }}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>
+                        }}
+                        variant="outlined"
+                        size="small"
+                        sx={{ width: '200px' }}
+                      />
+                      {lifeInsuranceRelief.error && (
+                        <Typography variant="body2" sx={{ color: 'red', mt: 1 }}>
+                          {lifeInsuranceRelief.error}
+                        </Typography>
+                      )}
+                    </Box>
+                  )}
+                </>
+              )}
+            </Box>
+          </Collapse>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
         {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           Results
@@ -1486,6 +1427,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <Typography>Monthly: {formatCurrency(results.monthlyTakeHome)}</Typography>
           <Typography>Annual: {formatCurrency(results.annualTakeHome)}</Typography>
         </Box>
+
+        <Divider sx={{ my: 2 }} />
+
 
         {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -1640,44 +1584,39 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             )}
             {taxReliefResults.siblingDisabilityRelief > 0 && (
               <Typography>
-                Sibling Relief (Disability): {formatCurrency(taxReliefResults.siblingDisabilityRelief)}
+                Sibling Disability Relief: {formatCurrency(taxReliefResults.siblingDisabilityRelief)}
               </Typography>
             )}
-            {grandparentCaregiverRelief.enabled && taxReliefResults.grandparentCaregiverRelief > 0 && (
+            {taxReliefResults.grandparentCaregiverRelief > 0 && (
               <Typography>
                 Grandparent Caregiver Relief: {formatCurrency(taxReliefResults.grandparentCaregiverRelief)}
               </Typography>
             )}
-            {qualifyingChildRelief.enabled && taxReliefResults.qualifyingChildRelief > 0 && (
+            {taxReliefResults.qualifyingChildRelief > 0 && (
               <Typography>
                 Qualifying Child Relief: {formatCurrency(taxReliefResults.qualifyingChildRelief)}
               </Typography>
             )}
-            {qualifyingChildReliefDisability.enabled && taxReliefResults.qualifyingChildReliefDisability > 0 && (
+            {taxReliefResults.qualifyingChildReliefDisability > 0 && (
               <Typography>
                 Qualifying Child Relief (Disability): {formatCurrency(taxReliefResults.qualifyingChildReliefDisability)}
               </Typography>
             )}
-
-            {/* After Qualifying Child Relief (Disability) display */}
             {workingMothersChildRelief.enabled && taxReliefResults.workingMothersChildRelief > 0 && (
               <Typography>
                 Working Mother's Child Relief: {formatCurrency(taxReliefResults.workingMothersChildRelief)}
               </Typography>
             )}
-
             {taxReliefResults.srsContributionRelief > 0 && (
               <Typography>
                 SRS Contribution Relief: {formatCurrency(taxReliefResults.srsContributionRelief)}
               </Typography>
             )}
-
-            {lifeInsuranceRelief.enabled && taxReliefResults.lifeInsuranceRelief > 0 && (
+            {taxReliefResults.lifeInsuranceRelief > 0 && (
               <Typography>
                 Life Insurance Relief: {formatCurrency(taxReliefResults.lifeInsuranceRelief)}
               </Typography>
             )}
-
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                 Total Tax Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}

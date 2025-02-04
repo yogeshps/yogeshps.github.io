@@ -25,10 +25,15 @@ interface IncomeSources {
   royalties: boolean;
 }
 
+interface ParentDependant {
+  staysWithMe: boolean;
+  hasDisability: boolean;
+}
+
 interface ParentRelief {
   enabled: boolean;
   dependants: string;
-  stayTypes: ("with" | "without")[];
+  dependantDetails: ParentDependant[];
 }
 
 /***********************************************************
@@ -227,14 +232,7 @@ const SingaporeTakeHomeCalculator = () => {
   const [parentRelief, setParentRelief] = useState<ParentRelief>({
     enabled: false,
     dependants: "1",
-    stayTypes: ["with", "with"] as ("with" | "without")[]
-  });
-
-  // Add new state for Parent Relief (Disability)
-  const [parentReliefDisability, setParentReliefDisability] = useState<ParentRelief>({
-    enabled: false,
-    dependants: "1",
-    stayTypes: ["with", "with"] as ("with" | "without")[]
+    dependantDetails: [{ staysWithMe: false, hasDisability: false }]
   });
 
   // Add new state for NSman relief
@@ -371,8 +369,11 @@ const SingaporeTakeHomeCalculator = () => {
       cpfTopUpInputs: cpfTopUp,
       nsmanRelief,
       spouseRelief,
-      parentRelief,
-      parentReliefDisability,
+      parentRelief: {
+        enabled: parentRelief.enabled,
+        dependants: parentRelief.dependants,
+        dependantDetails: parentRelief.dependantDetails || [{ staysWithMe: false, hasDisability: false }]
+      },
       siblingRelief,
       employeeCPF: results.totalEmployeeCPF || 0,
       annualIncome: results.baseIncome || 0,
@@ -396,7 +397,6 @@ const SingaporeTakeHomeCalculator = () => {
     nsmanRelief,
     spouseRelief,
     parentRelief,
-    parentReliefDisability,
     siblingRelief,
     results.totalEmployeeCPF,
     results.baseIncome,
@@ -750,20 +750,13 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
-  // Handler for Parent Relief (Disability)
-  const handleParentReliefDisabilityChange = (checked: boolean) => {
-    setParentReliefDisability(prev => ({
-      ...prev,
-      enabled: checked
-    }));
-  };
-
   // Add handler for stay type changes
-  const handleParentStayTypeChange = (index: number, stayType: "with" | "without", isDisability: boolean) => {
-    const setter = isDisability ? setParentReliefDisability : setParentRelief;
-    setter(prev => ({
+  const handleParentStayTypeChange = (index: number, stayType: "with" | "without") => {
+    setParentRelief(prev => ({
       ...prev,
-      stayTypes: prev.stayTypes.map((type, i) => i === index ? stayType : type)
+      dependantDetails: prev.dependantDetails.map((dependant, i) =>
+        i === index ? { ...dependant, staysWithMe: stayType === "with" } : dependant
+      )
     }));
   };
 
@@ -820,6 +813,37 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
+  // For changing number of dependants in dropdown
+  const handleParentDependantCount = (newCount: string) => {
+    setParentRelief(prev => {
+      const count = Number(newCount);
+      const currentDetails = [...prev.dependantDetails];
+      
+      while (currentDetails.length < count) {
+        currentDetails.push({ staysWithMe: false, hasDisability: false });
+      }
+      while (currentDetails.length > count) {
+        currentDetails.pop();
+      }
+      
+      return {
+        ...prev,
+        dependants: newCount,
+        dependantDetails: currentDetails
+      };
+    });
+  };
+
+  // For changing individual dependant properties
+  const handleParentDependantProperties = (index: number, field: keyof ParentDependant, value: boolean) => {
+    setParentRelief(prev => ({
+      ...prev,
+      dependantDetails: prev.dependantDetails.map((dependant, i) => 
+        i === index ? { ...dependant, [field]: value } : dependant
+      )
+    }));
+  };
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -833,7 +857,6 @@ const SingaporeTakeHomeCalculator = () => {
       annualSalaryPopoverAnchor={annualSalaryPopoverAnchor}
       annualBonusPopoverAnchor={annualBonusPopoverAnchor}
       parentRelief={parentRelief}
-      parentReliefDisability={parentReliefDisability}
       spouseRelief={spouseRelief}
       cpfTopUp={cpfTopUp}
       rsuCycles={rsuCycles}
@@ -844,9 +867,8 @@ const SingaporeTakeHomeCalculator = () => {
       handleSalaryChange={handleSalaryChange}
       setInputs={setInputs}
       handleParentReliefChange={handleParentReliefChange}
-      setParentRelief={setParentRelief}
-      handleParentReliefDisabilityChange={handleParentReliefDisabilityChange}
-      setParentReliefDisability={setParentReliefDisability}
+      handleParentDependantsChange={handleParentDependantCount}
+      handleParentDependantChange={handleParentDependantProperties}
       handleIncomeSourceChange={handleIncomeSourceChange}
       handleRsuChange={handleRsuChange}
       handleEsopChange={handleEsopChange}

@@ -8,16 +8,15 @@ interface TaxReliefResult {
   nsmanRelief: number;
   spouseRelief: number;
   parentRelief: number;
-  parentDisabilityRelief: number;
   siblingDisabilityRelief: number;
-  totalReliefs: number;
-  totalTaxableIncome: number;
   grandparentCaregiverRelief: number;
   qualifyingChildRelief: number;
   qualifyingChildReliefDisability: number;
   workingMothersChildRelief: number;
   srsContributionRelief: number;
   lifeInsuranceRelief: number;
+  totalReliefs: number;
+  totalTaxableIncome: number;
 }
 
 interface CpfTopUpInputs {
@@ -58,8 +57,11 @@ interface TaxReliefInputs {
     parent: boolean;
   };
   spouseRelief: { enabled: boolean; disability: boolean };
-  parentRelief: { enabled: boolean; dependants: string; stayTypes: string[] };
-  parentReliefDisability: { enabled: boolean; dependants: string; stayTypes: string[] };
+  parentRelief: {
+    enabled: boolean;
+    dependants: string;
+    dependantDetails: ParentDependant[];
+  };
   siblingRelief: { enabled: boolean; dependants: string };
   employeeCPF: number;
   annualIncome: number;  // Add annual income to inputs
@@ -76,6 +78,17 @@ interface TaxReliefInputs {
     enabled: boolean;
     amount: string;
   };
+}
+
+interface ParentDependant {
+  staysWithMe: boolean;
+  hasDisability: boolean;
+}
+
+interface ParentRelief {
+  enabled: boolean;
+  dependants: string;
+  dependantDetails: ParentDependant[];
 }
 
 export function calculateEarnedIncomeRelief(age: number, isDisability: boolean): number {
@@ -124,42 +137,16 @@ export function calculateNSmanRelief(nsmanRelief: NSmanReliefState, sprStatus: s
   return totalRelief;
 }
 
-function calculateParentRelief(parentRelief?: { enabled: boolean; dependants: string; stayTypes: string[] }, 
-                             parentReliefDisability?: { enabled: boolean; dependants: string; stayTypes: string[] }): number {
-  if (!parentRelief?.enabled) return 0;
-  
-  // Check total dependants
-  const totalDependants = Number(parentRelief.dependants) + 
-    (parentReliefDisability?.enabled ? Number(parentReliefDisability.dependants) : 0);
-    
-  if (totalDependants > 2) return 0;
-  
-  const dependantCount = Number(parentRelief.dependants);
-  return parentRelief.stayTypes
-    .slice(0, dependantCount)
-    .reduce((total, stayType) => {
-      const amount = stayType === 'with' ? constants.PARENT_RELIEF.WITH : constants.PARENT_RELIEF.WITHOUT;
-      return total + amount;
-    }, 0);
-}
-
-function calculateParentDisabilityRelief(parentReliefDisability?: { enabled: boolean; dependants: string; stayTypes: string[] },
-                                       parentRelief?: { enabled: boolean; dependants: string; stayTypes: string[] }): number {
-  if (!parentReliefDisability?.enabled) return 0;
-  
-  // Check total dependants
-  const totalDependants = Number(parentReliefDisability.dependants) + 
-    (parentRelief?.enabled ? Number(parentRelief.dependants) : 0);
-    
-  if (totalDependants > 2) return 0;
-  
-  const dependantCount = Number(parentReliefDisability.dependants);
-  return parentReliefDisability.stayTypes
-    .slice(0, dependantCount)
-    .reduce((total, stayType) => {
-      const amount = stayType === 'with' ? constants.PARENT_DISABILITY_RELIEF.WITH : constants.PARENT_DISABILITY_RELIEF.WITHOUT;
-      return total + amount;
-    }, 0);
+function calculateParentRelief(parentRelief: ParentRelief): number {
+  return parentRelief.dependantDetails.reduce((total, dependant) => {
+    let amount = 0;
+    if (dependant.hasDisability) {
+      amount = dependant.staysWithMe ? 14000 : 10000;
+    } else {
+      amount = dependant.staysWithMe ? 9000 : 5500;
+    }
+    return total + amount;
+  }, 0);
 }
 
 function calculateSiblingRelief(siblingRelief?: { enabled: boolean; dependants: string }): number {
@@ -204,7 +191,6 @@ export function calculateTaxReliefs({
   nsmanRelief,
   spouseRelief,
   parentRelief,
-  parentReliefDisability,
   siblingRelief,
   employeeCPF,
   annualIncome,
@@ -250,8 +236,7 @@ export function calculateTaxReliefs({
     spouseReliefValue = spouseRelief.disability ? 5500 : 2000;
   }
 
-  const parentReliefValue = calculateParentRelief(parentRelief, parentReliefDisability);
-  const parentDisabilityReliefValue = calculateParentDisabilityRelief(parentReliefDisability, parentRelief);
+  const parentReliefAmount = parentRelief.enabled ? calculateParentRelief(parentRelief) : 0;
 
   const siblingDisabilityReliefValue = calculateSiblingRelief(siblingRelief);
 
@@ -277,8 +262,7 @@ export function calculateTaxReliefs({
     cpfTopUpRelief +
     nsmanDeduction +
     spouseReliefValue +
-    parentReliefValue +
-    parentDisabilityReliefValue +
+    parentReliefAmount +
     siblingDisabilityReliefValue +
     grandparentCaregiverReliefValue +
     qualifyingChildReliefValue +
@@ -297,8 +281,7 @@ export function calculateTaxReliefs({
     cpfTopUpRelief,
     nsmanRelief: nsmanDeduction,
     spouseRelief: spouseReliefValue,
-    parentRelief: parentReliefValue,
-    parentDisabilityRelief: parentDisabilityReliefValue,
+    parentRelief: parentReliefAmount,
     siblingDisabilityRelief: siblingDisabilityReliefValue,
     grandparentCaregiverRelief: grandparentCaregiverReliefValue,
     qualifyingChildRelief: qualifyingChildReliefValue,
