@@ -1,4 +1,5 @@
 import * as constants from './constants';
+import { MAX_TAX_RELIEF } from './constants';
 
 interface TaxReliefResult {
   earnedIncomeRelief: number;
@@ -274,7 +275,8 @@ export function calculateTaxReliefs({
   }
 
   // Calculate total reliefs
-  const totalReliefs = earnedIncomeRelief +
+  const totalReliefs = Math.min(MAX_TAX_RELIEF, 
+    earnedIncomeRelief +
     earnedIncomeReliefDisability +
     cpfRelief +
     cpfTopUpRelief +
@@ -289,7 +291,8 @@ export function calculateTaxReliefs({
     srsContributionReliefValue +
     lifeInsuranceAmount +
     courseFeesReliefValue +
-    fdwlReliefValue;
+    fdwlReliefValue
+  );
 
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);

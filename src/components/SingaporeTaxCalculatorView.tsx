@@ -28,6 +28,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DeleteIcon from '@mui/icons-material/Delete';
 import * as constants from '../utils/constants';
+import { MAX_TAX_RELIEF } from '../utils/constants';
 
 interface CpfTopUp {
   enabled: boolean;
@@ -1738,8 +1739,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               </Typography>
             )}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
+              {taxReliefResults.totalReliefs == MAX_TAX_RELIEF && (
+                <>
+                  <Typography>
+                    Total Eligible Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}
+                  </Typography>
+                  <Typography>
+                    Tax Relief Cap: {formatCurrency(MAX_TAX_RELIEF)}
+                  </Typography>
+                  <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }} />
+                </>
+              )}
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                Total Tax Reliefs: {formatCurrency(taxReliefResults.totalReliefs)}
+                Total Tax Reliefs: {formatCurrency(Math.min(taxReliefResults.totalReliefs, MAX_TAX_RELIEF))}
               </Typography>
             </Box>
           </Box>

@@ -25,3 +25,6 @@ export const MAX_SRS_CONTRIBUTION_EP = 15300;
 export const MAX_SRS_CONTRIBUTION_CITIZEN_PR = 35700;
 
 export const LIFE_INSURANCE_LIMIT = 5000;
+
+// Tax Relief Constants
+export const MAX_TAX_RELIEF = 80000;
