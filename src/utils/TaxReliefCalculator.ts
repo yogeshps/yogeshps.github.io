@@ -9,6 +9,7 @@ interface TaxReliefResult {
   nsmanRelief: number;
   spouseRelief: number;
   parentRelief: number;
+  parentDisabilityRelief: number;
   siblingDisabilityRelief: number;
   grandparentCaregiverRelief: number;
   qualifyingChildRelief: number;
@@ -306,6 +307,7 @@ export function calculateTaxReliefs({
     nsmanRelief: nsmanDeduction,
     spouseRelief: spouseReliefValue,
     parentRelief: parentReliefAmount,
+    parentDisabilityRelief: parentReliefAmount,
     siblingDisabilityRelief: siblingDisabilityReliefValue,
     grandparentCaregiverRelief: grandparentCaregiverReliefValue,
     qualifyingChildRelief: qualifyingChildReliefValue,

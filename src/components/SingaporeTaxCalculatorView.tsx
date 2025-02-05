@@ -2007,17 +2007,32 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 <Typography>{formatCurrency(taxReliefResults.spouseRelief)}</Typography>
               </Box>
             )}
+            {/* Parent Relief Section */}
             {taxReliefResults.parentRelief > 0 && (
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography>Parent Relief</Typography>
-                <Typography>{formatCurrency(taxReliefResults.parentRelief)}</Typography>
-              </Box>
-            )}
-            {taxReliefResults.parentDisabilityRelief > 0 && (
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography>Parent Relief (Disability)</Typography>
-                <Typography>{formatCurrency(taxReliefResults.parentDisabilityRelief)}</Typography>
-              </Box>
+              <>
+                {parentRelief.dependantDetails.some(d => !d.hasDisability) && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Parent Relief</Typography>
+                    <Typography>
+                      {formatCurrency(parentRelief.dependantDetails
+                        .filter(d => !d.hasDisability)
+                        .reduce((total, d) => total + (d.staysWithMe ? 9000 : 5500), 0)
+                      )}
+                    </Typography>
+                  </Box>
+                )}
+                {parentRelief.dependantDetails.some(d => d.hasDisability) && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <Typography>Parent Relief (with Disability)</Typography>
+                    <Typography>
+                      {formatCurrency(parentRelief.dependantDetails
+                        .filter(d => d.hasDisability)
+                        .reduce((total, d) => total + (d.staysWithMe ? 14000 : 10000), 0)
+                      )}
+                    </Typography>
+                  </Box>
+                )}
+              </>
             )}
             {taxReliefResults.siblingDisabilityRelief > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>

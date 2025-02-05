@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import * as constants from '../utils/constants';
+import { TaxReliefResult } from '../types/tax';
 
 // Import CPF rates for each table
 import { computeMonthlyCpfTable1 } from './Table1.ts';
@@ -192,7 +193,7 @@ const SingaporeTakeHomeCalculator = () => {
   const [preferDisabilityRelief, setPreferDisabilityRelief] = useState(false);
 
   // Add this near the other state declarations (around line 115)
-  const [taxReliefResults, setTaxReliefResults] = useState({
+  const [taxReliefResults, setTaxReliefResults] = useState<TaxReliefResult>({
     earnedIncomeRelief: 0,
     earnedIncomeReliefDisability: 0,
     cpfRelief: 0,
@@ -469,7 +470,7 @@ const SingaporeTakeHomeCalculator = () => {
       annualTakeHome,
       totalRsuGains,
       totalEsopGains,
-      totalTaxableIncome,
+      totalTaxableIncome: chargeableIncome,
       employeeMonthlyCPF: empMonth,
       employeeAnnualCPF: empAnnualBase,
       employeeBonusCPF: empBonus,
@@ -483,7 +484,18 @@ const SingaporeTakeHomeCalculator = () => {
       annualTax: calculatedTax
     });
 
-    setTaxReliefResults(reliefs);
+    // Add missing properties to reliefs before setting state
+    setTaxReliefResults({
+      ...reliefs,
+      siblingDisabilityRelief: reliefs.siblingDisabilityRelief || 0,
+      grandparentCaregiverRelief: reliefs.grandparentCaregiverRelief || 0,
+      qualifyingChildRelief: reliefs.qualifyingChildRelief || 0,
+      qualifyingChildReliefDisability: reliefs.qualifyingChildReliefDisability || 0,
+      workingMothersChildRelief: reliefs.workingMothersChildRelief || 0,
+      srsContributionRelief: reliefs.srsContributionRelief || 0,
+      lifeInsuranceRelief: reliefs.lifeInsuranceRelief || 0
+    });
+
     setTaxDeductionResults(deductions);
   };
 
@@ -498,7 +510,19 @@ const SingaporeTakeHomeCalculator = () => {
     incomeSources,
     taxReliefs,
     taxDeductions,
-    // ... other dependencies that should trigger a recalculation
+    cpfTopUp,
+    nsmanRelief,
+    spouseRelief,
+    parentRelief,
+    siblingRelief,
+    grandparentCaregiverRelief,
+    qualifyingChildRelief,
+    qualifyingChildReliefDisability,
+    workingMothersChildRelief,
+    srsContributionRelief,
+    lifeInsuranceRelief,
+    courseFeesRelief,
+    fdwlRelief
   ]);
 
   // Effect to handle initial EIR setup and income source changes

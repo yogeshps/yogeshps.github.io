@@ -89,10 +89,9 @@ export interface TaxReliefResult {
   cpfRelief: number;
   cpfTopUpRelief: number;
   nsmanRelief: number;
-  totalReliefs: number;
   spouseRelief: number;
+  totalReliefs: number;
   parentRelief: number;
-  parentDisabilityRelief: number;
   siblingDisabilityRelief: number;
   grandparentCaregiverRelief: number;
   qualifyingChildRelief: number;
