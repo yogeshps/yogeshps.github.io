@@ -60,10 +60,11 @@ export function calculateTaxDeductions({
 
   // Calculate Rental Income Deductions
   let rentalIncomeDeductionsValue = 0;
+  const mortgageInterestAmount = Number(mortgageInterest) || 0; // Always consider mortgage interest
+
   if (rentalIncomeDeductions) {
-    const mortgageInterestAmount = Number(mortgageInterest) || 0;
     const rentalIncome = Number(annualRentalIncome) || 0;
-    
+
     if (rentalDeductionType === 'flat') {
       // Use the constant for flat deduction
       rentalIncomeDeductionsValue = (rentalIncome * FLAT_DEDUCTION_PERCENTAGE) + mortgageInterestAmount;
@@ -72,6 +73,9 @@ export function calculateTaxDeductions({
       const actualExpenses = Number(actualRentalExpenses) || 0;
       rentalIncomeDeductionsValue = actualExpenses + mortgageInterestAmount;
     }
+  } else {
+    // If rental income deductions are not selected, still consider mortgage interest
+    rentalIncomeDeductionsValue = mortgageInterestAmount;
   }
 
   // Calculate Employment Expense Deductions
