@@ -322,54 +322,184 @@ const SingaporeTakeHomeCalculator = () => {
     employmentExpenseAmount: ''
   });
 
-  // First effect: Calculate base income
-  useEffect(() => {
-    const rsuGains = rsuCycles.reduce((acc, cycle) => {
-      const shares = Number(cycle.shares || 0);
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      return acc + (shares * vestingPrice);
-    }, 0);
+  // 1. Modify the add cycle functions
+  const addRsuCycle = () => {
+    setRsuCycles(prevCycles => {
+      const newCycle = { shares: '', vestingPrice: '', expanded: true }; // Empty strings for UI
+      return [...prevCycles, newCycle];
+    });
+  };
 
-    const esopGains = esopCycles.reduce((acc, cycle) => {
-      const shares = Number(cycle.shares || 0);
-      const exercisePrice = Number(cycle.exercisePrice || 0);
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      return acc + Math.max(0, shares * (vestingPrice - exercisePrice));
-    }, 0);
+  const addEsopCycle = () => {
+    setEsopCycles(prevCycles => [
+      ...prevCycles,
+      {
+        shares: '',
+        exercisePrice: '',
+        vestingPrice: '',
+        expanded: true
+      }
+    ]);
+  };
 
-    const eligibleIncome = Number(inputs.monthlySalary || 0) * 12 +
-      Number(inputs.annualBonus || 0) +
-      Number(incomeSources.pension ? incomeSources.pensionAmount : 0) +
-      Number(incomeSources.trade ? incomeSources.tradeAmount : 0) +
-      rsuGains +
-      esopGains;
+  // New consolidated calculation function
+  const calculateAllResults = () => {
+    // 1. Base income calculations
+    const monthlyBase = Number(inputs.monthlySalary) || (Number(inputs.annualSalary) / 12) || 0;
+    const annualBase = monthlyBase * 12;
+    const bonus = Number(inputs.annualBonus) || 0;
+    const ageNum = Number(extraInputs.age) || 30;
+    const sprTable = extraInputs.sprStatus;
 
-    const baseIncome = eligibleIncome +
-      Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
-      Number(incomeSources.royalties ? incomeSources.royaltiesAmount : 0);
-    
-    setResults(prev => ({
-      ...prev,
-      baseIncome,
-      eligibleIncome,
-      totalRsuGains: rsuGains,
-      totalEsopGains: esopGains
-    }));
-  }, [inputs, incomeSources, rsuCycles, esopCycles]);
+    // 2. RSU and ESOP calculations
+    const totalRsuGains = rsuCycles
+      .map((cycle) => {
+        const shares = cycle.shares === '' ? 0 : Number(cycle.shares) || 0;
+        const vestingPrice = cycle.vestingPrice === '' ? 0 : Number(cycle.vestingPrice) || 0;
+        return shares * vestingPrice;
+      })
+      .reduce((acc, gain) => acc + gain, 0);
 
-  // Second effect: Calculate assessable income and tax
-  useEffect(() => {
-    if (results.baseIncome > 0) {
-      const assessableIncome = Math.max(0, results.baseIncome - taxDeductionResults.totalDeductions);
-      const chargeableIncome = Math.max(0, assessableIncome - taxReliefResults.totalReliefs);
-      
-      setResults(prev => ({
-        ...prev,
-        totalTaxableIncome: chargeableIncome,
-        annualTax: calculateTax(chargeableIncome)
-      }));
+    const totalEsopGains = esopCycles
+      .map((cycle) => {
+        const shares = cycle.shares === '' ? 0 : Number(cycle.shares) || 0;
+        const exercisePrice = cycle.exercisePrice === '' ? 0 : Number(cycle.exercisePrice) || 0;
+        const vestingPrice = cycle.vestingPrice === '' ? 0 : Number(cycle.vestingPrice) || 0;
+        
+        const gain = shares * (vestingPrice - exercisePrice);
+        return Math.max(gain, 0);
+      })
+      .reduce((acc, gain) => acc + gain, 0);
+
+    // 3. CPF calculations (only on base salary and bonus)
+    let empMonth = 0;
+    let erMonth = 0;
+
+    if (sprTable !== 'ep_pep_spass') {
+      const cpfResult = computeMonthlyCpfTable1(monthlyBase, ageNum);
+      empMonth = cpfResult.empCPF;
+      erMonth = cpfResult.erCPF;
     }
-  }, [results.baseIncome, taxDeductionResults.totalDeductions, taxReliefResults.totalReliefs]);
+
+    const empAnnualBase = empMonth * 12;
+    const erAnnualBase = erMonth * 12;
+
+    // Bonus CPF calculation
+    const cappedOW = Math.min(monthlyBase, 7400);
+    const annualOW = cappedOW * 12;
+    const bonusCpf = computeCpfOnBonus(sprTable, ageNum, monthlyBase, bonus, annualOW);
+    const empBonus = bonusCpf.empCPF;
+    const erBonus = bonusCpf.erCPF;
+
+    // 4. Additional income sources
+    const additionalIncome = {
+      pension: incomeSources.pension ? Number(incomeSources.pensionAmount) || 0 : 0,
+      trade: incomeSources.trade ? Number(incomeSources.tradeAmount) || 0 : 0,
+      rental: incomeSources.rental ? Number(incomeSources.rentalAmount) || 0 : 0,
+      royalties: incomeSources.royalties ? Number(incomeSources.royaltiesAmount) || 0 : 0
+    };
+
+    const totalAdditionalIncome = Object.values(additionalIncome).reduce((sum, val) => sum + val, 0);
+
+    // 5. Calculate total taxable income
+    const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains + totalAdditionalIncome;
+
+    // 6. Calculate tax reliefs
+    const reliefs = calculateTaxReliefs({
+      age: Number(extraInputs.age) || 0,
+      taxReliefs,
+      cpfTopUpInputs: cpfTopUp,
+      nsmanRelief,
+      spouseRelief,
+      parentRelief: {
+        enabled: parentRelief.enabled,
+        dependants: parentRelief.dependants,
+        dependantDetails: parentRelief.dependantDetails || [{ staysWithMe: false, hasDisability: false }]
+      },
+      siblingRelief,
+      employeeCPF: results.totalEmployeeCPF || 0,
+      annualIncome: results.baseIncome || 0,
+      sprStatus: extraInputs.sprStatus,
+      grandparentCaregiverRelief,
+      qualifyingChildRelief,
+      qualifyingChildReliefDisability,
+      workingMothersChildRelief,
+      srsContributionRelief,
+      lifeInsuranceRelief,
+      courseFeesRelief,
+      fdwlRelief
+    });
+
+    // 7. Calculate tax deductions
+    const deductions = calculateTaxDeductions({
+      charitableDeductions: {
+        enabled: taxDeductions.charitableDeductions.enabled,
+        amount: taxDeductions.charitableAmount,
+      },
+      parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
+      parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
+      parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
+      rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
+      rentalDeductionType: taxDeductions.rentalDeductionType ?? 'flat',
+      mortgageInterest: taxDeductions.mortgageInterest ?? '',
+      actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
+      annualRentalIncome: additionalIncome.rental.toString(),
+      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions,
+      employmentExpenseAmount: taxDeductions.employmentExpenseAmount,
+    });
+
+    // 8. Calculate final tax
+    const assessableIncome = totalTaxableIncome;
+    const chargeableIncome = Math.max(0, assessableIncome - reliefs.totalReliefs - deductions.totalDeductions);
+    const calculatedTax = calculateTax(chargeableIncome);
+
+    // 9. Calculate take-home pay
+    const monthlyTakeHomeFromSalary = monthlyBase - empMonth;
+    const annualBaseTakeHome = monthlyTakeHomeFromSalary * 12;
+    const bonusTakeHome = bonus - empBonus;
+    const stockTakeHome = totalRsuGains + totalEsopGains;
+    const additionalTakeHome = totalAdditionalIncome;
+
+    const annualTakeHome = annualBaseTakeHome + bonusTakeHome + stockTakeHome + additionalTakeHome - calculatedTax;
+    const monthlyTakeHome = annualTakeHome / 12;
+
+    // 10. Update all states at once
+    setResults({
+      monthlyTakeHome,
+      annualTakeHome,
+      totalRsuGains,
+      totalEsopGains,
+      totalTaxableIncome,
+      employeeMonthlyCPF: empMonth,
+      employeeAnnualCPF: empAnnualBase,
+      employeeBonusCPF: empBonus,
+      totalEmployeeCPF: empAnnualBase + empBonus,
+      employerMonthlyCPF: erMonth,
+      employerAnnualCPF: erAnnualBase,
+      employerBonusCPF: erBonus,
+      totalEmployerCPF: erAnnualBase + erBonus,
+      baseIncome: totalTaxableIncome,
+      eligibleIncome: totalTaxableIncome,
+      annualTax: calculatedTax
+    });
+
+    setTaxReliefResults(reliefs);
+    setTaxDeductionResults(deductions);
+  };
+
+  // Single useEffect to trigger calculations
+  useEffect(() => {
+    calculateAllResults();
+  }, [
+    inputs,
+    extraInputs,
+    rsuCycles,
+    esopCycles,
+    incomeSources,
+    taxReliefs,
+    taxDeductions,
+    // ... other dependencies that should trigger a recalculation
+  ]);
 
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
@@ -581,142 +711,11 @@ const SingaporeTakeHomeCalculator = () => {
     } else {
       setAgeError(''); // Clear error if age is valid
     }
-    calculateResults();
+    calculateAllResults();
     // Check if the selected residency status is EP / PEP / S Pass
     setShowCPF(extraInputs.sprStatus !== 'ep_pep_spass');
     // eslint-disable-next-line
   }, [inputs, extraInputs, rsuCycles, esopCycles]);
-
-  // 6) Our main logic
-  const calculateResults = () => {
-    // unify monthly vs annual
-    const monthlyBase = Number(inputs.monthlySalary) || (Number(inputs.annualSalary) / 12) || 0;
-    const annualBase = monthlyBase * 12;
-    const bonus = Number(inputs.annualBonus) || 0;
-    
-    // Set default age to 30 if not provided
-    const ageNum = Number(extraInputs.age) || 30; // Default to 30 if age is not provided
-    const sprTable = extraInputs.sprStatus;
-
-    // compute monthly CPF for base pay
-    let empMonth = 0;
-    let erMonth = 0;
-    let totalCPF = 0;
-
-    if (sprTable === 'ep_pep_spass') {
-      // Skip CPF calculations for EP / PEP / S Pass
-      empMonth = 0;
-      erMonth = 0;
-      totalCPF = 0;
-    } else if (sprTable === 'table1') {
-      const cpfResult = computeMonthlyCpfTable1(monthlyBase, ageNum);
-      empMonth = cpfResult.empCPF;
-      erMonth = cpfResult.erCPF;
-      totalCPF = cpfResult.totalCPF;
-    } else if (sprTable === 'table2') {
-      const cpfResult = computeMonthlyCpfTable2(monthlyBase, ageNum);
-      empMonth = cpfResult.empCPF;
-      erMonth = cpfResult.erCPF;
-      totalCPF = cpfResult.totalCPF;
-    } else if (sprTable === 'table3') {
-      const cpfResult = computeMonthlyCpfTable3(monthlyBase, ageNum);
-      empMonth = cpfResult.empCPF;
-      erMonth = cpfResult.erCPF;
-      totalCPF = cpfResult.totalCPF;
-    } else if (sprTable === 'table4') {
-      const cpfResult = computeMonthlyCpfTable4(monthlyBase, ageNum);
-      empMonth = cpfResult.empCPF;
-      erMonth = cpfResult.erCPF;
-      totalCPF = cpfResult.totalCPF;
-    } else if (sprTable === 'table5') {
-      const cpfResult = computeMonthlyCpfTable5(monthlyBase, ageNum);
-      empMonth = cpfResult.empCPF;
-      erMonth = cpfResult.erCPF;
-      totalCPF = cpfResult.totalCPF;
-    }
-
-    // Ensure results are set correctly even if no CPF is calculated
-    const empAnnualBase = empMonth * 12;
-    const erAnnualBase  = erMonth * 12;
-
-    // For bonus, treat entire bonus as AW
-    const cappedOW = Math.min(monthlyBase, 7400);
-    const annualOW = cappedOW * 12;
-    const bonusCpf = computeCpfOnBonus(sprTable, ageNum, monthlyBase, bonus, annualOW);
-    const empBonus = bonusCpf.empCPF;
-    const erBonus  = bonusCpf.erCPF;
-
-    // Calculate stock gains from RSUs
-    const stockGains = rsuCycles.map((cycle) => {
-      const shares = Number(cycle.shares) || 0;
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      return shares * vestingPrice; // Calculate stock gains for each RSU cycle
-    });
-
-    // Calculate ESOP gains
-    const esopGains = esopCycles.map((cycle) => {
-      const shares = Number(cycle.shares) || 0;
-      const exercisePrice = Number(cycle.exercisePrice || 0);
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      const gain = shares * (vestingPrice - exercisePrice);
-      return Math.max(gain, 0); // Ensure ESOP gains are not negative
-    });
-
-    // Total RSU and ESOP gains
-    const totalRsuGains = stockGains.reduce((acc, gain) => acc + gain, 0);
-    const totalEsopGains = esopGains.reduce((acc, gain) => acc + gain, 0);
-
-    // Calculate total taxable income
-    const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains + 
-      (incomeSources.rental ? Number(incomeSources.rentalAmount || 0) : 0);
-
-    // Calculate total deductions
-    const deductions = calculateTaxDeductions({
-      charitableDeductions: {
-        enabled: taxDeductions.charitableDeductions.enabled,
-        amount: taxDeductions.charitableAmount
-      },
-      parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
-      parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
-      parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
-      rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
-      rentalDeductionType: taxDeductions.rentalDeductionType ?? 'flat',
-      mortgageInterest: taxDeductions.mortgageInterest ?? '',
-      actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
-      annualRentalIncome: incomeSources.rentalAmount || '',
-      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions,
-      employmentExpenseAmount: taxDeductions.employmentExpenseAmount
-    });
-
-    setTaxDeductionResults(deductions);
-
-    // Calculate annual take-home pay
-    const annualTakeHome = totalTaxableIncome - deductions.totalDeductions;
-    const monthlyTakeHome = annualTakeHome / 12;
-
-    // Store in results
-    setResults(prev => ({
-      ...prev,
-      monthlyTakeHome,
-      annualTakeHome,
-      totalRsuGains,
-      totalEsopGains,
-      totalTaxableIncome,
-
-      employeeMonthlyCPF: empMonth,
-      employeeAnnualCPF: empAnnualBase,
-      employeeBonusCPF: empBonus,
-      totalEmployeeCPF: empAnnualBase + empBonus,
-
-      employerMonthlyCPF: erMonth,
-      employerAnnualCPF: erAnnualBase,
-      employerBonusCPF: erBonus,
-      totalEmployerCPF: erAnnualBase + erBonus,
-
-      baseIncome: totalTaxableIncome,
-      annualTax: results.annualTax
-    }));
-  };
 
   // Salary input changes
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -742,7 +741,10 @@ const SingaporeTakeHomeCalculator = () => {
   // RSU inputs
   const handleRsuChange = (index: number, name: keyof RsuCycle, value: string) => {
     const arr = [...rsuCycles];
-    arr[index][name] = value;
+    arr[index] = {
+      ...arr[index],
+      [name]: value === '' ? '0' : value
+    };
     setRsuCycles(arr);
   };
   const toggleRsuExpand = (index: number) => {
@@ -751,16 +753,17 @@ const SingaporeTakeHomeCalculator = () => {
     setRsuCycles(arr);
   };
   const removeRsuCycle = (index: number) => {
-    setRsuCycles(prev => prev.filter((_, i) => i !== index));
-  };
-  const addRsuCycle = () => {
-    setRsuCycles([...rsuCycles, { shares: '', exercisePrice: '', vestingPrice: '', expanded: true }]);
+    const newCycles = rsuCycles.filter((_, i) => i !== index);
+    setRsuCycles(newCycles);
   };
 
   // ESOP inputs
   const handleEsopChange = (index: number, name: keyof EsopCycle, value: string) => {
     const arr = [...esopCycles];
-    arr[index][name] = value;
+    arr[index] = {
+      ...arr[index],
+      [name]: value  // Store as empty string, don't convert to '0'
+    };
     setEsopCycles(arr);
   };
   const toggleEsopExpand = (index: number) => {
@@ -769,10 +772,8 @@ const SingaporeTakeHomeCalculator = () => {
     setEsopCycles(arr);
   };
   const removeEsopCycle = (index: number) => {
-    setEsopCycles(prev => prev.filter((_, i) => i !== index));
-  };
-  const addEsopCycle = () => {
-    setEsopCycles([...esopCycles, { shares: '', exercisePrice: '', vestingPrice: '', expanded: true }]);
+    const newCycles = esopCycles.filter((_, i) => i !== index);
+    setEsopCycles(newCycles);
   };
 
   // currency format
@@ -825,39 +826,6 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   }, [results.totalTaxableIncome]);
 
-  // Effect to calculate take-home pay after CPF and tax
-  useEffect(() => {
-    // Monthly take-home from salary
-    const monthlyTakeHome = Number(inputs.monthlySalary || 0) - 
-      (results.employeeMonthlyCPF || 0);
-
-    // Annual take-home calculation
-    const annualTakeHome = (monthlyTakeHome * 12) +
-      (Number(inputs.annualBonus || 0) - (results.employeeBonusCPF || 0)) +
-      (Number(incomeSources.pension ? incomeSources.pensionAmount : 0)) +
-      (Number(incomeSources.trade ? incomeSources.tradeAmount : 0)) +
-      (Number(incomeSources.rental ? incomeSources.rentalAmount : 0)) +
-      (Number(incomeSources.royalties ? incomeSources.royaltiesAmount : 0)) +
-      results.totalRsuGains +
-      results.totalEsopGains -
-      results.annualTax;
-
-    setResults(prev => ({
-      ...prev,
-      monthlyTakeHome,
-      annualTakeHome
-    }));
-  }, [
-    inputs.monthlySalary,
-    inputs.annualBonus,
-    incomeSources,
-    results.employeeMonthlyCPF,
-    results.employeeBonusCPF,
-    results.annualTax,
-    results.totalRsuGains,
-    results.totalEsopGains
-  ]);
-
   // Handler for main spouse relief checkbox
   const handleSpouseReliefChange = (checked: boolean) => {
     setSpouseRelief(prev => ({ ...prev, enabled: checked }));
@@ -867,28 +835,6 @@ const SingaporeTakeHomeCalculator = () => {
   const handleSpouseDisabilityChange = (checked: boolean) => {
     setSpouseRelief(prev => ({ ...prev, disability: checked }));
   };
-
-  // Calculate RSU and ESOP gains
-  useEffect(() => {
-    const totalRsuGains = rsuCycles.reduce((acc, cycle) => {
-      const shares = Number(cycle.shares || 0);
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      return acc + (shares * vestingPrice);
-    }, 0);
-
-    const totalEsopGains = esopCycles.reduce((acc, cycle) => {
-      const shares = Number(cycle.shares || 0);
-      const exercisePrice = Number(cycle.exercisePrice || 0);
-      const vestingPrice = Number(cycle.vestingPrice || 0);
-      return acc + Math.max(0, shares * (vestingPrice - exercisePrice));
-    }, 0);
-
-    setResults(prev => ({
-      ...prev,
-      totalRsuGains,  // Store total RSU gains
-      totalEsopGains, // Store total ESOP gains
-    }));
-  }, [rsuCycles, esopCycles]);
 
   // Handler for Parent Relief
   const handleParentReliefChange = (checked: boolean) => {

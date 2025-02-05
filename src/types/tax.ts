@@ -66,7 +66,6 @@ export interface IncomeSources {
 // Stock Options Types
 export interface RsuCycle {
   shares: string;
-  exercisePrice: string;
   vestingPrice: string;
   expanded: boolean;
 }

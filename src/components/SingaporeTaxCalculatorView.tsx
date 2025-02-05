@@ -1745,25 +1745,52 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Divider sx={{ my: 2 }} />
 
         {/* Results */}
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-          Results
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold'}}>
+          Take Home Pay
         </Typography>
         <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'green' }}>
-            Take Home Pay
-          </Typography>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography>Monthly</Typography>
-            <Typography>{formatCurrency(results.monthlyTakeHome)}</Typography>
-          </Box>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            <Typography>Annual</Typography>
-            <Typography>{formatCurrency(results.annualTakeHome)}</Typography>
+        
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Annual</Typography>
+              <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(results.annualTakeHome)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Monthly</Typography>
+              <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(results.annualTakeHome / 12)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Hourly</Typography>
+              <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(results.annualTakeHome / (52 * 40))}</Typography>
+            </Box>
           </Box>
         </Box>
 
         <Divider sx={{ my: 2 }} />
 
+        {/* CPF Overview */}
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold'}}>
+          CPF Contributions
+        </Typography>
+        <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+        
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Employee</Typography>
+              <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employeeAnnualCPF)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Employer</Typography>
+              <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employerAnnualCPF)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Total</Typography>
+              <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employeeAnnualCPF + results.employerAnnualCPF)}</Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
 
         {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
