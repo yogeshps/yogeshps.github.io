@@ -70,8 +70,8 @@ interface TaxReliefInputs {
   annualIncome: number;
   sprStatus: string;
   grandparentCaregiverRelief: { enabled: boolean };
-  qualifyingChildRelief: { enabled: boolean; dependants: string };
-  qualifyingChildReliefDisability: { enabled: boolean; dependants: string };
+  qualifyingChildRelief: { enabled: boolean; count: string };
+  qualifyingChildReliefDisability: { enabled: boolean; count: string };
   workingMothersChildRelief: {
     enabled: boolean;
     amount: string;
@@ -165,17 +165,17 @@ function calculateGrandparentCaregiverRelief(grandparentCaregiverRelief: { enabl
   return grandparentCaregiverRelief?.enabled ? constants.GRANDPARENT_CAREGIVER_RELIEF.AMOUNT : 0;
 }
 
-function calculateQualifyingChildRelief(qualifyingChildRelief?: { enabled: boolean; dependants: string }): number {
+function calculateQualifyingChildRelief(qualifyingChildRelief?: { enabled: boolean; count: string }): number {
   if (!qualifyingChildRelief?.enabled) return 0;
   
-  const dependantCount = Number(qualifyingChildRelief.dependants) || 0;
+  const dependantCount = Number(qualifyingChildRelief.count) || 0;
   return dependantCount * constants.QUALIFYING_CHILD_RELIEF.AMOUNT;
 }
 
-function calculateQualifyingChildReliefDisability(qualifyingChildReliefDisability?: { enabled: boolean; dependants: string }): number {
+function calculateQualifyingChildReliefDisability(qualifyingChildReliefDisability?: { enabled: boolean; count: string }): number {
   if (!qualifyingChildReliefDisability?.enabled) return 0;
   
-  const dependantCount = Number(qualifyingChildReliefDisability.dependants) || 0;
+  const dependantCount = Number(qualifyingChildReliefDisability.count) || 0;
   return dependantCount * constants.QUALIFYING_CHILD_RELIEF.DISABILITY_AMOUNT;
 }
 

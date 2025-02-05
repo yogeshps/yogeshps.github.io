@@ -1,4 +1,5 @@
 import { CHARITABLE_DEDUCTION_MULTIPLIER } from './constants';
+import { TaxDeductions, TaxDeductionResult } from '../types/tax';
 
 interface TaxDeductionInputs {
   charitableDeductions: {
@@ -8,14 +9,6 @@ interface TaxDeductionInputs {
   parenthoodTaxRebate: boolean;
   rentalIncomeDeductions: boolean;
   employmentExpenseDeductions: boolean;
-}
-
-interface TaxDeductionResult {
-  charitableDeductions: number;
-  parenthoodTaxRebate: number;
-  rentalIncomeDeductions: number;
-  employmentExpenseDeductions: number;
-  totalDeductions: number;
 }
 
 export function calculateTaxDeductions({

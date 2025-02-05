@@ -29,253 +29,31 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DeleteIcon from '@mui/icons-material/Delete';
 import * as constants from '../utils/constants';
 import { MAX_TAX_RELIEF } from '../utils/constants';
-
-interface CpfTopUp {
-  enabled: boolean;
-  self: boolean;
-  family: boolean;
-  selfAmount: string;
-  familyAmount: string;
-}
+import type { 
+  SingaporeTaxCalculatorViewProps,
+  TaxDeductions,
+  TaxDeductionResult,
+  CpfTopUp,
+  ParentRelief,
+  IncomeSources,
+  RsuCycle,
+  EsopCycle,
+  SiblingRelief,
+  TaxReliefResult,
+  QualifyingChildRelief,
+  QualifyingChildReliefDisability,
+  WorkingMothersChildRelief,
+  SrsContributionRelief,
+  LifeInsuranceRelief,
+  CourseFeesRelief,
+  FdwlRelief
+} from '../types/tax';
+import { POPOVER_MAX_WIDTH } from '../utils/constants';
 
 interface ParentDependant {
   staysWithMe: boolean;
   hasDisability: boolean;
 }
-
-interface ParentRelief {
-  enabled: boolean;
-  dependants: string;
-  dependantDetails: ParentDependant[];
-}
-
-interface IncomeSources {
-  employment: boolean;
-  pension: boolean;
-  trade: boolean;
-  rental: boolean;
-  royalties: boolean;
-}
-
-interface RsuCycle {
-  shares: string;
-  vestingPrice: string;
-  expanded: boolean;
-}
-
-interface EsopCycle {
-  shares: string;
-  exercisePrice: string;
-  vestingPrice: string;
-  expanded: boolean;
-}
-
-interface SiblingRelief {
-  enabled: boolean;
-  dependants: string;
-}
-
-interface TaxReliefResult {
-  earnedIncomeRelief: number;
-  earnedIncomeReliefDisability: number;
-  cpfRelief: number;
-  cpfTopUpRelief: number;
-  nsmanRelief: number;
-  totalReliefs: number;
-  spouseRelief: number;
-  parentRelief: number;
-  parentDisabilityRelief: number;
-  siblingDisabilityRelief: number;
-  grandparentCaregiverRelief: number;
-  qualifyingChildRelief: number;
-  qualifyingChildReliefDisability: number;
-  workingMothersChildRelief: number;
-  srsContributionRelief: number;
-  lifeInsuranceRelief: number;
-}
-
-export interface TaxDeductions {
-  charitableDeductions: boolean;
-  charitableAmount: string;
-  charitableError?: string;
-  parenthoodTaxRebate: boolean;
-  rentalIncomeDeductions: boolean;
-  employmentExpenseDeductions: boolean;
-}
-
-export interface SingaporeTaxCalculatorViewProps {
-  extraInputs: {
-    age: string;
-    sprStatus: string;
-  };
-  inputs: {
-    monthlySalary: string;
-    annualSalary: string;
-    annualBonus: string;
-  };
-  results: {
-    monthlyTakeHome: number;
-    annualTakeHome: number;
-    totalRsuGains: number;
-    totalEsopGains: number;
-    employeeMonthlyCPF: number;
-    employeeAnnualCPF: number;
-    employeeBonusCPF: number;
-    totalEmployeeCPF: number;
-    employerMonthlyCPF: number;
-    employerAnnualCPF: number;
-    employerBonusCPF: number;
-    totalEmployerCPF: number;
-    totalTaxableIncome: number;
-    annualTax: number;
-    baseIncome: number;
-  };
-  taxReliefResults: TaxReliefResult;
-  ageError: string;
-  agePopoverAnchor: HTMLElement | null;
-  residencyPopoverAnchor: HTMLElement | null;
-  monthlySalaryPopoverAnchor: HTMLElement | null;
-  annualSalaryPopoverAnchor: HTMLElement | null;
-  annualBonusPopoverAnchor: HTMLElement | null;
-  rsuSharesPopoverAnchor: HTMLElement | null;
-  rsuVestingPopoverAnchor: HTMLElement | null;
-  esopSharesPopoverAnchor: HTMLElement | null;
-  esopExercisePopoverAnchor: HTMLElement | null;
-  esopVestingPopoverAnchor: HTMLElement | null;
-  parentRelief: ParentRelief;
-  spouseRelief: {
-    enabled: boolean;
-    disability: boolean;
-  };
-  cpfTopUp: CpfTopUp;
-  incomeSources: IncomeSources;
-  rsuCycles: Array<RsuCycle>;
-  esopCycles: Array<EsopCycle>;
-  taxReliefs: {
-    earnedIncomeRelief: boolean;
-    earnedIncomeReliefDisability: boolean;
-    cpfRelief: boolean;
-  };
-  cpfTopUpErrors: {
-    selfAmount?: string;
-    familyAmount?: string;
-  };
-  nsmanRelief: {
-    enabled: boolean;
-    general: boolean;
-    key: boolean;
-    wife: boolean;
-    parent: boolean;
-  };
-  siblingRelief: SiblingRelief;
-  handleSiblingReliefChange: (checked: boolean) => void;
-  setSiblingRelief: React.Dispatch<React.SetStateAction<SiblingRelief>>;
-  grandparentCaregiverRelief: {
-    enabled: boolean;
-    dependants: string;
-  };
-  handleGrandparentCaregiverReliefChange: (checked: boolean) => void;
-  qualifyingChildRelief: {
-    enabled: boolean;
-    dependants: string;
-  };
-  setQualifyingChildRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; dependants: string }>>;
-  qualifyingChildReliefDisability: {
-    enabled: boolean;
-    dependants: string;
-  };
-  setQualifyingChildReliefDisability: React.Dispatch<React.SetStateAction<{
-    enabled: boolean;
-    dependants: string;
-  }>>;
-  workingMothersChildRelief: {
-    enabled: boolean;
-    amount: string;
-    error: string;
-  };
-  setWorkingMothersChildRelief: React.Dispatch<React.SetStateAction<{
-    enabled: boolean;
-    amount: string;
-    error: string;
-  }>>;
-  srsContributionRelief: {
-    enabled: boolean;
-    amount: string;
-    error: string;
-  };
-  setSrsContributionRelief: React.Dispatch<React.SetStateAction<{
-    enabled: boolean;
-    amount: string;
-    error: string;
-  }>>;
-  lifeInsuranceRelief: {
-    enabled: boolean;
-    amount: string;
-    error?: string;
-  };
-  setLifeInsuranceRelief: React.Dispatch<React.SetStateAction<{
-    enabled: boolean;
-    amount: string;
-    error?: string;
-  }>>;
-  handleLifeInsuranceChange: (value: string) => void;
-  // Handler functions
-  handleClose: () => void;
-  handlePopoverClick: (
-    event: React.MouseEvent<HTMLButtonElement>,
-    setAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>
-  ) => void;
-  setExtraInputs: (value: any) => void;
-  handleSalaryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  setInputs: (value: any) => void;
-  handleParentReliefChange: (checked: boolean) => void;
-  handleParentDependantChange: (index: number, field: keyof ParentDependant, value: boolean) => void;
-  handleParentDependantsChange: (newCount: string) => void;
-  handleIncomeSourceChange: (source: keyof IncomeSources) => void;
-  handleRsuChange: (index: number, name: keyof RsuCycle, value: string) => void;
-  handleEsopChange: (index: number, name: keyof EsopCycle, value: string) => void;
-  addRsuCycle: () => void;
-  addEsopCycle: () => void;
-  toggleRsuExpanded: (index: number) => void;
-  toggleEsopExpanded: (index: number) => void;
-  formatCurrency: (amount: number) => string;
-  setAgePopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setResidencyPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setMonthlySalaryPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setAnnualSalaryPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setAnnualBonusPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  handleDisabilityReliefChange: (checked: boolean) => void;
-  handleCpfTopUpChange: (checked: boolean) => void;
-  setCpfTopUp: React.Dispatch<React.SetStateAction<CpfTopUp>>;
-  handleCpfTopUpAmountChange: (field: 'selfAmount' | 'familyAmount', value: string) => void;
-  handleNSmanReliefChange: (checked: boolean) => void;
-  handleNSmanChange: (type: 'general' | 'key' | 'wife' | 'parent') => void;
-  handleSpouseReliefChange: (checked: boolean) => void;
-  handleSpouseDisabilityChange: (checked: boolean) => void;
-  removeRsuCycle: (index: number) => void;
-  setRsuSharesPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setRsuVestingPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  removeEsopCycle: (index: number) => void;
-  setEsopSharesPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setEsopExercisePopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  setEsopVestingPopoverAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>;
-  handleParentStayTypeChange: (index: number, stayType: "with" | "without", isDisability: boolean) => void;
-  courseFeesRelief: { enabled: boolean; amount: string; error: string };
-  setCourseFeesRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
-  fdwlRelief: { enabled: boolean; amount: string; error: string };
-  setFdwlRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
-  taxDeductionResults: {
-    charitableDeductions: number;
-    parenthoodTaxRebate: number;
-    rentalIncomeDeductions: number;
-    employmentExpenseDeductions: number;
-    totalDeductions: number;
-  };
-  handleTaxDeductionChange: (field: keyof TaxDeductions, value: boolean | string) => void;
-  taxDeductions: TaxDeductions;
-}
-
-const POPOVER_MAX_WIDTH = '480px';
 
 export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProps> = ({
   extraInputs,
@@ -932,7 +710,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         onChange={(e) => {
                           const value = e.target.value;
                           if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                            setCpfTopUp(prev => ({
+                            setCpfTopUp((prev: CpfTopUp) => ({
                               ...prev,
                               selfAmount: value
                             }));
@@ -1180,7 +958,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     name="qualifyingChildRelief"
                     checked={qualifyingChildRelief.enabled}
                     onChange={(e) => {
-                      setQualifyingChildRelief(prev => ({
+                      setQualifyingChildRelief((prev: QualifyingChildRelief) => ({
                         ...prev,
                         enabled: e.target.checked
                       }));
@@ -1196,10 +974,10 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="qualifying-child-relief-dependants"
                     name="qualifyingChildReliefDependants"
                     size="small"
-                    value={qualifyingChildRelief.dependants}
-                    onChange={(e) => setQualifyingChildRelief(prev => ({
+                    value={qualifyingChildRelief.count}
+                    onChange={(e) => setQualifyingChildRelief((prev: QualifyingChildRelief) => ({
                       ...prev,
-                      dependants: e.target.value
+                      count: e.target.value
                     }))}
                     sx={{ width: '120px' }}
                   >
@@ -1220,7 +998,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     name="qualifyingChildReliefDisability"
                     checked={qualifyingChildReliefDisability.enabled}
                     onChange={(e) => {
-                      setQualifyingChildReliefDisability(prev => ({
+                      setQualifyingChildReliefDisability((prev: QualifyingChildReliefDisability) => ({
                         ...prev,
                         enabled: e.target.checked
                       }));
@@ -1236,10 +1014,10 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="qualifying-child-relief-disability-dependants"
                     name="qualifyingChildReliefDisabilityDependants"
                     size="small"
-                    value={qualifyingChildReliefDisability.dependants}
-                    onChange={(e) => setQualifyingChildReliefDisability(prev => ({
+                    value={qualifyingChildReliefDisability.count}
+                    onChange={(e) => setQualifyingChildReliefDisability((prev: QualifyingChildReliefDisability) => ({
                       ...prev,
-                      dependants: e.target.value
+                      count: e.target.value
                     }))}
                     sx={{ width: '120px' }}
                   >
@@ -1260,7 +1038,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     name="workingMothersChildRelief"
                     checked={workingMothersChildRelief.enabled}
                     onChange={(e) => {
-                      setWorkingMothersChildRelief(prev => ({
+                      setWorkingMothersChildRelief((prev: WorkingMothersChildRelief) => ({
                         ...prev,
                         enabled: e.target.checked
                       }));
@@ -1279,7 +1057,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                        setWorkingMothersChildRelief(prev => ({
+                        setWorkingMothersChildRelief((prev: WorkingMothersChildRelief) => ({
                           ...prev,
                           amount: value
                         }));
@@ -1306,7 +1084,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="srs-contribution-relief"
                     name="srsContributionRelief"
                     checked={srsContributionRelief.enabled}
-                    onChange={(e) => setSrsContributionRelief(prev => ({
+                    onChange={(e) => setSrsContributionRelief((prev: SrsContributionRelief) => ({
                       ...prev,
                       enabled: e.target.checked
                     }))}
@@ -1330,24 +1108,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
                       if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
                         if (value === '' || isNaN(numericValue) || numericValue <= maxAmount) {
-                          setSrsContributionRelief(prev => ({
+                          setSrsContributionRelief((prev: SrsContributionRelief) => ({
                             ...prev,
                             amount: value,
-                            error: ''
                           }));
                         } else {
-                          setSrsContributionRelief(prev => ({
+                          setSrsContributionRelief((prev: SrsContributionRelief) => ({
                             ...prev,
                             error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
                           }));
-
-                          // Clear the error after 5 seconds
-                          setTimeout(() => {
-                            setSrsContributionRelief(current => ({
-                              ...current,
-                              error: ''
-                            }));
-                          }, 5000);
                         }
                       }
                     }}
@@ -1379,7 +1148,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         id="life-insurance-relief"
                         name="lifeInsuranceRelief"
                         checked={lifeInsuranceRelief.enabled}
-                        onChange={(e) => setLifeInsuranceRelief(prev => ({
+                        onChange={(e) => setLifeInsuranceRelief((prev: LifeInsuranceRelief) => ({
                           ...prev,
                           enabled: e.target.checked
                         }))}
@@ -1396,25 +1165,24 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         value={lifeInsuranceRelief.amount}
                         onChange={(e) => {
                           const value = e.target.value;
-                          const numericValue = parseFloat(value);
-
+                          const numericValue = Number(value);
                           if (value === '' || /^(\d*\.?\d{0,2}|\.\d{0,2})$/.test(value)) {
                             if (value === '' || isNaN(numericValue) || numericValue <= constants.LIFE_INSURANCE_LIMIT) {
-                              setLifeInsuranceRelief(prev => ({
+                              setLifeInsuranceRelief((prev: LifeInsuranceRelief) => ({
                                 ...prev,
                                 amount: value,
                                 error: ''
                               }));
                             } else {
-                              setLifeInsuranceRelief(prev => ({
+                              setLifeInsuranceRelief((prev: LifeInsuranceRelief) => ({
                                 ...prev,
                                 error: `Max relief allowed is ${formatCurrency(constants.LIFE_INSURANCE_LIMIT)}`
                               }));
 
                               // Clear the error after 5 seconds
                               setTimeout(() => {
-                                setLifeInsuranceRelief(current => ({
-                                  ...current,
+                                setLifeInsuranceRelief((prev: LifeInsuranceRelief) => ({
+                                  ...prev,
                                   error: ''
                                 }));
                               }, 5000);
@@ -1449,7 +1217,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="course-fees-relief"
                     name="courseFeesRelief"
                     checked={courseFeesRelief.enabled}
-                    onChange={(e) => setCourseFeesRelief(prev => ({
+                    onChange={(e) => setCourseFeesRelief((prev: CourseFeesRelief) => ({
                       ...prev,
                       enabled: e.target.checked
                     }))}
@@ -1467,7 +1235,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                        setCourseFeesRelief(prev => ({
+                        setCourseFeesRelief((prev: CourseFeesRelief) => ({
                           ...prev,
                           amount: value,
                           error: ''
@@ -1500,7 +1268,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="fdwl-relief"
                     name="fdwlRelief"
                     checked={fdwlRelief.enabled}
-                    onChange={(e) => setFdwlRelief(prev => ({
+                    onChange={(e) => setFdwlRelief((prev: FdwlRelief) => ({
                       ...prev,
                       enabled: e.target.checked
                     }))}
@@ -1518,7 +1286,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                        setFdwlRelief(prev => ({
+                        setFdwlRelief((prev: FdwlRelief) => ({
                           ...prev,
                           amount: value,
                           error: ''

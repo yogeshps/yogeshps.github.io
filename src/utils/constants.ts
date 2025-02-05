@@ -30,3 +30,5 @@ export const LIFE_INSURANCE_LIMIT = 5000;
 export const MAX_TAX_RELIEF = 80000;
 
 export const CHARITABLE_DEDUCTION_MULTIPLIER = 2.5; // 250% of donation amount
+
+export const POPOVER_MAX_WIDTH = '480px';

@@ -13,29 +13,24 @@ import { calculateTax } from './TaxLogic'; // Adjust the path as needed
 import { calculateTaxReliefs } from '../utils/TaxReliefCalculator';
 import { calculateTaxDeductions } from '../utils/TaxDeductionCalculator';
 import { SingaporeTaxCalculatorView } from './SingaporeTaxCalculatorView';
-import { TaxDeductions } from './SingaporeTaxCalculatorView';
+import {
+  TaxDeductions,
+  CpfTopUp,
+  ParentRelief,
+  IncomeSources,
+  RsuCycle,
+  EsopCycle,
+  SiblingRelief,
+  TaxReliefResult
+} from '../types/tax';
 
 // Global variable for popover max width
 //const POPOVER_MAX_WIDTH = '480px';
 
 // Add this interface near the top of the file, after imports
-interface IncomeSources {
-  employment: boolean;
-  pension: boolean;
-  trade: boolean;
-  rental: boolean;
-  royalties: boolean;
-}
-
 interface ParentDependant {
   staysWithMe: boolean;
   hasDisability: boolean;
-}
-
-interface ParentRelief {
-  enabled: boolean;
-  dependants: string;
-  dependantDetails: ParentDependant[];
 }
 
 /***********************************************************
@@ -75,20 +70,6 @@ function computeCpfOnBonus(sprTable: string, age: number, monthlySalary: number,
   };
 }
 
-// Define the type for RSU/ESOP cycle
-interface RsuCycle {
-  shares: string;
-  exercisePrice: string;
-  vestingPrice: string;
-  expanded: boolean;
-}
-
-interface EsopCycle {
-  shares: string;
-  exercisePrice: string;
-  vestingPrice: string;
-  expanded: boolean;
-}
 
 /***********************************************************
  * Main React Component
@@ -261,13 +242,13 @@ const SingaporeTakeHomeCalculator = () => {
   // Add this state declaration
   const [qualifyingChildRelief, setQualifyingChildRelief] = useState({
     enabled: false,
-    dependants: "1"
+    count: "1"
   });
 
   // Add this state declaration
   const [qualifyingChildReliefDisability, setQualifyingChildReliefDisability] = useState({
     enabled: false,
-    dependants: "1"
+    count: "1"
   });
 
   // Add this new state for Working Mother's Child Relief
@@ -472,7 +453,7 @@ const SingaporeTakeHomeCalculator = () => {
   };
 
   const handlePopoverClick = (
-    event: React.MouseEvent<HTMLButtonElement>,
+    event: React.MouseEvent<HTMLElement | HTMLButtonElement>,
     setAnchor: React.Dispatch<React.SetStateAction<HTMLElement | null>>
   ) => {
     setAnchor(event.currentTarget);
