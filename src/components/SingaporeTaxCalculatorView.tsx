@@ -142,7 +142,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleTaxDeductionChange,
   taxDeductions,
   mortgageInterestPopoverAnchor,
-  setMortgageInterestPopoverAnchor
+  setMortgageInterestPopoverAnchor,
+  setIncomeSources
 }) => {
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
@@ -154,8 +155,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
     <Card sx={{ width: '100%', maxWidth: 1000, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
-          Singapore Take Home Pay Calculator (All-in-One)
+          Singapore Take Home Pay Calculator
         </Typography>
+        <Divider sx={{ my: 2 }} />
+
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Basic Information
+          </Typography>
 
         <Grid container spacing={2} sx={{ mb: 3 }}>
           {/* Age */}
@@ -382,6 +388,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             }}
           />
         </Box>
+        <Divider sx={{ my: 2 }} />
 
         {/* Add this new section after RSU and before Annual Cash Bonus */}
         <Box sx={{ mb: 3 }}>
@@ -403,6 +410,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }
               label="Salaried employment"
             />
+            {/* Pension */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -414,6 +422,32 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }
               label="Pension"
             />
+            {incomeSources.pension && (
+              <TextField
+                id="pension-amount"
+                name="pensionAmount"
+                placeholder="Enter amount"
+                value={incomeSources.pensionAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    handleIncomeSourceChange('pensionAmount', value);
+                  }
+                }}
+                inputProps={{
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ width: '200px', ml: 4 }}
+              />
+            )}
+            
+            {/* Trade */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -425,6 +459,32 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }
               label="Trade, business, profession or vocation"
             />
+            {incomeSources.trade && (
+              <TextField
+                id="trade-amount"
+                name="tradeAmount"
+                placeholder="Enter amount"
+                value={incomeSources.tradeAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    handleIncomeSourceChange('tradeAmount', value);
+                  }
+                }}
+                inputProps={{
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ width: '200px', ml: 4 }}
+              />
+            )}
+
+            {/* Rental */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -468,6 +528,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 />
               </Box>
             )}
+
+            {/* Royalties */}
             <FormControlLabel
               control={
                 <Checkbox
@@ -479,14 +541,39 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }
               label="Royalties, charge, estate/trust"
             />
+            {incomeSources.royalties && (
+              <TextField
+                id="royalties-amount"
+                name="royaltiesAmount"
+                placeholder="Enter amount"
+                value={incomeSources.royaltiesAmount}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                    handleIncomeSourceChange('royaltiesAmount', value);
+                  }
+                }}
+                inputProps={{
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>
+                }}
+                variant="outlined"
+                size="small"
+                sx={{ width: '200px', ml: 4 }}
+              />
+            )}
           </Box>
         </Box>
 
+        <Divider sx={{ my: 2 }} />
 
         {/* RSU and ESOP Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            RSUs and ESOPs
+            Equity Grants
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
             Provide details of your RSU/ESOP vesting cycles.
@@ -726,8 +813,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         id="earned-income-relief"
                         name="earnedIncomeRelief"
                         checked={taxReliefs.earnedIncomeRelief}
-                        disabled={true}  // Always disabled
-                        onChange={() => {}} // No-op since it's disabled
+                        disabled={true}
                       />
                     }
                     label="Earned Income Relief"
@@ -740,6 +826,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                           name="earnedIncomeReliefDisability"
                           checked={taxReliefs.earnedIncomeReliefDisability}
                           onChange={(e) => handleDisabilityReliefChange(e.target.checked)}
+                          disabled={results.eligibleIncome === 0}
                         />
                       }
                       label="Earned Income Relief (Disability)"

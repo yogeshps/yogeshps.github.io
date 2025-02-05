@@ -50,10 +50,17 @@ export interface ParentRelief {
 export interface IncomeSources {
   employment: boolean;
   pension: boolean;
+  pensionAmount: string | undefined;
+  prevPensionAmount: string | undefined;
   trade: boolean;
+  tradeAmount: string | undefined;
+  prevTradeAmount: string | undefined;
   rental: boolean;
-  rentalAmount?: string;
+  rentalAmount: string | undefined;
+  prevRentalAmount: string | undefined;
   royalties: boolean;
+  royaltiesAmount: string | undefined;
+  prevRoyaltiesAmount: string | undefined;
 }
 
 // Stock Options Types
@@ -123,6 +130,7 @@ export interface SingaporeTaxCalculatorViewProps {
     employerBonusCPF: number;
     totalEmployerCPF: number;
     baseIncome: number;
+    eligibleIncome: number;
   };
   taxReliefResults: TaxReliefResult;
   taxDeductionResults: TaxDeductionResult;
@@ -210,6 +218,7 @@ export interface SingaporeTaxCalculatorViewProps {
   setFdwlRelief: (value: any) => void;
   setSrsContributionRelief: (value: any) => void;
   handleTaxDeductionChange: (field: keyof TaxDeductions, value: boolean | string) => void;
+  setIncomeSources: React.Dispatch<React.SetStateAction<IncomeSources>>;
 }
 
 export interface QualifyingChildRelief {
@@ -257,11 +266,3 @@ export interface Inputs {
   annualSalary: string;
   annualBonus: string;
 } 
-export interface IncomeSources {
-  employment: boolean;
-  pension: boolean;
-  trade: boolean;
-  rental: boolean;
-  rentalAmount?: string;
-  royalties: boolean;
-}

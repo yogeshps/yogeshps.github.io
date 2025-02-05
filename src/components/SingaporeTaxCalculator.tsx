@@ -106,7 +106,8 @@ const SingaporeTakeHomeCalculator = () => {
     employerAnnualCPF: 0,
     employerBonusCPF: 0,
     totalEmployerCPF: 0,
-    baseIncome: 0
+    baseIncome: 0,
+    eligibleIncome: 0
   });
 
   // Inline error state for age
@@ -124,13 +125,20 @@ const SingaporeTakeHomeCalculator = () => {
   const [esopVestingPopoverAnchor, setEsopVestingPopoverAnchor] = useState<null | HTMLElement>(null);
 
   // Update incomeSources state to have employment checked by default
-  const [incomeSources, setIncomeSources] = useState({
-    employment: true,  // Default to true
+  const [incomeSources, setIncomeSources] = useState<IncomeSources>({
+    employment: true,
     pension: false,
+    pensionAmount: '',
+    prevPensionAmount: '',
     trade: false,
+    tradeAmount: '',
+    prevTradeAmount: '',
     rental: false,
     rentalAmount: '',
+    prevRentalAmount: '',
     royalties: false,
+    royaltiesAmount: '',
+    prevRoyaltiesAmount: ''
   });
 
   // Add new state for CPF top-up
@@ -314,11 +322,59 @@ const SingaporeTakeHomeCalculator = () => {
     employmentExpenseAmount: ''
   });
 
+  // First effect: Calculate base income
+  useEffect(() => {
+    const rsuGains = rsuCycles.reduce((acc, cycle) => {
+      const shares = Number(cycle.shares || 0);
+      const vestingPrice = Number(cycle.vestingPrice || 0);
+      return acc + (shares * vestingPrice);
+    }, 0);
+
+    const esopGains = esopCycles.reduce((acc, cycle) => {
+      const shares = Number(cycle.shares || 0);
+      const exercisePrice = Number(cycle.exercisePrice || 0);
+      const vestingPrice = Number(cycle.vestingPrice || 0);
+      return acc + Math.max(0, shares * (vestingPrice - exercisePrice));
+    }, 0);
+
+    const eligibleIncome = Number(inputs.monthlySalary || 0) * 12 +
+      Number(inputs.annualBonus || 0) +
+      Number(incomeSources.pension ? incomeSources.pensionAmount : 0) +
+      Number(incomeSources.trade ? incomeSources.tradeAmount : 0) +
+      rsuGains +
+      esopGains;
+
+    const baseIncome = eligibleIncome +
+      Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
+      Number(incomeSources.royalties ? incomeSources.royaltiesAmount : 0);
+    
+    setResults(prev => ({
+      ...prev,
+      baseIncome,
+      eligibleIncome,
+      totalRsuGains: rsuGains,
+      totalEsopGains: esopGains
+    }));
+  }, [inputs, incomeSources, rsuCycles, esopCycles]);
+
+  // Second effect: Calculate assessable income and tax
+  useEffect(() => {
+    if (results.baseIncome > 0) {
+      const assessableIncome = Math.max(0, results.baseIncome - taxDeductionResults.totalDeductions);
+      const chargeableIncome = Math.max(0, assessableIncome - taxReliefResults.totalReliefs);
+      
+      setResults(prev => ({
+        ...prev,
+        totalTaxableIncome: chargeableIncome,
+        annualTax: calculateTax(chargeableIncome)
+      }));
+    }
+  }, [results.baseIncome, taxDeductionResults.totalDeductions, taxReliefResults.totalReliefs]);
+
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
-    const hasEligibleIncome = incomeSources.employment || 
-                             incomeSources.pension || 
-                             incomeSources.trade;
+    // Check if there's actual income from eligible sources (including stocks)
+    const hasEligibleIncome = results.eligibleIncome > 0;
 
     if (!hasEligibleIncome) {
       setTaxReliefs(prev => ({
@@ -327,14 +383,13 @@ const SingaporeTakeHomeCalculator = () => {
         earnedIncomeReliefDisability: false
       }));
     } else {
-      // Restore previous state or set default when eligible income is selected
       setTaxReliefs(prev => ({
         ...prev,
         earnedIncomeRelief: !preferDisabilityRelief,
         earnedIncomeReliefDisability: preferDisabilityRelief
       }));
     }
-  }, [incomeSources, preferDisabilityRelief]);
+  }, [results.eligibleIncome, preferDisabilityRelief]);
 
   // Update the disability handler
   const handleDisabilityReliefChange = (checked: boolean) => {
@@ -361,6 +416,9 @@ const SingaporeTakeHomeCalculator = () => {
     const baseIncome = Number(inputs.monthlySalary || 0) * 12 +
       Number(inputs.annualBonus || 0) +
       Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
+      Number(incomeSources.pension ? incomeSources.pensionAmount : 0) +
+      Number(incomeSources.trade ? incomeSources.tradeAmount : 0) +
+      Number(incomeSources.royalties ? incomeSources.royaltiesAmount : 0) +
       // RSU gains calculation
       rsuCycles.reduce((acc, cycle) => {
         const shares = Number(cycle.shares || 0);
@@ -379,7 +437,20 @@ const SingaporeTakeHomeCalculator = () => {
       ...prev,
       baseIncome: baseIncome
     }));
-  }, [inputs.monthlySalary, inputs.annualBonus, incomeSources.rental, incomeSources.rentalAmount, rsuCycles, esopCycles]);
+  }, [
+    inputs.monthlySalary, 
+    inputs.annualBonus, 
+    incomeSources.rental,
+    incomeSources.rentalAmount,
+    incomeSources.pension,
+    incomeSources.pensionAmount,
+    incomeSources.trade,
+    incomeSources.tradeAmount,
+    incomeSources.royalties,
+    incomeSources.royaltiesAmount,
+    rsuCycles, 
+    esopCycles
+  ]);
 
   // Then calculate tax reliefs based on base income
   useEffect(() => {
@@ -433,37 +504,53 @@ const SingaporeTakeHomeCalculator = () => {
     fdwlRelief
   ]);
 
-  // Calculate assessable income (after deductions, before reliefs)
-  useEffect(() => {
-    if (results.baseIncome > 0) {
-      const assessableIncome = Math.max(0, results.baseIncome - taxDeductionResults.totalDeductions);
-      
-      // Calculate chargeable income (after reliefs)
-      const chargeableIncome = Math.max(0, assessableIncome - taxReliefResults.totalReliefs);
-      
-      setResults(prev => ({
-        ...prev,
-        totalTaxableIncome: chargeableIncome,
-        annualTax: calculateTax(chargeableIncome)
-      }));
-    }
-  }, [results.baseIncome, taxDeductionResults.totalDeductions, taxReliefResults.totalReliefs]);
-
   // Add this new handler for checkbox changes
   const handleIncomeSourceChange = (source: string, value?: string) => {
-    if (source === 'rentalAmount') {
+    if (['pensionAmount', 'tradeAmount', 'royaltiesAmount'].includes(source)) {
+      if (value === undefined) return;
+      setIncomeSources(prev => ({
+        ...prev,
+        [source]: value
+      }));
+    } else if (source === 'rentalAmount') {
+      // Keep existing rental amount logic separate
       if (value === undefined) return;
       setIncomeSources(prev => ({
         ...prev,
         rentalAmount: value
       }));
     } else {
-      setIncomeSources(prev => ({
-        ...prev,
-        [source]: !prev[source as keyof IncomeSources],
-        ...(source === 'rental' && !prev.rental ? {} : 
-           source === 'rental' ? { rentalAmount: '' } : {})
-      }));
+      setIncomeSources(prev => {
+        const newState = {
+          ...prev,
+          [source]: !prev[source as keyof IncomeSources]
+        };
+
+        // Handle rental toggle separately to preserve existing logic
+        if (source === 'rental') {
+          if (!prev.rental) {
+            newState.rentalAmount = prev.prevRentalAmount || '';
+          } else {
+            newState.prevRentalAmount = prev.rentalAmount;
+            newState.rentalAmount = '';
+          }
+        }
+
+        // Handle other income sources
+        if (source === 'pension' || source === 'trade' || source === 'royalties') {
+          const amountField = `${source}Amount`;
+          const prevAmountField = `prev${source.charAt(0).toUpperCase() + source.slice(1)}Amount`;
+          
+          if (!prev[source]) {
+            (newState as any)[amountField] = prev[prevAmountField as keyof IncomeSources] || '';
+          } else {
+            (newState as any)[prevAmountField] = prev[amountField as keyof IncomeSources];
+            (newState as any)[amountField] = '';
+          }
+        }
+
+        return newState;
+      });
     }
   };
 
@@ -740,16 +827,20 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Effect to calculate take-home pay after CPF and tax
   useEffect(() => {
-    // Calculate take-home pay after CPF and tax
-    const annualGross = Number(inputs.monthlySalary || 0) * 12 + 
-                       Number(inputs.annualBonus || 0) +
-                       Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
-                       results.totalRsuGains +
-                       results.totalEsopGains;
-                       
-    const totalDeductions = results.totalEmployeeCPF + results.annualTax;
-    const annualTakeHome = annualGross - totalDeductions;
-    const monthlyTakeHome = annualTakeHome / 12;
+    // Monthly take-home from salary
+    const monthlyTakeHome = Number(inputs.monthlySalary || 0) - 
+      (results.employeeMonthlyCPF || 0);
+
+    // Annual take-home calculation
+    const annualTakeHome = (monthlyTakeHome * 12) +
+      (Number(inputs.annualBonus || 0) - (results.employeeBonusCPF || 0)) +
+      (Number(incomeSources.pension ? incomeSources.pensionAmount : 0)) +
+      (Number(incomeSources.trade ? incomeSources.tradeAmount : 0)) +
+      (Number(incomeSources.rental ? incomeSources.rentalAmount : 0)) +
+      (Number(incomeSources.royalties ? incomeSources.royaltiesAmount : 0)) +
+      results.totalRsuGains +
+      results.totalEsopGains -
+      results.annualTax;
 
     setResults(prev => ({
       ...prev,
@@ -759,12 +850,12 @@ const SingaporeTakeHomeCalculator = () => {
   }, [
     inputs.monthlySalary,
     inputs.annualBonus,
-    incomeSources.rental,
-    incomeSources.rentalAmount,
+    incomeSources,
+    results.employeeMonthlyCPF,
+    results.employeeBonusCPF,
+    results.annualTax,
     results.totalRsuGains,
-    results.totalEsopGains,
-    results.totalEmployeeCPF,
-    results.annualTax
+    results.totalEsopGains
   ]);
 
   // Handler for main spouse relief checkbox
@@ -971,6 +1062,7 @@ const SingaporeTakeHomeCalculator = () => {
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
       inputs={inputs}
+      setIncomeSources={setIncomeSources}
       results={results}
       taxReliefResults={taxReliefResults}
       ageError={ageError}
