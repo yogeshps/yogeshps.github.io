@@ -38,3 +38,5 @@ export const PARENTHOOD_TAX_REBATE = {
   SECOND_CHILD: 10000,
   THIRD_CHILD: 20000,
 } as const;
+
+export const FLAT_DEDUCTION_PERCENTAGE = 0.15; // 15%

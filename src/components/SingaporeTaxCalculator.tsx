@@ -129,6 +129,7 @@ const SingaporeTakeHomeCalculator = () => {
     pension: false,
     trade: false,
     rental: false,
+    rentalAmount: '',
     royalties: false,
   });
 
@@ -299,13 +300,16 @@ const SingaporeTakeHomeCalculator = () => {
   });
 
   // Add new state for tax deductions
-  const [taxDeductions, setTaxDeductions] = useState({
-    charitableDeductions: false,
+  const [taxDeductions, setTaxDeductions] = useState<TaxDeductions>({
+    charitableDeductions: { enabled: false, amount: '' },
     charitableAmount: '',
     parenthoodTaxRebate: false,
-    parenthoodTaxRebateType: 'first_child',
+    parenthoodTaxRebateType: '',
     parenthoodTaxRebateAmount: '',
     rentalIncomeDeductions: false,
+    rentalDeductionType: 'flat',
+    mortgageInterest: '',
+    actualRentalExpenses: '',
     employmentExpenseDeductions: false
   });
 
@@ -355,13 +359,14 @@ const SingaporeTakeHomeCalculator = () => {
     // Calculate base income (before reliefs)
     const baseIncome = Number(inputs.monthlySalary || 0) * 12 +
       Number(inputs.annualBonus || 0) +
-      // Correct RSU gains calculation
+      Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
+      // RSU gains calculation
       rsuCycles.reduce((acc, cycle) => {
         const shares = Number(cycle.shares || 0);
         const vestingPrice = Number(cycle.vestingPrice || 0);
         return acc + (shares * vestingPrice);
       }, 0) +
-      // Correct ESOP gains calculation
+      // ESOP gains calculation
       esopCycles.reduce((acc, cycle) => {
         const shares = Number(cycle.shares || 0);
         const exercisePrice = Number(cycle.exercisePrice || 0);
@@ -373,7 +378,7 @@ const SingaporeTakeHomeCalculator = () => {
       ...prev,
       baseIncome: baseIncome
     }));
-  }, [inputs.monthlySalary, inputs.annualBonus, rsuCycles, esopCycles]);
+  }, [inputs.monthlySalary, inputs.annualBonus, incomeSources.rental, incomeSources.rentalAmount, rsuCycles, esopCycles]);
 
   // Then calculate tax reliefs based on base income
   useEffect(() => {
@@ -444,11 +449,21 @@ const SingaporeTakeHomeCalculator = () => {
   }, [results.baseIncome, taxDeductionResults.totalDeductions, taxReliefResults.totalReliefs]);
 
   // Add this new handler for checkbox changes
-  const handleIncomeSourceChange = (source: keyof IncomeSources) => {
-    setIncomeSources(prev => ({
-      ...prev,
-      [source]: !prev[source]
-    }));
+  const handleIncomeSourceChange = (source: string, value?: string) => {
+    if (source === 'rentalAmount') {
+      if (value === undefined) return;
+      setIncomeSources(prev => ({
+        ...prev,
+        rentalAmount: value
+      }));
+    } else {
+      setIncomeSources(prev => ({
+        ...prev,
+        [source]: !prev[source as keyof IncomeSources],
+        ...(source === 'rental' && !prev.rental ? {} : 
+           source === 'rental' ? { rentalAmount: '' } : {})
+      }));
+    }
   };
 
   const handlePopoverClick = (
@@ -564,18 +579,23 @@ const SingaporeTakeHomeCalculator = () => {
     const totalEsopGains = esopGains.reduce((acc, gain) => acc + gain, 0);
 
     // Calculate total taxable income
-    const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains;
+    const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains + 
+      (incomeSources.rental ? Number(incomeSources.rentalAmount || 0) : 0);
 
     // Calculate total deductions
     const deductions = calculateTaxDeductions({
       charitableDeductions: {
-        enabled: taxDeductions.charitableDeductions,
+        enabled: taxDeductions.charitableDeductions.enabled,
         amount: taxDeductions.charitableAmount
       },
       parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
       parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
       parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
       rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
+      rentalDeductionType: taxDeductions.rentalDeductionType ?? 'flat',
+      mortgageInterest: taxDeductions.mortgageInterest ?? '',
+      actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
+      annualRentalIncome: incomeSources.rentalAmount || '',
       employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
     });
 
@@ -721,6 +741,7 @@ const SingaporeTakeHomeCalculator = () => {
     // Calculate take-home pay after CPF and tax
     const annualGross = Number(inputs.monthlySalary || 0) * 12 + 
                        Number(inputs.annualBonus || 0) +
+                       Number(incomeSources.rental ? incomeSources.rentalAmount : 0) +
                        results.totalRsuGains +
                        results.totalEsopGains;
                        
@@ -736,6 +757,8 @@ const SingaporeTakeHomeCalculator = () => {
   }, [
     inputs.monthlySalary,
     inputs.annualBonus,
+    incomeSources.rental,
+    incomeSources.rentalAmount,
     results.totalRsuGains,
     results.totalEsopGains,
     results.totalEmployeeCPF,
@@ -880,30 +903,47 @@ const SingaporeTakeHomeCalculator = () => {
   useEffect(() => {
     const deductions = calculateTaxDeductions({
       charitableDeductions: {
-        enabled: taxDeductions.charitableDeductions,
+        enabled: taxDeductions.charitableDeductions.enabled,
         amount: taxDeductions.charitableAmount
       },
       parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
       parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
       parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
       rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
+      rentalDeductionType: taxDeductions.rentalDeductionType ?? 'flat',
+      mortgageInterest: taxDeductions.mortgageInterest ?? '',
+      actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
+      annualRentalIncome: incomeSources.rentalAmount || '',
       employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
     });
 
-    setTaxDeductionResults(prev => ({
-      ...prev,
-      ...deductions
-    }));
-  }, [taxDeductions]);
+    setTaxDeductionResults(deductions);
+  }, [taxDeductions, incomeSources.rentalAmount]);
 
-  const handleTaxDeductionChange = (
-    field: keyof TaxDeductions,
-    value: boolean | string
-  ) => {
-    setTaxDeductions(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleTaxDeductionChange = (field: string, value: any) => {
+    setTaxDeductions(prev => {
+      if (field === 'charitableDeductions') {
+        return {
+          ...prev,
+          charitableDeductions: {
+            ...prev.charitableDeductions,
+            enabled: value
+          }
+        };
+      }
+      if (field === 'parenthoodTaxRebate') {
+        return {
+          ...prev,
+          parenthoodTaxRebate: value,
+          parenthoodTaxRebateType: value ? 'first_child' : '', // Reset type when toggling
+          parenthoodTaxRebateAmount: ''  // Reset amount when toggling
+        };
+      }
+      return {
+        ...prev,
+        [field]: value
+      };
+    });
   };
 
   return (

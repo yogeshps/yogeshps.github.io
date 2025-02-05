@@ -140,7 +140,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setFdwlRelief,
   taxDeductionResults,
   handleTaxDeductionChange,
-  taxDeductions
+  taxDeductions,
+  mortgageInterestPopoverAnchor,
+  setMortgageInterestPopoverAnchor
 }) => {
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
@@ -433,6 +435,38 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }
               label="Rent from property ownership"
             />
+            {incomeSources.rental && (
+              <Box sx={{ ml: 4 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Annual Rental Income
+                  <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
+                  <InfoIcon fontSize="inherit" />
+                  </IconButton>
+                  </Typography>
+                <TextField
+                  id="rental-income-amount"
+                  name="rentalIncomeAmount"
+                  placeholder="Enter amount"
+                  value={incomeSources.rentalAmount || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                      handleIncomeSourceChange('rentalAmount', value);
+                    }
+                  }}
+                  inputProps={{ 
+                    inputMode: 'decimal',
+                    pattern: '[0-9]*\.?[0-9]{0,2}'
+                  }}
+                  InputProps={{
+                    startAdornment: <InputAdornment position="start">$</InputAdornment>
+                  }}
+                  variant="outlined"
+                  size="small"
+                  sx={{ width: '200px' }}
+                />
+              </Box>
+            )}
             <FormControlLabel
               control={
                 <Checkbox
@@ -1389,13 +1423,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   <Checkbox
                     id="charitable-deductions"
                     name="charitableDeductions"
-                    checked={taxDeductions.charitableDeductions}
+                    checked={taxDeductions.charitableDeductions.enabled}
                     onChange={(e) => handleTaxDeductionChange('charitableDeductions', e.target.checked)}
                   />
                 }
                 label="Charitable Deductions"
               />
-              {taxDeductions.charitableDeductions && (
+              {taxDeductions.charitableDeductions.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
                   <TextField
                     id="charitable-amount"
@@ -1491,6 +1525,86 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 }
                 label="Rental Income Deductions"
               />
+              {taxDeductions.rentalIncomeDeductions && (
+                <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                    Annual Mortgage Interest
+                    <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Typography>
+                  <TextField
+                    id="mortgage-interest"
+                    name="mortgageInterest"
+                    size="small"
+                    value={taxDeductions.mortgageInterest || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        handleTaxDeductionChange('mortgageInterest', value);
+                      }
+                    }}
+                    placeholder="Enter amount"
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    sx={{ width: '200px' }}
+                  />
+                  <Box sx={{ mb: 2 }} />
+
+                  <Typography>How do you calculate rental income deductions?</Typography>
+                  <Box sx={{ mb: 1 }} />
+                  <Select
+                    id="rental-deduction-type"
+                    name="rentalDeductionType"
+                    size="small"
+                    value={taxDeductions.rentalDeductionType || 'flat'}
+                    onChange={(e) => handleTaxDeductionChange('rentalDeductionType', e.target.value)}
+                    sx={{ width: '200px', mb: 1 }}
+                  >
+                    <MenuItem value="flat">Flat 15% deduction</MenuItem>
+                    <MenuItem value="actual">Actual rental expenses</MenuItem>
+                  </Select>
+                  
+                  <Box sx={{ mb: 1 }} />
+
+                  {taxDeductions.rentalDeductionType === 'actual' && (
+                    <>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      Actual Rental Expenses
+                        <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
+                        <InfoIcon fontSize="inherit" />
+                      </IconButton>
+                      </Typography>
+                      <TextField
+                        id="actual-rental-expenses"
+                        name="actualRentalExpenses"
+                        size="small"
+                        value={taxDeductions.actualRentalExpenses || ''}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                            handleTaxDeductionChange('actualRentalExpenses', value);
+                          }
+                        }}
+                        placeholder="Enter amount"
+                        inputProps={{ 
+                          inputMode: 'decimal',
+                          pattern: '[0-9]*\.?[0-9]{0,2}'
+                        }}
+                        InputProps={{
+                          startAdornment: <InputAdornment position="start">$</InputAdornment>
+                        }}
+                        sx={{ width: '200px' }}
+                      />
+                    </>
+                  )}
+                </Box>
+              )}
 
               {/* Employment Expense Deductions */}
               <FormControlLabel

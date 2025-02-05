@@ -1,12 +1,18 @@
 // Tax Deduction Types
 export interface TaxDeductions {
-  charitableDeductions: boolean;
+  charitableDeductions: {
+    enabled: boolean;
+    amount: string;
+  };
   charitableAmount: string;
   charitableError?: string;
   parenthoodTaxRebate: boolean;
   parenthoodTaxRebateType: string;
   parenthoodTaxRebateAmount: string;
   rentalIncomeDeductions: boolean;
+  rentalDeductionType?: 'flat' | 'actual';
+  mortgageInterest?: string;
+  actualRentalExpenses?: string;
   employmentExpenseDeductions: boolean;
 }
 
@@ -162,7 +168,7 @@ export interface SingaporeTaxCalculatorViewProps {
   handleParentReliefChange: (checked: boolean) => void;
   handleParentDependantChange: (index: number, field: keyof ParentDependant, value: boolean) => void;
   handleParentDependantsChange: (value: string) => void;
-  handleIncomeSourceChange: (source: keyof IncomeSources) => void;
+  handleIncomeSourceChange: (source: string, value?: string) => void;
   handleRsuChange: (index: number, field: keyof RsuCycle, value: string) => void;
   handleEsopChange: (index: number, field: keyof EsopCycle, value: string) => void;
   addRsuCycle: () => void;
@@ -250,3 +256,11 @@ export interface Inputs {
   annualSalary: string;
   annualBonus: string;
 } 
+export interface IncomeSources {
+  employment: boolean;
+  pension: boolean;
+  trade: boolean;
+  rental: boolean;
+  rentalAmount?: string;
+  royalties: boolean;
+}

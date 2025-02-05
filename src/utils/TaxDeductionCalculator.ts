@@ -1,6 +1,7 @@
 import { CHARITABLE_DEDUCTION_MULTIPLIER } from './constants';
 import { TaxDeductions, TaxDeductionResult } from '../types/tax';
 import { PARENTHOOD_TAX_REBATE } from './constants';
+import { FLAT_DEDUCTION_PERCENTAGE } from './constants';
 
 interface TaxDeductionInputs {
   charitableDeductions: {
@@ -11,6 +12,10 @@ interface TaxDeductionInputs {
   parenthoodTaxRebateType: string;
   parenthoodTaxRebateAmount: string;
   rentalIncomeDeductions: boolean;
+  rentalDeductionType: 'flat' | 'actual';
+  mortgageInterest: string;
+  actualRentalExpenses: string;
+  annualRentalIncome: string;
   employmentExpenseDeductions: boolean;
 }
 
@@ -20,6 +25,10 @@ export function calculateTaxDeductions({
   parenthoodTaxRebateType,
   parenthoodTaxRebateAmount,
   rentalIncomeDeductions,
+  rentalDeductionType,
+  mortgageInterest,
+  actualRentalExpenses,
+  annualRentalIncome,
   employmentExpenseDeductions
 }: TaxDeductionInputs): TaxDeductionResult {
   
@@ -52,8 +61,17 @@ export function calculateTaxDeductions({
   // Calculate Rental Income Deductions
   let rentalIncomeDeductionsValue = 0;
   if (rentalIncomeDeductions) {
-    // TODO: Implement logic for rental income deductions calculation
-    rentalIncomeDeductionsValue = 0;
+    const mortgageInterestAmount = Number(mortgageInterest) || 0;
+    const rentalIncome = Number(annualRentalIncome) || 0;
+    
+    if (rentalDeductionType === 'flat') {
+      // Use the constant for flat deduction
+      rentalIncomeDeductionsValue = (rentalIncome * FLAT_DEDUCTION_PERCENTAGE) + mortgageInterestAmount;
+    } else {
+      // Actual expenses + mortgage interest
+      const actualExpenses = Number(actualRentalExpenses) || 0;
+      rentalIncomeDeductionsValue = actualExpenses + mortgageInterestAmount;
+    }
   }
 
   // Calculate Employment Expense Deductions

@@ -297,13 +297,6 @@ export function calculateTaxReliefs({
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
 
-  console.log('Tax Relief Debug:', {
-    courseFeesReliefValue,
-    fdwlReliefValue,
-    totalReliefs,
-    annualIncome,
-    totalTaxableIncome
-  });
 
   return {
     earnedIncomeRelief,
