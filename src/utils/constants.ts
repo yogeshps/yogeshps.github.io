@@ -32,3 +32,9 @@ export const MAX_TAX_RELIEF = 80000;
 export const CHARITABLE_DEDUCTION_MULTIPLIER = 2.5; // 250% of donation amount
 
 export const POPOVER_MAX_WIDTH = '480px';
+
+export const PARENTHOOD_TAX_REBATE = {
+  FIRST_CHILD: 5000,
+  SECOND_CHILD: 10000,
+  THIRD_CHILD: 20000,
+} as const;

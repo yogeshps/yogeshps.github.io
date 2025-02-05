@@ -15,13 +15,10 @@ import { calculateTaxDeductions } from '../utils/TaxDeductionCalculator';
 import { SingaporeTaxCalculatorView } from './SingaporeTaxCalculatorView';
 import {
   TaxDeductions,
-  CpfTopUp,
   ParentRelief,
   IncomeSources,
   RsuCycle,
-  EsopCycle,
-  SiblingRelief,
-  TaxReliefResult
+  EsopCycle
 } from '../types/tax';
 
 // Global variable for popover max width
@@ -306,6 +303,8 @@ const SingaporeTakeHomeCalculator = () => {
     charitableDeductions: false,
     charitableAmount: '',
     parenthoodTaxRebate: false,
+    parenthoodTaxRebateType: 'first_child',
+    parenthoodTaxRebateAmount: '',
     rentalIncomeDeductions: false,
     employmentExpenseDeductions: false
   });
@@ -471,10 +470,6 @@ const SingaporeTakeHomeCalculator = () => {
     setEsopExercisePopoverAnchor(null);
     setEsopVestingPopoverAnchor(null);
   };
-
-  const isAgePopoverOpen = Boolean(agePopoverAnchor);
-  const isResidencyPopoverOpen = Boolean(residencyPopoverAnchor);
-
   // Whenever inputs change, recalc
   useEffect(() => {
     if (Number(extraInputs.age) < 0 || Number(extraInputs.age) > 120) {
@@ -551,15 +546,15 @@ const SingaporeTakeHomeCalculator = () => {
     // Calculate stock gains from RSUs
     const stockGains = rsuCycles.map((cycle) => {
       const shares = Number(cycle.shares) || 0;
-      const vestingPrice = Number(cycle.vestingPrice) || 0;
+      const vestingPrice = Number(cycle.vestingPrice || 0);
       return shares * vestingPrice; // Calculate stock gains for each RSU cycle
     });
 
     // Calculate ESOP gains
     const esopGains = esopCycles.map((cycle) => {
       const shares = Number(cycle.shares) || 0;
-      const exercisePrice = Number(cycle.exercisePrice) || 0;
-      const vestingPrice = Number(cycle.vestingPrice) || 0;
+      const exercisePrice = Number(cycle.exercisePrice || 0);
+      const vestingPrice = Number(cycle.vestingPrice || 0);
       const gain = shares * (vestingPrice - exercisePrice);
       return Math.max(gain, 0); // Ensure ESOP gains are not negative
     });
@@ -572,10 +567,22 @@ const SingaporeTakeHomeCalculator = () => {
     const totalTaxableIncome = annualBase + bonus + totalRsuGains + totalEsopGains;
 
     // Calculate total deductions
-    const totalDeductions = results.totalEmployeeCPF + results.annualTax;
+    const deductions = calculateTaxDeductions({
+      charitableDeductions: {
+        enabled: taxDeductions.charitableDeductions,
+        amount: taxDeductions.charitableAmount
+      },
+      parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
+      parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
+      parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
+      rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
+      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
+    });
+
+    setTaxDeductionResults(deductions);
 
     // Calculate annual take-home pay
-    const annualTakeHome = totalTaxableIncome - totalDeductions;
+    const annualTakeHome = totalTaxableIncome - deductions.totalDeductions;
     const monthlyTakeHome = annualTakeHome / 12;
 
     // Store in results
@@ -605,17 +612,20 @@ const SingaporeTakeHomeCalculator = () => {
   // Salary input changes
   const handleSalaryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    
     if (name === 'monthlySalary') {
+      const annual = (parseFloat(value) || 0) * 12;
       setInputs({
         ...inputs,
         monthlySalary: value,
-        annualSalary: value ? (Number(value) * 12).toString() : ''
+        annualSalary: annual.toString()
       });
     } else if (name === 'annualSalary') {
+      const monthly = (parseFloat(value) || 0) / 12;
       setInputs({
         ...inputs,
         annualSalary: value,
-        monthlySalary: value ? (Number(value) / 12).toString() : ''
+        monthlySalary: monthly.toString()
       });
     }
   };
@@ -874,6 +884,8 @@ const SingaporeTakeHomeCalculator = () => {
         amount: taxDeductions.charitableAmount
       },
       parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
+      parenthoodTaxRebateType: taxDeductions.parenthoodTaxRebateType,
+      parenthoodTaxRebateAmount: taxDeductions.parenthoodTaxRebateAmount,
       rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
       employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
     });

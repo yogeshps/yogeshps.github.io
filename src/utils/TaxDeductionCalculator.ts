@@ -1,5 +1,6 @@
 import { CHARITABLE_DEDUCTION_MULTIPLIER } from './constants';
 import { TaxDeductions, TaxDeductionResult } from '../types/tax';
+import { PARENTHOOD_TAX_REBATE } from './constants';
 
 interface TaxDeductionInputs {
   charitableDeductions: {
@@ -7,6 +8,8 @@ interface TaxDeductionInputs {
     amount: string;
   };
   parenthoodTaxRebate: boolean;
+  parenthoodTaxRebateType: string;
+  parenthoodTaxRebateAmount: string;
   rentalIncomeDeductions: boolean;
   employmentExpenseDeductions: boolean;
 }
@@ -14,6 +17,8 @@ interface TaxDeductionInputs {
 export function calculateTaxDeductions({
   charitableDeductions,
   parenthoodTaxRebate,
+  parenthoodTaxRebateType,
+  parenthoodTaxRebateAmount,
   rentalIncomeDeductions,
   employmentExpenseDeductions
 }: TaxDeductionInputs): TaxDeductionResult {
@@ -28,8 +33,20 @@ export function calculateTaxDeductions({
   // Calculate Parenthood Tax Rebate
   let parenthoodTaxRebateValue = 0;
   if (parenthoodTaxRebate) {
-    // TODO: Implement logic for parenthood tax rebate calculation
-    parenthoodTaxRebateValue = 0;
+    switch (parenthoodTaxRebateType) {
+      case 'first_child':
+        parenthoodTaxRebateValue = PARENTHOOD_TAX_REBATE.FIRST_CHILD;
+        break;
+      case 'second_child':
+        parenthoodTaxRebateValue = PARENTHOOD_TAX_REBATE.SECOND_CHILD;
+        break;
+      case 'third_child':
+        parenthoodTaxRebateValue = PARENTHOOD_TAX_REBATE.THIRD_CHILD;
+        break;
+      case 'custom':
+        parenthoodTaxRebateValue = parseFloat(parenthoodTaxRebateAmount || '0') || 0;
+        break;
+    }
   }
 
   // Calculate Rental Income Deductions

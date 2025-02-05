@@ -4,6 +4,8 @@ export interface TaxDeductions {
   charitableAmount: string;
   charitableError?: string;
   parenthoodTaxRebate: boolean;
+  parenthoodTaxRebateType: string;
+  parenthoodTaxRebateAmount: string;
   rentalIncomeDeductions: boolean;
   employmentExpenseDeductions: boolean;
 }
@@ -43,6 +45,7 @@ export interface IncomeSources {
   pension: boolean;
   trade: boolean;
   rental: boolean;
+  rentalAmount?: string;
   royalties: boolean;
 }
 
@@ -240,4 +243,10 @@ export interface FdwlRelief {
   enabled: boolean;
   amount: string;
   error: string;
+}
+
+export interface Inputs {
+  monthlySalary: string;
+  annualSalary: string;
+  annualBonus: string;
 } 

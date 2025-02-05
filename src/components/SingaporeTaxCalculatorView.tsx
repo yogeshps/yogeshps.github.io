@@ -46,7 +46,8 @@ import type {
   SrsContributionRelief,
   LifeInsuranceRelief,
   CourseFeesRelief,
-  FdwlRelief
+  FdwlRelief,
+  Inputs
 } from '../types/tax';
 import { POPOVER_MAX_WIDTH } from '../utils/constants';
 
@@ -259,8 +260,25 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               id="monthly-salary"
               name="monthlySalary"
               fullWidth
+              placeholder="Enter amount"
               value={inputs.monthlySalary}
-              onChange={handleSalaryChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                  setInputs((prev: Inputs) => ({
+                    ...prev,
+                    monthlySalary: value,
+                    annualSalary: value ? (Number(value) * 12).toFixed(2) : ''
+                  }));
+                }
+              }}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                inputProps: { 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }
+              }}
             />
           </Grid>
           <Grid item xs={12} md={6}>
@@ -290,8 +308,25 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               id="annual-salary"
               name="annualSalary"
               fullWidth
+              placeholder="Enter amount"
               value={inputs.annualSalary}
-              onChange={handleSalaryChange}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                  setInputs((prev: Inputs) => ({
+                    ...prev,
+                    annualSalary: value,
+                    monthlySalary: value ? (Number(value) / 12).toFixed(2) : ''
+                  }));
+                }
+              }}
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                inputProps: { 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }
+              }}
             />
           </Grid>
         </Grid>
@@ -324,9 +359,24 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             id="annual-bonus"
             name="annualBonus"
             fullWidth
+            placeholder="Enter amount" 
             value={inputs.annualBonus}
-            onChange={(e) => setInputs({ ...inputs, annualBonus: e.target.value })}
-            sx={{ mt: 1 }}
+            onChange={(e) => {
+              const value = e.target.value;
+              if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                setInputs((prev: Inputs) => ({
+                  ...prev,
+                  annualBonus: value
+                }));
+              }
+            }}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              inputProps: { 
+                inputMode: 'decimal',
+                pattern: '[0-9]*\.?[0-9]{0,2}'
+              }
+            }}
           />
         </Box>
 
@@ -1386,6 +1436,48 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 }
                 label="Parenthood Tax Rebate"
               />
+              {taxDeductions.parenthoodTaxRebate && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <Select
+                    id="parenthood-tax-rebate-type"
+                    name="parenthoodTaxRebateType"
+                    size="small"
+                    value={taxDeductions.parenthoodTaxRebateType || 'first_child'}
+                    onChange={(e) => handleTaxDeductionChange('parenthoodTaxRebateType', e.target.value)}
+                    sx={{ width: '200px' }}
+                    displayEmpty
+                  >
+                    <MenuItem value="first_child">1st child</MenuItem>
+                    <MenuItem value="second_child">2nd child</MenuItem>
+                    <MenuItem value="third_child">3rd child and beyond</MenuItem>
+                    <MenuItem value="custom">Custom amount</MenuItem>
+                  </Select>
+                  {taxDeductions.parenthoodTaxRebateType === 'custom' && (
+                    <TextField
+                      id="parenthood-tax-rebate-amount"
+                      name="parenthoodTaxRebateAmount"
+                      placeholder="Enter amount"
+                      value={taxDeductions.parenthoodTaxRebateAmount || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                          handleTaxDeductionChange('parenthoodTaxRebateAmount', value);
+                        }
+                      }}
+                      inputProps={{ 
+                        inputMode: 'decimal',
+                        pattern: '[0-9]*\.?[0-9]{0,2}'
+                      }}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">$</InputAdornment>
+                      }}
+                      variant="outlined"
+                      size="small"
+                      sx={{ width: '200px' }}
+                    />
+                  )}
+                </Box>
+              )}
 
               {/* Rental Income Deductions */}
               <FormControlLabel
