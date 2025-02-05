@@ -21,6 +21,7 @@ interface TaxReliefResult {
   fdwlRelief: number;
   totalReliefs: number;
   totalTaxableIncome: number;
+  rawTotalReliefs: number;
 }
 
 interface CpfTopUpInputs {
@@ -295,6 +296,24 @@ export function calculateTaxReliefs({
     fdwlReliefValue
   );
 
+  const rawTotalReliefs = 
+    earnedIncomeRelief +
+    earnedIncomeReliefDisability +
+    cpfRelief +
+    cpfTopUpRelief +
+    nsmanDeduction +
+    spouseReliefValue +
+    parentReliefAmount +
+    siblingDisabilityReliefValue +
+    grandparentCaregiverReliefValue +
+    qualifyingChildReliefValue +
+    qualifyingChildReliefDisabilityValue +
+    workingMothersChildReliefValue +
+    srsContributionReliefValue +
+    lifeInsuranceAmount +
+    courseFeesReliefValue +
+    fdwlReliefValue;
+
   // Calculate taxable income
   const totalTaxableIncome = Math.max(0, annualIncome - totalReliefs);
 
@@ -318,6 +337,7 @@ export function calculateTaxReliefs({
     courseFeesRelief: courseFeesReliefValue,
     fdwlRelief: fdwlReliefValue,
     totalReliefs,
+    rawTotalReliefs,
     totalTaxableIncome
   };
 } 

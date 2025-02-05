@@ -1,3 +1,5 @@
+import { Dispatch, SetStateAction } from 'react';
+
 // Tax Deduction Types
 export interface TaxDeductions {
   charitableDeductions: {
@@ -91,6 +93,7 @@ export interface TaxReliefResult {
   nsmanRelief: number;
   spouseRelief: number;
   totalReliefs: number;
+  rawTotalReliefs: number;
   parentRelief: number;
   siblingDisabilityRelief: number;
   grandparentCaregiverRelief: number;
@@ -129,6 +132,13 @@ export interface SingaporeTaxCalculatorViewProps {
     totalEmployerCPF: number;
     baseIncome: number;
     eligibleIncome: number;
+    annualBonus: number;
+    pensionIncome: number;
+    businessIncome: number;
+    rentalIncome: number;
+    royaltiesIncome: number;
+    annualSalary: number;
+    totalIncome: number;
   };
   taxReliefResults: TaxReliefResult;
   taxDeductionResults: TaxDeductionResult;

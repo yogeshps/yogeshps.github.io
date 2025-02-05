@@ -101,6 +101,13 @@ const SingaporeTakeHomeCalculator = () => {
     totalTaxableIncome: 0,
     employeeMonthlyCPF: 0,
     employeeAnnualCPF: 0,
+    totalIncome: 0,
+    annualSalary: 0,
+    annualBonus: 0,
+    pensionIncome: 0,
+    businessIncome: 0,
+    rentalIncome: 0,
+    royaltiesIncome: 0,
     employeeBonusCPF: 0,
     totalEmployeeCPF: 0,
     employerMonthlyCPF: 0,
@@ -201,6 +208,7 @@ const SingaporeTakeHomeCalculator = () => {
     nsmanRelief: 0,
     spouseRelief: 0,
     totalReliefs: 0,
+    rawTotalReliefs: 0,
     parentRelief: 0,
     siblingDisabilityRelief: 0,
     grandparentCaregiverRelief: 0,
@@ -376,7 +384,14 @@ const SingaporeTakeHomeCalculator = () => {
     let erMonth = 0;
 
     if (sprTable !== 'ep_pep_spass') {
-      const cpfResult = computeMonthlyCpfTable1(monthlyBase, ageNum);
+      const cpfResult = 
+        sprTable === 'table1' ? computeMonthlyCpfTable1(monthlyBase, ageNum) :
+        sprTable === 'table2' ? computeMonthlyCpfTable2(monthlyBase, ageNum) :
+        sprTable === 'table3' ? computeMonthlyCpfTable3(monthlyBase, ageNum) :
+        sprTable === 'table4' ? computeMonthlyCpfTable4(monthlyBase, ageNum) :
+        sprTable === 'table5' ? computeMonthlyCpfTable5(monthlyBase, ageNum) :
+        { empCPF: 0, erCPF: 0 };
+      
       empMonth = cpfResult.empCPF;
       erMonth = cpfResult.erCPF;
     }
@@ -464,6 +479,16 @@ const SingaporeTakeHomeCalculator = () => {
     const monthlyTakeHome = annualTakeHome / 12;
 
     // 10. Update all states at once
+    const totalIncome = 
+      (Number(results.annualSalary) || 0) + 
+      (Number(results.annualBonus) || 0) + 
+      (Number(results.pensionIncome) || 0) + 
+      (Number(results.businessIncome) || 0) + 
+      (Number(results.rentalIncome) || 0) + 
+      (Number(results.royaltiesIncome) || 0) + 
+      (Number(results.totalRsuGains) || 0) + 
+      (Number(results.totalEsopGains) || 0);
+
     setResults({
       monthlyTakeHome,
       annualTakeHome,
@@ -480,7 +505,14 @@ const SingaporeTakeHomeCalculator = () => {
       totalEmployerCPF: erAnnualBase + erBonus,
       baseIncome: totalTaxableIncome,
       eligibleIncome: totalTaxableIncome,
-      annualTax: calculatedTax
+      annualTax: calculatedTax,
+      annualSalary: Number(inputs.monthlySalary) * 12 || 0,
+      annualBonus: Number(inputs.annualBonus) || 0,
+      pensionIncome: Number(incomeSources.pensionAmount) || 0,
+      businessIncome: Number(incomeSources.tradeAmount) || 0,
+      rentalIncome: Number(incomeSources.rentalAmount) || 0,
+      royaltiesIncome: Number(incomeSources.royaltiesAmount) || 0,
+      totalIncome
     });
 
     // Add missing properties to reliefs before setting state
@@ -492,7 +524,8 @@ const SingaporeTakeHomeCalculator = () => {
       qualifyingChildReliefDisability: reliefs.qualifyingChildReliefDisability || 0,
       workingMothersChildRelief: reliefs.workingMothersChildRelief || 0,
       srsContributionRelief: reliefs.srsContributionRelief || 0,
-      lifeInsuranceRelief: reliefs.lifeInsuranceRelief || 0
+      lifeInsuranceRelief: reliefs.lifeInsuranceRelief || 0,
+      rawTotalReliefs: reliefs.totalReliefs
     });
 
     setTaxDeductionResults(deductions);
@@ -762,13 +795,15 @@ const SingaporeTakeHomeCalculator = () => {
   };
 
   // RSU inputs
-  const handleRsuChange = (index: number, name: keyof RsuCycle, value: string) => {
-    const arr = [...rsuCycles];
-    arr[index] = {
-      ...arr[index],
-      [name]: value === '' ? '0' : value
-    };
-    setRsuCycles(arr);
+  const handleRsuChange = (index: number, field: keyof RsuCycle, value: string) => {
+    setRsuCycles(prev => {
+      const updatedCycles = [...prev];
+      updatedCycles[index] = {
+        ...updatedCycles[index],
+        [field]: value // Update the specific field with the new value
+      };
+      return updatedCycles;
+    });
   };
   const toggleRsuExpand = (index: number) => {
     const arr = [...rsuCycles];
@@ -1027,6 +1062,8 @@ const SingaporeTakeHomeCalculator = () => {
     });
   };
 
+  // Inside your component
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -1114,6 +1151,7 @@ const SingaporeTakeHomeCalculator = () => {
       taxDeductionResults={taxDeductionResults}
       handleTaxDeductionChange={handleTaxDeductionChange}
       taxDeductions={taxDeductions}
+
     />
   );
 };
