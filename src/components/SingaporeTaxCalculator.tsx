@@ -202,7 +202,6 @@ const SingaporeTakeHomeCalculator = () => {
     spouseRelief: 0,
     totalReliefs: 0,
     parentRelief: 0,
-    parentDisabilityRelief: 0,
     siblingDisabilityRelief: 0,
     grandparentCaregiverRelief: 0,
     qualifyingChildRelief: 0,

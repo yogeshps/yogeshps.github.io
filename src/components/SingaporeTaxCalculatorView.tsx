@@ -1745,12 +1745,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Divider sx={{ my: 2 }} />
 
         {/* Results */}
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold'}}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           Take Home Pay
         </Typography>
         <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
-        
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
             <Box>
               <Typography sx={{ fontWeight: 'bold' }}>Annual</Typography>
               <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(results.annualTakeHome)}</Typography>
@@ -1769,12 +1768,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Divider sx={{ my: 2 }} />
 
         {/* CPF Overview */}
-        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold'}}>
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           CPF Contributions
         </Typography>
         <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
-        
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
             <Box>
               <Typography sx={{ fontWeight: 'bold' }}>Employee</Typography>
               <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employeeAnnualCPF)}</Typography>
@@ -1791,6 +1789,30 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         </Box>
 
         <Divider sx={{ my: 2 }} />
+
+        {/* Tax */}
+        <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+          Tax
+        </Typography>
+        <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
+              <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Annual Tax</Typography>
+              <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax)}</Typography>
+            </Box>
+            <Box>
+              <Typography sx={{ fontWeight: 'bold' }}>Monthly Tax</Typography>
+              <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax / 12)}</Typography>
+            </Box>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
 
         {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
@@ -2023,7 +2045,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 )}
                 {parentRelief.dependantDetails.some(d => d.hasDisability) && (
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Typography>Parent Relief (with Disability)</Typography>
+                    <Typography>Parent Relief (Disability)</Typography>
                     <Typography>
                       {formatCurrency(parentRelief.dependantDetails
                         .filter(d => d.hasDisability)
