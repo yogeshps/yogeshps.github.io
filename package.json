@@ -2,7 +2,7 @@
   "name": "sg-calculator",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://sgtax.github.io/",
+  "homepage": "https://yogeshps.github.io",
   "type": "module",
   "scripts": {
     "dev": "vite",
