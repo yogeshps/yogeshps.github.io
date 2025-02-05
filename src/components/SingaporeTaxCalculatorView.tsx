@@ -94,6 +94,15 @@ interface TaxReliefResult {
   lifeInsuranceRelief: number;
 }
 
+export interface TaxDeductions {
+  charitableDeductions: boolean;
+  charitableAmount: string;
+  charitableError?: string;
+  parenthoodTaxRebate: boolean;
+  rentalIncomeDeductions: boolean;
+  employmentExpenseDeductions: boolean;
+}
+
 export interface SingaporeTaxCalculatorViewProps {
   extraInputs: {
     age: string;
@@ -255,6 +264,15 @@ export interface SingaporeTaxCalculatorViewProps {
   setCourseFeesRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
   fdwlRelief: { enabled: boolean; amount: string; error: string };
   setFdwlRelief: React.Dispatch<React.SetStateAction<{ enabled: boolean; amount: string; error: string }>>;
+  taxDeductionResults: {
+    charitableDeductions: number;
+    parenthoodTaxRebate: number;
+    rentalIncomeDeductions: number;
+    employmentExpenseDeductions: number;
+    totalDeductions: number;
+  };
+  handleTaxDeductionChange: (field: keyof TaxDeductions, value: boolean | string) => void;
+  taxDeductions: TaxDeductions;
 }
 
 const POPOVER_MAX_WIDTH = '480px';
@@ -340,10 +358,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   courseFeesRelief,
   setCourseFeesRelief,
   fdwlRelief,
-  setFdwlRelief
+  setFdwlRelief,
+  taxDeductionResults,
+  handleTaxDeductionChange,
+  taxDeductions
 }) => {
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
+  const [taxDeductionsExpanded, setTaxDeductionsExpanded] = useState(false);
 
   // Render
   return (
@@ -1527,6 +1549,107 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
         <Divider sx={{ my: 2 }} />
 
+        {/* Tax Deductions & Rebates */}
+        <Box sx={{ mb: 3 }}>
+          <Box 
+            sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+            onClick={() => setTaxDeductionsExpanded(!taxDeductionsExpanded)}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
+              Tax Deductions & Rebates
+            </Typography>
+            <IconButton>
+              {taxDeductionsExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Box>
+          
+          <Collapse in={taxDeductionsExpanded}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mt: 2 }}>
+              {/* Charitable Deductions */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="charitable-deductions"
+                    name="charitableDeductions"
+                    checked={taxDeductions.charitableDeductions}
+                    onChange={(e) => handleTaxDeductionChange('charitableDeductions', e.target.checked)}
+                  />
+                }
+                label="Charitable Deductions"
+              />
+              {taxDeductions.charitableDeductions && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="charitable-amount"
+                    name="charitableAmount"
+                    placeholder="Enter amount"
+                    value={taxDeductions.charitableAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        handleTaxDeductionChange('charitableAmount', value);
+                      }
+                    }}
+                    inputProps={{ 
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                    error={!!taxDeductions.charitableError}
+                    helperText={taxDeductions.charitableError}
+                  />
+                </Box>
+              )}
+
+              {/* Parenthood Tax Rebate */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="parenthood-tax-rebate"
+                    name="parenthoodTaxRebate"
+                    checked={taxDeductions.parenthoodTaxRebate}
+                    onChange={(e) => handleTaxDeductionChange('parenthoodTaxRebate', e.target.checked)}
+                  />
+                }
+                label="Parenthood Tax Rebate"
+              />
+
+              {/* Rental Income Deductions */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="rental-income-deductions"
+                    name="rentalIncomeDeductions"
+                    checked={taxDeductions.rentalIncomeDeductions}
+                    onChange={(e) => handleTaxDeductionChange('rentalIncomeDeductions', e.target.checked)}
+                  />
+                }
+                label="Rental Income Deductions"
+              />
+
+              {/* Employment Expense Deductions */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    id="employment-expense-deductions"
+                    name="employmentExpenseDeductions"
+                    checked={taxDeductions.employmentExpenseDeductions}
+                    onChange={(e) => handleTaxDeductionChange('employmentExpenseDeductions', e.target.checked)}
+                  />
+                }
+                label="Employment Expense Deductions"
+              />
+            </Box>
+          </Collapse>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
         {/* Results */}
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           Results
@@ -1681,6 +1804,45 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
         {/* Add margin/padding between sections */}
         <Box sx={{ mb: 3 }} />
+
+        {/* Tax Deductions & Rebates Box */}
+        {(results.baseIncome > 0 && taxDeductionResults.totalDeductions > 0) && (
+          <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+              Tax Deductions & Rebates
+            </Typography>
+            {taxDeductionResults.charitableDeductions > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Charitable Donations</Typography>
+                <Typography>{formatCurrency(taxDeductionResults.charitableDeductions)}</Typography>
+              </Box>
+            )}
+            {taxDeductionResults.parenthoodTaxRebate > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Parenthood Tax Rebate</Typography>
+                <Typography>{formatCurrency(taxDeductionResults.parenthoodTaxRebate)}</Typography>
+              </Box>
+            )}
+            {taxDeductionResults.rentalIncomeDeductions > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Rental Income Deductions</Typography>
+                <Typography>{formatCurrency(taxDeductionResults.rentalIncomeDeductions)}</Typography>
+              </Box>
+            )}
+            {taxDeductionResults.employmentExpenseDeductions > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Employment Expense Deductions</Typography>
+                <Typography>{formatCurrency(taxDeductionResults.employmentExpenseDeductions)}</Typography>
+              </Box>
+            )}
+            <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Deductions & Rebates</Typography>
+                <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
+              </Box>
+            </Box>
+          </Box>
+        )}
 
         {/* Tax Relief Summary Box */}
         {(results.baseIncome > 0 && taxReliefResults.totalReliefs > 0) && (

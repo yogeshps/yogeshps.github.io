@@ -11,7 +11,9 @@ import { getAwRates } from './AwRates'; // Import the new function
 //import { getAgeKey } from './CpfUtils'; // Adjust the path as needed
 import { calculateTax } from './TaxLogic'; // Adjust the path as needed
 import { calculateTaxReliefs } from '../utils/TaxReliefCalculator';
+import { calculateTaxDeductions } from '../utils/TaxDeductionCalculator';
 import { SingaporeTaxCalculatorView } from './SingaporeTaxCalculatorView';
+import { TaxDeductions } from './SingaporeTaxCalculatorView';
 
 // Global variable for popover max width
 //const POPOVER_MAX_WIDTH = '480px';
@@ -309,6 +311,24 @@ const SingaporeTakeHomeCalculator = () => {
     error: ''
   });
 
+  // Add new state for tax deductions
+  const [taxDeductionResults, setTaxDeductionResults] = useState({
+    charitableDeductions: 0,
+    parenthoodTaxRebate: 0,
+    rentalIncomeDeductions: 0,
+    employmentExpenseDeductions: 0,
+    totalDeductions: 0
+  });
+
+  // Add new state for tax deductions
+  const [taxDeductions, setTaxDeductions] = useState({
+    charitableDeductions: false,
+    charitableAmount: '',
+    parenthoodTaxRebate: false,
+    rentalIncomeDeductions: false,
+    employmentExpenseDeductions: false
+  });
+
   // Effect to handle initial EIR setup and income source changes
   useEffect(() => {
     const hasEligibleIncome = incomeSources.employment || 
@@ -427,18 +447,21 @@ const SingaporeTakeHomeCalculator = () => {
     fdwlRelief
   ]);
 
-  // Finally calculate taxable income after all reliefs
+  // Calculate assessable income (after deductions, before reliefs)
   useEffect(() => {
     if (results.baseIncome > 0) {
-      const finalTaxableIncome = Math.max(0, results.baseIncome - taxReliefResults.totalReliefs);
+      const assessableIncome = Math.max(0, results.baseIncome - taxDeductionResults.totalDeductions);
+      
+      // Calculate chargeable income (after reliefs)
+      const chargeableIncome = Math.max(0, assessableIncome - taxReliefResults.totalReliefs);
       
       setResults(prev => ({
         ...prev,
-        totalTaxableIncome: finalTaxableIncome,
-        annualTax: calculateTax(finalTaxableIncome)
+        totalTaxableIncome: chargeableIncome,
+        annualTax: calculateTax(chargeableIncome)
       }));
     }
-  }, [results.baseIncome, taxReliefResults.totalReliefs]);
+  }, [results.baseIncome, taxDeductionResults.totalDeductions, taxReliefResults.totalReliefs]);
 
   // Add this new handler for checkbox changes
   const handleIncomeSourceChange = (source: keyof IncomeSources) => {
@@ -862,6 +885,34 @@ const SingaporeTakeHomeCalculator = () => {
     }));
   };
 
+  // Add this new effect to calculate tax deductions
+  useEffect(() => {
+    const deductions = calculateTaxDeductions({
+      charitableDeductions: {
+        enabled: taxDeductions.charitableDeductions,
+        amount: taxDeductions.charitableAmount
+      },
+      parenthoodTaxRebate: taxDeductions.parenthoodTaxRebate,
+      rentalIncomeDeductions: taxDeductions.rentalIncomeDeductions,
+      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
+    });
+
+    setTaxDeductionResults(prev => ({
+      ...prev,
+      ...deductions
+    }));
+  }, [taxDeductions]);
+
+  const handleTaxDeductionChange = (
+    field: keyof TaxDeductions,
+    value: boolean | string
+  ) => {
+    setTaxDeductions(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
@@ -945,6 +996,9 @@ const SingaporeTakeHomeCalculator = () => {
       setCourseFeesRelief={setCourseFeesRelief}
       fdwlRelief={fdwlRelief}
       setFdwlRelief={setFdwlRelief}
+      taxDeductionResults={taxDeductionResults}
+      handleTaxDeductionChange={handleTaxDeductionChange}
+      taxDeductions={taxDeductions}
     />
   );
 };

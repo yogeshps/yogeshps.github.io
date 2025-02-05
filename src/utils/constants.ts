@@ -28,3 +28,5 @@ export const LIFE_INSURANCE_LIMIT = 5000;
 
 // Tax Relief Constants
 export const MAX_TAX_RELIEF = 80000;
+
+export const CHARITABLE_DEDUCTION_MULTIPLIER = 2.5; // 250% of donation amount
