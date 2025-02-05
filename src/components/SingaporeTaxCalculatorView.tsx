@@ -147,6 +147,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
   const [taxDeductionsExpanded, setTaxDeductionsExpanded] = useState(false);
+  const [employmentExpenseAmount, setEmploymentExpenseAmount] = useState(''); // State for the amount
 
   // Render
   return (
@@ -1613,11 +1614,43 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     id="employment-expense-deductions"
                     name="employmentExpenseDeductions"
                     checked={taxDeductions.employmentExpenseDeductions}
-                    onChange={(e) => handleTaxDeductionChange('employmentExpenseDeductions', e.target.checked)}
+                    onChange={(e) => {
+                      handleTaxDeductionChange('employmentExpenseDeductions', e.target.checked);
+                      if (!e.target.checked) {
+                        setEmploymentExpenseAmount(''); // Reset amount when unchecked
+                      }
+                    }}
                   />
                 }
                 label="Employment Expense Deductions"
               />
+              {taxDeductions.employmentExpenseDeductions && ( // Show input if checked
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
+                  <TextField
+                    id="employment-expense-amount"
+                    name="employmentExpenseAmount"
+                    placeholder="Enter amount"
+                    value={employmentExpenseAmount}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                        setEmploymentExpenseAmount(value);
+                        handleTaxDeductionChange('employmentExpenseAmount', value); // Update parent state if needed
+                      }
+                    }}
+                    inputProps={{
+                      inputMode: 'decimal',
+                      pattern: '[0-9]*\.?[0-9]{0,2}'
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>
+                    }}
+                    variant="outlined"
+                    size="small"
+                    sx={{ width: '200px' }}
+                  />
+                </Box>
+              )}
             </Box>
           </Collapse>
         </Box>

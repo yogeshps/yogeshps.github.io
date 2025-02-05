@@ -14,6 +14,7 @@ export interface TaxDeductions {
   mortgageInterest?: string;
   actualRentalExpenses?: string;
   employmentExpenseDeductions: boolean;
+  employmentExpenseAmount: string;
 }
 
 export interface TaxDeductionResult {

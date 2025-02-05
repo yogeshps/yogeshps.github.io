@@ -17,6 +17,7 @@ interface TaxDeductionInputs {
   actualRentalExpenses: string;
   annualRentalIncome: string;
   employmentExpenseDeductions: boolean;
+  employmentExpenseAmount: string;
 }
 
 export function calculateTaxDeductions({
@@ -29,7 +30,8 @@ export function calculateTaxDeductions({
   mortgageInterest,
   actualRentalExpenses,
   annualRentalIncome,
-  employmentExpenseDeductions
+  employmentExpenseDeductions,
+  employmentExpenseAmount
 }: TaxDeductionInputs): TaxDeductionResult {
   
   // Calculate Charitable Deductions
@@ -39,9 +41,15 @@ export function calculateTaxDeductions({
     charitableDeductionsValue = baseAmount * CHARITABLE_DEDUCTION_MULTIPLIER;
   }
 
+  // Calculate Employment Expense Deductions
+  let employmentExpenseDeductionsValue = 0;
+  if (employmentExpenseDeductions && employmentExpenseAmount) {
+    employmentExpenseDeductionsValue = Number(employmentExpenseAmount) || 0;
+  }
+
   // Calculate Parenthood Tax Rebate
   let parenthoodTaxRebateValue = 0;
-  if (parenthoodTaxRebate) {
+  if (parenthoodTaxRebate) {  // Only calculate if enabled
     switch (parenthoodTaxRebateType) {
       case 'first_child':
         parenthoodTaxRebateValue = PARENTHOOD_TAX_REBATE.FIRST_CHILD;
@@ -60,29 +68,17 @@ export function calculateTaxDeductions({
 
   // Calculate Rental Income Deductions
   let rentalIncomeDeductionsValue = 0;
-  const mortgageInterestAmount = Number(mortgageInterest) || 0; // Always consider mortgage interest
 
-  if (rentalIncomeDeductions) {
+  if (rentalIncomeDeductions) {  // Only calculate if enabled
+    const mortgageInterestAmount = Number(mortgageInterest) || 0;
     const rentalIncome = Number(annualRentalIncome) || 0;
 
     if (rentalDeductionType === 'flat') {
-      // Use the constant for flat deduction
       rentalIncomeDeductionsValue = (rentalIncome * FLAT_DEDUCTION_PERCENTAGE) + mortgageInterestAmount;
     } else {
-      // Actual expenses + mortgage interest
       const actualExpenses = Number(actualRentalExpenses) || 0;
       rentalIncomeDeductionsValue = actualExpenses + mortgageInterestAmount;
     }
-  } else {
-    // If rental income deductions are not selected, still consider mortgage interest
-    rentalIncomeDeductionsValue = mortgageInterestAmount;
-  }
-
-  // Calculate Employment Expense Deductions
-  let employmentExpenseDeductionsValue = 0;
-  if (employmentExpenseDeductions) {
-    // TODO: Implement logic for employment expense deductions calculation
-    employmentExpenseDeductionsValue = 0;
   }
 
   // Calculate total deductions

@@ -310,7 +310,8 @@ const SingaporeTakeHomeCalculator = () => {
     rentalDeductionType: 'flat',
     mortgageInterest: '',
     actualRentalExpenses: '',
-    employmentExpenseDeductions: false
+    employmentExpenseDeductions: false,
+    employmentExpenseAmount: ''
   });
 
   // Effect to handle initial EIR setup and income source changes
@@ -596,7 +597,8 @@ const SingaporeTakeHomeCalculator = () => {
       mortgageInterest: taxDeductions.mortgageInterest ?? '',
       actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
       annualRentalIncome: incomeSources.rentalAmount || '',
-      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
+      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions,
+      employmentExpenseAmount: taxDeductions.employmentExpenseAmount
     });
 
     setTaxDeductionResults(deductions);
@@ -914,7 +916,8 @@ const SingaporeTakeHomeCalculator = () => {
       mortgageInterest: taxDeductions.mortgageInterest ?? '',
       actualRentalExpenses: taxDeductions.actualRentalExpenses ?? '',
       annualRentalIncome: incomeSources.rentalAmount || '',
-      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions
+      employmentExpenseDeductions: taxDeductions.employmentExpenseDeductions,
+      employmentExpenseAmount: taxDeductions.employmentExpenseAmount
     });
 
     setTaxDeductionResults(deductions);
@@ -935,8 +938,26 @@ const SingaporeTakeHomeCalculator = () => {
         return {
           ...prev,
           parenthoodTaxRebate: value,
-          parenthoodTaxRebateType: value ? 'first_child' : '', // Reset type when toggling
-          parenthoodTaxRebateAmount: ''  // Reset amount when toggling
+          parenthoodTaxRebateType: value 
+            ? (prev.parenthoodTaxRebateType || 'first_child')
+            : prev.parenthoodTaxRebateType,
+          parenthoodTaxRebateAmount: prev.parenthoodTaxRebateAmount
+        };
+      }
+      if (field === 'employmentExpenseDeductions') {
+        return {
+          ...prev,
+          employmentExpenseDeductions: value,
+          employmentExpenseAmount: prev.employmentExpenseAmount
+        };
+      }
+      if (field === 'rentalIncomeDeductions') {
+        return {
+          ...prev,
+          rentalIncomeDeductions: value,
+          rentalDeductionType: prev.rentalDeductionType,
+          mortgageInterest: prev.mortgageInterest,
+          actualRentalExpenses: prev.actualRentalExpenses
         };
       }
       return {
