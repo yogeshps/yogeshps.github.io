@@ -139,6 +139,13 @@ export interface SingaporeTaxCalculatorViewProps {
     royaltiesIncome: number;
     annualSalary: number;
     totalIncome: number;
+    totalCPF: number;
+    cpfAllocation: {
+      ordinaryAccountAllocation: number;
+      specialAccountAllocation: number;
+      retirementAccountAllocation: number;
+      mediSaveAccountAllocation: number;
+    };
   };
   taxReliefResults: TaxReliefResult;
   taxDeductionResults: TaxDeductionResult;

@@ -16,7 +16,17 @@ const theme = createTheme({
 function App() {
   return (
     <ThemeProvider theme={theme}>
-      <div style={{ padding: '20px', backgroundColor: '#121212', minHeight: '100vh' }}>
+      <div style={{ 
+        backgroundColor: '#FAF9F6', 
+        minHeight: '100vh', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        width: '100%', // Ensure the background covers the entire width
+        position: 'absolute', // Positioning to cover the entire viewport
+        top: 0,
+        left: 0,
+      }}>
         <SingaporeTaxCalculator />
       </div>
     </ThemeProvider>

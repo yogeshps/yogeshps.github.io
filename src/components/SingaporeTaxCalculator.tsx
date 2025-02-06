@@ -21,6 +21,7 @@ import {
   RsuCycle,
   EsopCycle
 } from '../types/tax';
+import { getCPFAllocation } from './cpfAllocation';
 
 // Global variable for popover max width
 //const POPOVER_MAX_WIDTH = '480px';
@@ -115,7 +116,14 @@ const SingaporeTakeHomeCalculator = () => {
     employerBonusCPF: 0,
     totalEmployerCPF: 0,
     baseIncome: 0,
-    eligibleIncome: 0
+    eligibleIncome: 0,
+    totalCPF: 0,
+    cpfAllocation: {
+      ordinaryAccountAllocation: 0,
+      specialAccountAllocation: 0,
+      retirementAccountAllocation: 0,
+      mediSaveAccountAllocation: 0,
+    },
   });
 
   // Inline error state for age
@@ -489,6 +497,9 @@ const SingaporeTakeHomeCalculator = () => {
       (Number(results.totalRsuGains) || 0) + 
       (Number(results.totalEsopGains) || 0);
 
+    const totalCPF = results.totalEmployeeCPF + results.totalEmployerCPF;
+    const cpfAllocation = getCPFAllocation(Number(extraInputs.age) || 0, totalCPF);
+
     setResults({
       monthlyTakeHome,
       annualTakeHome,
@@ -512,7 +523,9 @@ const SingaporeTakeHomeCalculator = () => {
       businessIncome: Number(incomeSources.tradeAmount) || 0,
       rentalIncome: Number(incomeSources.rentalAmount) || 0,
       royaltiesIncome: Number(incomeSources.royaltiesAmount) || 0,
-      totalIncome
+      totalIncome,
+      totalCPF,
+      cpfAllocation
     });
 
     // Add missing properties to reliefs before setting state

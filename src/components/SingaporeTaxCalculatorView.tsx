@@ -15,7 +15,6 @@ import {
   Button,
   Collapse,
   InputAdornment,
-  FormHelperText,
   Divider
 } from '@mui/material';
 import InfoIcon from '@mui/icons-material/Info';
@@ -26,15 +25,7 @@ import * as constants from '../utils/constants';
 import { MAX_TAX_RELIEF } from '../utils/constants';
 import type { 
   SingaporeTaxCalculatorViewProps,
-  TaxDeductions,
-  TaxDeductionResult,
   CpfTopUp,
-  ParentRelief,
-  IncomeSources,
-  RsuCycle,
-  EsopCycle,
-  SiblingRelief,
-  TaxReliefResult,
   QualifyingChildRelief,
   QualifyingChildReliefDisability,
   WorkingMothersChildRelief,
@@ -45,11 +36,6 @@ import type {
   Inputs
 } from '../types/tax';
 import { POPOVER_MAX_WIDTH } from '../utils/constants';
-
-interface ParentDependant {
-  staysWithMe: boolean;
-  hasDisability: boolean;
-}
 
 export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProps> = ({
   extraInputs,
@@ -74,7 +60,6 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   rsuCycles,
   esopCycles,
   taxReliefs,
-  cpfTopUpErrors,
   nsmanRelief,
   siblingRelief,
   grandparentCaregiverRelief,
@@ -86,7 +71,6 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleClose,
   handlePopoverClick,
   setExtraInputs,
-  handleSalaryChange,
   setInputs,
   handleParentReliefChange,
   handleParentDependantChange,
@@ -107,7 +91,6 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleDisabilityReliefChange,
   handleCpfTopUpChange,
   setCpfTopUp,
-  handleCpfTopUpAmountChange,
   handleNSmanReliefChange,
   handleNSmanChange,
   handleSpouseReliefChange,
@@ -121,24 +104,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   setEsopVestingPopoverAnchor,
   handleSiblingReliefChange,
   setSiblingRelief,
-  handleParentStayTypeChange,
   handleGrandparentCaregiverReliefChange,
   setQualifyingChildRelief,
   setQualifyingChildReliefDisability,
   setWorkingMothersChildRelief,
   lifeInsuranceRelief,
   setLifeInsuranceRelief,
-  handleLifeInsuranceChange,
   courseFeesRelief,
   setCourseFeesRelief,
   fdwlRelief,
   setFdwlRelief,
   taxDeductionResults,
   handleTaxDeductionChange,
-  taxDeductions,
-  mortgageInterestPopoverAnchor,
-  setMortgageInterestPopoverAnchor,
-  setIncomeSources
+  taxDeductions
 }) => {
   // Add state for tax relief section expansion
   const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
@@ -147,23 +125,33 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
   // Render
   return (
-    <Card sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
-      <CardContent>
+   
+    <Box sx={{ py: { xs: 0, md: 8 } }}> {/* Different padding for mobile and larger screens */}
+      <Card sx={{ 
+        width: '100%', 
+        maxWidth: 1400, 
+        mx: 'auto', 
+        p: { xs: 0.6, md: 4 },  // Change this line: less padding on mobile (xs), original padding on medium+ screens
+        borderRadius: 2, 
+        boxShadow: 3 
+      }}>
+        <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
           🇸🇬 Singapore Salary Calculator
         </Typography>
+        <Typography>Best calculator on the internet to understand where your hard-earned money goes.</Typography>
         <Divider sx={{ my: 4 }} />
 
     <Grid container spacing={4}>
       {/* Left Column: Inputs */}
-      <Grid item xs={12} md={5.5} sx={{ flex: 1 }}>
+      <Grid item xs={12} md={6} sx={{ flex: 1 }}>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
           Basic Information
         </Typography>
-        <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid container spacing={2.5}>  {/* Adjusted spacing to be more consistent */}
           {/* Age */}
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
               Age
               <IconButton onClick={(e) => handlePopoverClick(e, setAgePopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
@@ -203,10 +191,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               inputProps={{ min: 0 }} // Optional: Prevent negative numbers
             />
           </Grid>
+          <Grid item md={6} sx={{ display: { xs: 'none', md: 'block' } }} />  {/* Hide on mobile */}
 
           {/* Residency Status */}
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
               Residency Status
               <IconButton onClick={(e) => handlePopoverClick(e, setResidencyPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
@@ -221,7 +210,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 }}
                 transformOrigin={{
                   vertical: 'bottom',
-                  horizontal: 'right',
+                  horizontal: 'left',
                 }}
                 sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
               >
@@ -243,12 +232,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <MenuItem value="ep_pep_spass">EP / PEP / S Pass</MenuItem>
             </Select>
           </Grid>
-        </Grid>
+          <Grid item md={6} sx={{ display: { xs: 'none', md: 'block' } }} />  {/* Hide on mobile */}
 
-        {/* Salary */}
-        <Grid container spacing={2} sx={{ mb: 3 }}>
+          {/* Monthly Salary and Annual Salary */}
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
               Monthly Salary
               <IconButton onClick={(e) => handlePopoverClick(e, setMonthlySalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
@@ -296,7 +284,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             />
           </Grid>
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
               Annual Salary
               <IconButton onClick={(e) => handlePopoverClick(e, setAnnualSalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
@@ -343,56 +331,57 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               }}
             />
           </Grid>
-        </Grid>
 
-        {/* Bonus */}
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-            Annual Bonus Salary
-            <IconButton onClick={(e) => handlePopoverClick(e, setAnnualBonusPopoverAnchor)} size="small">
-              <InfoIcon fontSize="inherit" />
-            </IconButton>
-            <Popover
-              open={Boolean(annualBonusPopoverAnchor)}
-              anchorEl={annualBonusPopoverAnchor}
-              onClose={handleClose}
-              anchorOrigin={{
-                vertical: 'top',
-                horizontal: 'left',
+          {/* Annual Bonus */}
+          <Grid item xs={12} md={6}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+              Annual Bonus Salary
+              <IconButton onClick={(e) => handlePopoverClick(e, setAnnualBonusPopoverAnchor)} size="small">
+                <InfoIcon fontSize="inherit" />
+              </IconButton>
+              <Popover
+                open={Boolean(annualBonusPopoverAnchor)}
+                anchorEl={annualBonusPopoverAnchor}
+                onClose={handleClose}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'left',
+                }}
+                transformOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+              >
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Annual cash bonuses before any deductions.</Typography>
+              </Popover>
+            </Typography>
+            <TextField
+              id="annual-bonus"
+              name="annualBonus"
+              fullWidth
+              placeholder="Enter amount" 
+              value={inputs.annualBonus}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
+                  setInputs((prev: Inputs) => ({
+                    ...prev,
+                    annualBonus: value
+                  }));
+                }
               }}
-              transformOrigin={{
-                vertical: 'bottom',
-                horizontal: 'center',
+              InputProps={{
+                startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                inputProps: { 
+                  inputMode: 'decimal',
+                  pattern: '[0-9]*\.?[0-9]{0,2}'
+                }
               }}
-              sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
-            >
-              <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Annual cash bonuses before any deductions.</Typography>
-            </Popover>
-          </Typography>
-          <TextField
-            id="annual-bonus"
-            name="annualBonus"
-            fullWidth
-            placeholder="Enter amount" 
-            value={inputs.annualBonus}
-            onChange={(e) => {
-              const value = e.target.value;
-              if (value === '' || /^\d*\.?\d{0,2}$/.test(value)) {
-                setInputs((prev: Inputs) => ({
-                  ...prev,
-                  annualBonus: value
-                }));
-              }
-            }}
-            InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
-              inputProps: { 
-                inputMode: 'decimal',
-                pattern: '[0-9]*\.?[0-9]{0,2}'
-              }
-            }}
-          />
-        </Box>
+            />
+          </Grid>
+          <Grid item md={6} sx={{ display: { xs: 'none', md: 'block' } }} />  {/* Hide on mobile */}
+        </Grid>
         <Divider sx={{ my: 4 }} />
 
         {/* Add this new section after RSU and before Annual Cash Bonus */}
@@ -2017,19 +2006,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
           </Collapse>
         </Box>
-        <Divider sx={{ my: 4, display: { xs: 'block', md: 'none' } }} />
+        <Divider sx={{ display: { xs: 'block', md: 'none' } }} />
 
       </Grid>
       
 
 
       {/* Right Column: Outputs */}
-      <Grid item xs={12} md={6.5} sx={{ display: 'flex' }}>
-        <Divider orientation="vertical" sx={{ mr: 4, display: { xs: 'none', md: 'block' } }} />
+      <Grid item xs={12} md={6} sx={{ display: 'flex' }}>
+        <Divider orientation="vertical" sx={{ mr: 4, display: { xs: 'none', md: 'block' }}} />
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Results */}
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Take Home Pay
+            Take-Home Pay
           </Typography>
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
@@ -2066,7 +2055,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
             <Divider sx={{ my: 1 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography sx={{ fontWeight: 'bold' }}>Take Home Pay</Typography>
+              <Typography sx={{ fontWeight: 'bold' }}>Take-Home Pay</Typography>
               <Typography sx={{ fontWeight: 'bold', color: 'green' }}>{formatCurrency(results.annualTakeHome)}</Typography>
             </Box>
           </Box>
@@ -2092,7 +2081,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: 'bold' }}>Total</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF + results.totalEmployerCPF)}</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalCPF)}</Typography>
                   </Box>
                 </Box>
               </Box>
@@ -2256,7 +2245,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 </Box>
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}> {/* Added margin-top for spacing */}
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Employee Contributions</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Contributions</Typography>
                   <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
                 </Box>
 
@@ -2279,8 +2268,35 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   <Typography>{formatCurrency(results.employerBonusCPF)}</Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Employer Contributions</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Contributions</Typography>
                   <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
+                </Box>
+
+                <Divider sx={{ my: 2 }} />
+
+                {/* CPF Allocation Section */}
+                <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
+                  Annual CPF Allocation
+                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography>Ordinary Account</Typography>
+                  <Typography>{formatCurrency(results.cpfAllocation.ordinaryAccountAllocation)}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography>
+                    {Number(extraInputs.age) > 55 ? 'Retirement Account' : 'Special Account'}
+                  </Typography>
+                  <Typography>
+                    {formatCurrency(
+                      Number(extraInputs.age) > 55 
+                        ? results.cpfAllocation.retirementAccountAllocation 
+                        : results.cpfAllocation.specialAccountAllocation
+                    )}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography>MediSave Account</Typography>
+                  <Typography>{formatCurrency(results.cpfAllocation.mediSaveAccountAllocation)}</Typography>
                 </Box>
               </Box>
             </>
@@ -2318,7 +2334,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               )}
               <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Deductions & Rebates</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Deductions</Typography>
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
                 </Box>
               </Box>
@@ -2475,5 +2491,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
       
       </CardContent>
     </Card>
+    </Box>
   );
+  
 };
