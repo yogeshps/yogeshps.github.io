@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -13,12 +13,7 @@ import {
   FormControlLabel,
   Checkbox,
   Button,
-  RadioGroup,
-  Radio,
   Collapse,
-  FormControl,
-  InputLabel,
-  Input,
   InputAdornment,
   FormHelperText,
   Divider
@@ -155,7 +150,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
     <Card sx={{ width: '100%', maxWidth: 1400, mx: 'auto', p: 4, borderRadius: 2, boxShadow: 3 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
-          Singapore Take Home Pay Calculator
+          🇸🇬 Singapore Salary Calculator
         </Typography>
         <Divider sx={{ my: 4 }} />
 
@@ -178,14 +173,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 anchorEl={agePopoverAnchor}
                 onClose={handleClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                transformOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
               >
                 <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Your current age for CPF calculations.</Typography>
               </Popover>
@@ -194,16 +189,24 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               id="age"
               name="age"
               fullWidth
+              type="number"  // Set input type to number
               value={extraInputs.age}
-              onChange={(e) => setExtraInputs({ ...extraInputs, age: e.target.value })}
+              onChange={(e) => {
+                const value = e.target.value;
+                // Allow only whole numbers (no decimals)
+                if (/^\d*$/.test(value)) {
+                  setExtraInputs({ ...extraInputs, age: value });
+                }
+              }}
               error={!!ageError}
               helperText={ageError}
+              inputProps={{ min: 0 }} // Optional: Prevent negative numbers
             />
           </Grid>
 
           {/* Residency Status */}
           <Grid item xs={12} md={6}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', display: 'flex', alignItems: 'center' }}>
               Residency Status
               <IconButton onClick={(e) => handlePopoverClick(e, setResidencyPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
@@ -213,14 +216,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 anchorEl={residencyPopoverAnchor}
                 onClose={handleClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                transformOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
               >
                 <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Your Singapore residency status.</Typography>
               </Popover>
@@ -246,7 +249,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Grid container spacing={2} sx={{ mb: 3 }}>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-              Monthly Income
+              Monthly Salary
               <IconButton onClick={(e) => handlePopoverClick(e, setMonthlySalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
               </IconButton>
@@ -255,14 +258,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 anchorEl={monthlySalaryPopoverAnchor}
                 onClose={handleClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                transformOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'left',
+                }}
+                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
               >
                 <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Gross monthly salary before any deductions.</Typography>
               </Popover>
@@ -294,7 +297,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-              Annual Income
+              Annual Salary
               <IconButton onClick={(e) => handlePopoverClick(e, setAnnualSalaryPopoverAnchor)} size="small">
                 <InfoIcon fontSize="inherit" />
               </IconButton>
@@ -303,16 +306,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 anchorEl={annualSalaryPopoverAnchor}
                 onClose={handleClose}
                 anchorOrigin={{
-                  vertical: 'bottom',
-                  horizontal: 'left',
-                }}
-                transformOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                transformOrigin={{
+                  vertical: 'bottom',
+                  horizontal: 'right',
+                }}
+                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Gross yearly salary, excluding bonuses, before any deductions.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Gross yearly salary before any deductions.</Typography>
               </Popover>
             </Typography>
             <TextField
@@ -345,7 +348,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         {/* Bonus */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-            Annual Cash Bonus
+            Annual Bonus Salary
             <IconButton onClick={(e) => handlePopoverClick(e, setAnnualBonusPopoverAnchor)} size="small">
               <InfoIcon fontSize="inherit" />
             </IconButton>
@@ -354,14 +357,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               anchorEl={annualBonusPopoverAnchor}
               onClose={handleClose}
               anchorOrigin={{
-                vertical: 'bottom',
-                horizontal: 'left',
-              }}
-              transformOrigin={{
                 vertical: 'top',
                 horizontal: 'left',
               }}
-              sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+              transformOrigin={{
+                vertical: 'bottom',
+                horizontal: 'center',
+              }}
+              sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
             >
               <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Annual cash bonuses before any deductions.</Typography>
             </Popover>
@@ -500,12 +503,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             />
             {incomeSources.rental && (
               <Box sx={{ ml: 4 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                      Annual Rental Income
-                  <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
-                  <InfoIcon fontSize="inherit" />
-                  </IconButton>
-                  </Typography>
+                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
+                  Annual Rental Income
+                </Typography>
                 <TextField
                   id="rental-income-amount"
                   name="rentalIncomeAmount"
@@ -578,13 +578,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             Equity Grants
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
-            Provide details of your RSU/ESOP vesting cycles.
+            Provide details of your RSU/ESOP vesting schedules.
           </Typography>
         </Box>
 
         {/* RSU Section */}
-        <Box sx={{ bgcolor: 'rgb(245, 240, 255)', p: 2, borderRadius: 1, mb: 3 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#9370DB', mb: 2 }}>
+        <Box sx={{ bgcolor: 'rgb(246, 241, 255)', p: 2, borderRadius: 1, mb: 3 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#6A5ACD', mb: 2 }}>
             Restricted Stock Units (RSU)
           </Typography>
           {rsuCycles.map((cycle, idx) => (
@@ -594,11 +594,12 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 sx={{ 
                   display: 'flex', 
                   justifyContent: 'space-between',
-                  cursor: 'pointer'  // Add pointer cursor
+                  alignItems: 'center',  // Add this line
+                  cursor: 'pointer'
                 }}
               >
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                  RSU Vesting Cycle {idx + 1}
+                <Typography sx={{ fontWeight: 'bold' }}>
+                  RSU Vesting Schedule {idx + 1}
                 </Typography>
                 <Box>
                   <IconButton>
@@ -621,16 +622,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       anchorEl={rsuSharesPopoverAnchor}
                       onClose={handleClose}
                       anchorOrigin={{
-                        vertical: 'bottom',
+                        vertical: 'top',
                         horizontal: 'left',
                       }}
                       transformOrigin={{
-                        vertical: 'top',
+                        vertical: 'bottom',
                         horizontal: 'left',
                       }}
                       sx={{ maxWidth: POPOVER_MAX_WIDTH }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Total RSUs vesting in this cycle.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Total RSUs vesting in this schedule.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -662,16 +663,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       anchorEl={rsuVestingPopoverAnchor}
                       onClose={handleClose}
                       anchorOrigin={{
-                        vertical: 'bottom',
+                        vertical: 'top',
                         horizontal: 'left',
                       }}
                       transformOrigin={{
-                        vertical: 'top',
+                        vertical: 'bottom',
                         horizontal: 'left',
                       }}
                       sx={{ maxWidth: POPOVER_MAX_WIDTH }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Stock price at the time of RSU vesting.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Share price at the time of RSU vesting.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -701,12 +702,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               {idx < rsuCycles.length - 1 && <Divider sx={{ my: 2 }} />} {/* Divider between RSU cycles */}
             </Box>
           ))}
-          <Button variant="outlined" onClick={addRsuCycle} sx={{ color: '#9370DB', borderColor: '#9370DB' }}>+ Add RSU Vesting Cycle</Button>
+          <Button variant="outlined" onClick={addRsuCycle} sx={{ fontWeight: 'bold', color: '#6A5ACD', borderColor: '#6A5ACD' }}>+ RSU Vesting Schedule</Button>
         </Box>
 
-        {/* ESOP Section */}
-        <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 3 }}>
-          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 2 }}>
+        <Box sx={{ bgcolor: 'rgb(246, 241, 255)', p: 2, borderRadius: 1, mb: 3 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: '#6A5ACD', mb: 2 }}>
             Employee Share Options (ESOP)
           </Typography>
           {esopCycles.map((cycle, idx) => (
@@ -716,11 +716,12 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 sx={{ 
                   display: 'flex', 
                   justifyContent: 'space-between',
+                  alignItems: 'center',  // Add this line
                   cursor: 'pointer'  // Add pointer cursor
                 }}
               >
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                  ESOP Vesting Cycle {idx + 1}
+                <Typography sx={{ fontWeight: 'bold' }}>
+                  ESOP Vesting Schedule {idx + 1}
                 </Typography>
                 <Box>
                   <IconButton>
@@ -743,16 +744,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       anchorEl={esopSharesPopoverAnchor}
                       onClose={handleClose}
                       anchorOrigin={{
-                        vertical: 'bottom',
+                        vertical: 'top',
                         horizontal: 'left',
                       }}
                       transformOrigin={{
-                        vertical: 'top',
+                        vertical: 'bottom',
                         horizontal: 'left',
                       }}
                       sx={{ maxWidth: POPOVER_MAX_WIDTH }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Total number of options vesting in a given cycle.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Number of share options vesting in this schedule.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -784,16 +785,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       anchorEl={esopVestingPopoverAnchor}
                       onClose={handleClose}
                       anchorOrigin={{
-                        vertical: 'bottom',
+                        vertical: 'top',
                         horizontal: 'left',
                       }}
                       transformOrigin={{
-                        vertical: 'top',
+                        vertical: 'bottom',
                         horizontal: 'left',
                       }}
                       sx={{ maxWidth: POPOVER_MAX_WIDTH }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Stock price at the time of vesting, used to calculate gains.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Share price at the time of vesting.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -828,16 +829,16 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       anchorEl={esopExercisePopoverAnchor}
                       onClose={handleClose}
                       anchorOrigin={{
-                        vertical: 'bottom',
+                        vertical: 'top',
                         horizontal: 'left',
                       }}
                       transformOrigin={{
-                        vertical: 'top',
+                        vertical: 'bottom',
                         horizontal: 'left',
                       }}
                       sx={{ maxWidth: POPOVER_MAX_WIDTH }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Price per share you must pay to exercise your stock options, usually set during contract signing, grant date, or annual reviews.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Price per share you must pay to exercise your options, usually set during contract signing, grant date, or annual reviews.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -866,7 +867,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               {idx < esopCycles.length - 1 && <Divider sx={{ my: 2 }} />} {/* Divider between ESOP cycles */}
             </Box>
           ))}
-          <Button variant="outlined" onClick={addEsopCycle} sx={{ color: 'primary.main', borderColor: 'primary.main' }}>+ Add ESOP Vesting Cycle</Button>
+          <Button variant="outlined" onClick={addEsopCycle} sx={{ fontWeight: 'bold', color: '#6A5ACD', borderColor: '#6A5ACD' }}>+ ESOP Vesting Schedule</Button>
         </Box>
         <Divider sx={{ my: 4 }} /> {/* Divider added here */}
 
@@ -898,9 +899,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         disabled={true}
                       />
                     }
-                    label="Earned Income Relief"
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        Earned Income Relief
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/earned-income-relief', '_blank')}
+                        >
+                          <InfoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Box>
+                    }
                   />
-                  <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                     <FormControlLabel
                       control={
                         <Checkbox
@@ -911,7 +922,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                           disabled={results.eligibleIncome === 0}
                         />
                       }
-                      label="Earned Income Relief (Disability)"
+                      label={
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          Earned Income Relief (Disability)
+                          <IconButton
+                            size="small"
+                            onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/earned-income-relief', '_blank')}
+                          >
+                            <InfoIcon fontSize="inherit" />
+                          </IconButton>
+                        </Box>
+                      }
                     />
                   </Box>
                 </Box>
@@ -927,7 +948,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         disabled={true}
                       />
                     }
-                    label="CPF/Provident Fund Relief"
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        CPF/Provident Fund Relief
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/central-provident-fund(cpf)-relief-for-employees', '_blank')}
+                        >
+                          <InfoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Box>
+                    }
                   />
                   <FormControlLabel
                     control={
@@ -938,7 +969,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         onChange={(e) => handleCpfTopUpChange(e.target.checked)}
                       />
                     }
-                    label="CPF Cash Top-Up Relief"
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        CPF Cash Top-Up Relief
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/central-provident-fund-(cpf)-cash-top-up-relief', '_blank')}
+                        >
+                          <InfoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Box>
+                    }
                   />
                   {cpfTopUp.enabled && (
                     <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1033,7 +1074,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         onChange={(e) => handleNSmanReliefChange(e.target.checked)}
                       />
                     }
-                    label="NSman Relief"
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        NSman Relief
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/nsman-relief-(self-wife-and-parent)', '_blank')}
+                        >
+                          <InfoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Box>
+                    }
                   />
                   {nsmanRelief.enabled && (
                     <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1086,7 +1137,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleSpouseReliefChange(e.target.checked)}
                   />
                 }
-                label="Spouse Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Spouse Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/spouse-relief-spouse-relief-(disability)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {spouseRelief.enabled && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1112,7 +1173,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleParentReliefChange(e.target.checked)}
                   />
                 }
-                label="Parent Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Parent Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/parent-relief-parent-relief-(disability)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {parentRelief.enabled && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1166,7 +1237,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleSiblingReliefChange(e.target.checked)}
                   />
                 }
-                label="Sibling Relief (Disability)"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Sibling Relief (Disability)
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/sibling-relief-(disability)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {siblingRelief.enabled && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1201,7 +1282,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleGrandparentCaregiverReliefChange(e.target.checked)}
                   />
                 }
-                label="Grandparent Caregiver Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Grandparent Caregiver Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/grandparent-caregiver-relief', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
 
               {/* Qualifying Child Relief Section */}
@@ -1219,7 +1310,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }}
                   />
                 }
-                label="Qualifying Child Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Qualifying Child Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/qualifying-child-relief-(qcr)-child-relief-(disability)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {qualifyingChildRelief.enabled && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1259,7 +1360,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }}
                   />
                 }
-                label="Qualifying Child Relief (Disability)"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Qualifying Child Relief (Disability)
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/qualifying-child-relief-(qcr)-child-relief-(disability)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {qualifyingChildReliefDisability.enabled && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1299,7 +1410,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }}
                   />
                 }
-                label="Working Mother's Child Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Working Mother's Child Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/working-mother\'s-child-relief-(wmcr)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {workingMothersChildRelief.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -1344,7 +1465,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }))}
                   />
                 }
-                label="SRS Contribution Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    SRS Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/special-tax-schemes/srs-contributions#title4', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {srsContributionRelief.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1408,7 +1539,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         }))}
                       />
                     }
-                    label="Life Insurance Relief"
+                    label={
+                      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        Life Insurance Relief
+                        <IconButton
+                          size="small"
+                          onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/life-insurance-relief', '_blank')}
+                        >
+                          <InfoIcon fontSize="inherit" />
+                        </IconButton>
+                      </Box>
+                    }
                   />
                   {lifeInsuranceRelief.enabled && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1477,7 +1618,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }))}
                   />
                 }
-                label="Course Fees Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Course Fees Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/course-fees-relief', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {courseFeesRelief.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1528,7 +1679,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }))}
                   />
                 }
-                label="Foreign Domestic Worker Levy (FDWL) Relief"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    Foreign Domestic Worker Levy Relief
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/foreign-domestic-worker-levy-(fdwl)-relief', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {fdwlRelief.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1597,7 +1758,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleTaxDeductionChange('charitableDeductions', e.target.checked)}
                   />
                 }
-                label="Charitable Deductions"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <span>Charitable Deductions</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/other-taxes/charities/donations-tax-deductions', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {taxDeductions.charitableDeductions.enabled && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1638,7 +1809,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleTaxDeductionChange('parenthoodTaxRebate', e.target.checked)}
                   />
                 }
-                label="Parenthood Tax Rebate"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <span>Parenthood Tax Rebate</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/tax-reliefs/parenthood-tax-rebate-(ptr)', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {taxDeductions.parenthoodTaxRebate && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1693,15 +1874,22 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleTaxDeductionChange('rentalIncomeDeductions', e.target.checked)}
                   />
                 }
-                label="Rental Income Deductions"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <span>Rental Income</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/what-is-taxable-what-is-not/income-from-property-rented-out', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {taxDeductions.rentalIncomeDeductions && (
                 <Box sx={{ ml: 4, display: 'flex', flexDirection: 'column' }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                     Annual Mortgage Interest
-                    <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
-                      <InfoIcon fontSize="inherit" />
-                    </IconButton>
                   </Typography>
                   <TextField
                     id="mortgage-interest"
@@ -1741,14 +1929,10 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   </Select>
                   
                   <Box sx={{ mb: 1 }} />
-
                   {taxDeductions.rentalDeductionType === 'actual' && (
                     <>
-                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 0.5 }}>
                       Actual Rental Expenses
-                        <IconButton onClick={(e) => handlePopoverClick(e, setMortgageInterestPopoverAnchor)} size="small">
-                        <InfoIcon fontSize="inherit" />
-                      </IconButton>
                       </Typography>
                       <TextField
                         id="actual-rental-expenses"
@@ -1791,7 +1975,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     }}
                   />
                 }
-                label="Employment Expense Deductions"
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <span>Employment Expenses</span>
+                    <IconButton
+                      size="small"
+                      onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-reliefs-rebates-and-deductions/employment-expenses', '_blank')}
+                    >
+                      <InfoIcon fontSize="inherit" />
+                    </IconButton>
+                  </Box>
+                }
               />
               {taxDeductions.employmentExpenseDeductions && ( // Show input if checked
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 4 }}>
@@ -1856,7 +2050,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'green', mb: 1 }}>
-              Take Home Pay Calculation
+              How is it calculated?
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Total Income</Typography>
@@ -1890,15 +2084,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
                   <Box>
                     <Typography sx={{ fontWeight: 'bold' }}>Employee</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employeeAnnualCPF)}</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: 'bold' }}>Employer</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employerAnnualCPF)}</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: 'bold' }}>Total</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.employeeAnnualCPF + results.employerAnnualCPF)}</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF + results.totalEmployerCPF)}</Typography>
                   </Box>
                 </Box>
               </Box>
@@ -1931,24 +2125,24 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
           <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
-            Taxable Income Calculation
+            How is it calculated?
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Total Income</Typography>
               <Typography>{formatCurrency(results.totalIncome || 0)}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Tax Deductions/Rebates</Typography>
+              <Typography>Tax Deductions</Typography>
               <Typography>— {formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Tax Reliefs</Typography>
               <Typography>— {formatCurrency(taxReliefResults.totalReliefs)}</Typography>
             </Box>
-            <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 1 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
             </Box>
           </Box>
 
@@ -1962,7 +2156,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
           {/* Income Breakdown Section */}
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'green', mb: 1 }}>
+            <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'green' }}>
               Income Streams
             </Typography>
 
@@ -2030,10 +2224,10 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             })}
 
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1, pt: 1 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Income</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                  {formatCurrency(Number(results.totalIncome) || 0)}
+                  <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(Number(results.totalIncome) || 0)}</Typography>
                 </Typography>
               </Box>
             </Box>
@@ -2043,7 +2237,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             <>
               {/* CPF - Employee */}
               <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
+                <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
                   Employee CPF Contributions
                 </Typography>
                 
@@ -2063,14 +2257,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}> {/* Added margin-top for spacing */}
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Employee Contributions</Typography>
-                  <Typography>{formatCurrency(results.totalEmployeeCPF)}</Typography>
+                  <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
                 </Box>
 
                 <Divider sx={{ my: 2 }} />
 
                 {/* Employer Section */}
-                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'primary.main', mb: 1 }}>
-                  Employee CPF Contributions
+                <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}>
+                  Employer CPF Contributions
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography>Monthly</Typography>
@@ -2086,7 +2280,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Employer Contributions</Typography>
-                  <Typography>{formatCurrency(results.totalEmployerCPF)}</Typography>
+                  <Typography sx={{ fontWeight: 'bold', color: 'primary.main' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
                 </Box>
               </Box>
             </>
@@ -2094,9 +2288,8 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
       
           {/* Tax Deductions & Rebates Box */}
-          {(results.annualSalary > 0 && taxDeductionResults.totalDeductions > 0) && (
-            <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
+          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
+              <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'darkgoldenrod' }}>
                 Tax Deductions & Rebates
               </Typography>
               {taxDeductionResults.charitableDeductions > 0 && (
@@ -2126,16 +2319,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Deductions & Rebates</Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
                 </Box>
               </Box>
             </Box>
-          )}
 
           {/* Tax Relief Summary Box */}
-          {(results.annualSalary > 0 && taxReliefResults.totalReliefs > 0) && (
-            <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
-              <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
+          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
+              <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'darkgoldenrod' }}>
                 Tax Reliefs
               </Typography>
               {taxReliefResults.earnedIncomeRelief > 0 && (
@@ -2270,12 +2461,11 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   </>
                 )}
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Tax Reliefs</Typography>
-                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>{formatCurrency(Math.min(taxReliefResults.totalReliefs, MAX_TAX_RELIEF))}</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Reliefs</Typography>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(Math.min(taxReliefResults.totalReliefs, MAX_TAX_RELIEF))}</Typography>
                 </Box>
               </Box>
             </Box>
-          )}
       </Box>
       </Grid>
       </Grid>
