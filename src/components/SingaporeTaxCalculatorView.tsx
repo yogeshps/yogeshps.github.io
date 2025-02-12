@@ -139,7 +139,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
           🇸🇬 Singapore Salary Calculator
         </Typography>
-        <Typography>Best calculator on the internet to understand where your hard-earned money goes.</Typography>
+        <Typography>Best calculator on the internet to easily understand your take-home pay, tax and CPF contributions accurately.</Typography>
         <Divider sx={{ my: 4 }} />
 
     <Grid container spacing={4}>
@@ -160,6 +160,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 open={Boolean(agePopoverAnchor)}
                 anchorEl={agePopoverAnchor}
                 onClose={handleClose}
+                disableScrollLock={true}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
@@ -168,9 +169,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   vertical: 'bottom',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+                sx={{
+                  '& .MuiPopover-paper': {
+                    maxWidth: {
+                      md: POPOVER_MAX_WIDTH, // Max width for desktop
+                    },
+                  },
+                }}             
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Your current age for CPF calculations.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Your current age (to calculate CPF rates).</Typography>
               </Popover>
             </Typography>
             <TextField
@@ -204,6 +211,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 open={Boolean(residencyPopoverAnchor)}
                 anchorEl={residencyPopoverAnchor}
                 onClose={handleClose}
+                disableScrollLock={true}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
@@ -212,9 +220,28 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   vertical: 'bottom',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+                sx={{
+                  '& .MuiPopover-paper': {
+                    maxWidth: {
+                      md: POPOVER_MAX_WIDTH, // Max width for desktop
+                    },
+                  },
+                }}
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Your Singapore residency status.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>
+                  Your Singapore residency status.
+                  <ul style={{ 
+                    paddingLeft: '20px',     // Add left padding for bullets
+                    margin: '8px 0',         // Add some vertical margin
+                    listStyleType: 'disc'    // Explicitly set bullet style
+                  }}>
+                    <li style={{ display: 'list-item' }}>Citizen/PR: employer 17%, employee 20%</li>
+                    <li style={{ display: 'list-item' }}>PR 1st year (G/G): employer 4%, employee 5%</li>
+                    <li style={{ display: 'list-item' }}>PR 2nd year (G/G): employer 9%, employee 15%</li>
+                    <li style={{ display: 'list-item' }}>PR 1st year (F/G): employer 17%, employee 5%</li>
+                    <li style={{ display: 'list-item' }}>PR 2nd year (F/G): employer 17%, employee 15%</li>
+                  </ul>
+                </Typography>
               </Popover>
             </Typography>
             <Select
@@ -223,13 +250,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               fullWidth
               value={extraInputs.sprStatus}
               onChange={(e) => setExtraInputs({ ...extraInputs, sprStatus: e.target.value })}
+              MenuProps={{ disableScrollLock: true }}
             >
-              <MenuItem value="table1">Citizen / Permanent Resident</MenuItem>
-              <MenuItem value="table2">PR 1st year (Graduated/Graduated)</MenuItem>
-              <MenuItem value="table3">PR 2nd year (Graduated/Graduated)</MenuItem>
-              <MenuItem value="table4">PR 1st year (Full/Graduated)</MenuItem>
-              <MenuItem value="table5">PR 2nd year (Full/Graduated)</MenuItem>
+              <MenuItem value="table1">Citizen / PR</MenuItem>
               <MenuItem value="ep_pep_spass">EP / PEP / S Pass</MenuItem>
+              <MenuItem value="table2">PR 1st year (G/G) (Default setting)</MenuItem>
+              <MenuItem value="table3">PR 2nd year (G/G) (Default setting)</MenuItem>
+              <MenuItem value="table4">PR 1st year (F/G)</MenuItem>
+              <MenuItem value="table5">PR 2nd year (F/G)</MenuItem>
             </Select>
           </Grid>
           <Grid item md={6} sx={{ display: { xs: 'none', md: 'block' } }} />  {/* Hide on mobile */}
@@ -245,6 +273,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 open={Boolean(monthlySalaryPopoverAnchor)}
                 anchorEl={monthlySalaryPopoverAnchor}
                 onClose={handleClose}
+                disableScrollLock={true}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
@@ -253,9 +282,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   vertical: 'bottom',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+                sx={{
+                  '& .MuiPopover-paper': {
+                    maxWidth: {
+                      md: POPOVER_MAX_WIDTH, // Max width for desktop
+                    },
+                  },
+                }}
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Gross monthly salary before any deductions.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Base monthly salary before deductions.</Typography>
               </Popover>
             </Typography>
             <TextField
@@ -293,6 +328,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 open={Boolean(annualSalaryPopoverAnchor)}
                 anchorEl={annualSalaryPopoverAnchor}
                 onClose={handleClose}
+                disableScrollLock={true}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
@@ -301,9 +337,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   vertical: 'bottom',
                   horizontal: 'right',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+                sx={{
+                  '& .MuiPopover-paper': {
+                    maxWidth: {
+                      md: POPOVER_MAX_WIDTH, // Max width for desktop
+                    },
+                  },
+                }}
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Gross yearly salary before any deductions.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Base annual salary before deductions.</Typography>
               </Popover>
             </Typography>
             <TextField
@@ -343,6 +385,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 open={Boolean(annualBonusPopoverAnchor)}
                 anchorEl={annualBonusPopoverAnchor}
                 onClose={handleClose}
+                disableScrollLock={true}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'left',
@@ -351,9 +394,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                   vertical: 'bottom',
                   horizontal: 'left',
                 }}
-                sx={{ maxWidth: POPOVER_MAX_WIDTH, overflow: 'visible' }}
+                sx={{
+                  '& .MuiPopover-paper': {
+                    maxWidth: {
+                      md: POPOVER_MAX_WIDTH, // Max width for desktop
+                    },
+                  },
+                }}
               >
-                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Annual cash bonuses before any deductions.</Typography>
+                <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Total bonus payments (e.g. AWS, performance bonus)</Typography>
               </Popover>
             </Typography>
             <TextField
@@ -567,7 +616,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             Equity Grants
           </Typography>
           <Typography variant="body1" sx={{ mb: 1 }}>
-            Provide details of your RSU/ESOP vesting schedules.
+            For each RSU/ESOP vesting cycle, enter the <strong>number of shares that vest within this year</strong> (not the total across multiple years).
           </Typography>
         </Box>
 
@@ -588,7 +637,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 }}
               >
                 <Typography sx={{ fontWeight: 'bold' }}>
-                  RSU Vesting Schedule {idx + 1}
+                  RSU Vesting Cycle {idx + 1}
                 </Typography>
                 <Box>
                   <IconButton>
@@ -610,6 +659,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       open={Boolean(rsuSharesPopoverAnchor)}
                       anchorEl={rsuSharesPopoverAnchor}
                       onClose={handleClose}
+                      disableScrollLock={true}
                       anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'left',
@@ -618,29 +668,40 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         vertical: 'bottom',
                         horizontal: 'left',
                       }}
-                      sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                      sx={{
+                        '& .MuiPopover-paper': {
+                          maxWidth: {
+                            md: POPOVER_MAX_WIDTH, // Max width for desktop
+                          },
+                        },
+                      }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Total RSUs vesting in this schedule.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Number of RSUs vesting in this cycle.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
                     id={`rsu-shares-${idx}`}
                     name={`rsuShares${idx}`}
                     fullWidth
-                    placeholder="Enter number of shares"
+                    placeholder="Enter number of RSUs"
                     value={cycle.shares}
                     onChange={(e) => {
                       const value = e.target.value;
-                      // Allow empty string or valid number input
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        handleRsuChange(idx, 'shares', value); // Pass the value directly
+                        handleRsuChange(idx, 'shares', value);
                       }
                     }}
                     inputProps={{
                       inputMode: 'decimal',
                       pattern: '[0-9]*\.?[0-9]*'
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2, 
+                      maxWidth: { 
+                        xs: '100%',
+                        sm: '300px'
+                      } 
+                    }}
                   />
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                     <span>Price at Vesting</span>
@@ -651,6 +712,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       open={Boolean(rsuVestingPopoverAnchor)}
                       anchorEl={rsuVestingPopoverAnchor}
                       onClose={handleClose}
+                      disableScrollLock={true}
                       anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'left',
@@ -659,7 +721,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         vertical: 'bottom',
                         horizontal: 'left',
                       }}
-                      sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                      sx={{
+                        '& .MuiPopover-paper': {
+                          maxWidth: {
+                            md: POPOVER_MAX_WIDTH, // Max width for desktop
+                          },
+                        },
+                      }}
                     >
                       <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Share price at the time of RSU vesting.</Typography>
                     </Popover>
@@ -683,7 +751,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2, 
+                      maxWidth: { 
+                        xs: '100%',
+                        sm: '300px'
+                      } 
+                    }}
                   />
                 
                 </Box>
@@ -691,7 +765,21 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               {idx < rsuCycles.length - 1 && <Divider sx={{ my: 2 }} />} {/* Divider between RSU cycles */}
             </Box>
           ))}
-          <Button variant="outlined" onClick={addRsuCycle} sx={{ fontWeight: 'bold', color: '#6A5ACD', borderColor: '#6A5ACD' }}>+ RSU Vesting Schedule</Button>
+          <Button 
+            variant="outlined" 
+            onClick={addRsuCycle} 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: '#6A5ACD', 
+              borderColor: '#6A5ACD',
+              width: {
+                xs: '100%', // Full width on mobile
+                sm: '300px' // 300px on desktop
+              }
+            }}
+          >
+            + RSU Vesting Cycle
+          </Button>
         </Box>
 
         <Box sx={{ bgcolor: 'rgb(246, 241, 255)', p: 2, borderRadius: 1, mb: 3 }}>
@@ -710,7 +798,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                 }}
               >
                 <Typography sx={{ fontWeight: 'bold' }}>
-                  ESOP Vesting Schedule {idx + 1}
+                  ESOP Vesting Cycle {idx + 1}
                 </Typography>
                 <Box>
                   <IconButton>
@@ -732,6 +820,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       open={Boolean(esopSharesPopoverAnchor)}
                       anchorEl={esopSharesPopoverAnchor}
                       onClose={handleClose}
+                      disableScrollLock={true}
                       anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'left',
@@ -740,28 +829,40 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         vertical: 'bottom',
                         horizontal: 'left',
                       }}
-                      sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                      sx={{
+                        '& .MuiPopover-paper': {
+                          maxWidth: {
+                            md: POPOVER_MAX_WIDTH, // Max width for desktop
+                          },
+                        },
+                      }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Number of share options vesting in this schedule.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Number of ESOPs vesting in this cycle.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
                     id={`esop-shares-${idx}`}
                     name={`esopShares${idx}`}
                     fullWidth
-                    placeholder="Enter number of shares"
+                    placeholder="Enter number of ESOPs"
                     value={cycle.shares}
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        handleEsopChange(idx, 'shares', value === '' ? '' : value); // Allow empty string
+                        handleEsopChange(idx, 'shares', value === '' ? '' : value);
                       }
                     }}
                     inputProps={{
                       inputMode: 'decimal',
                       pattern: '[0-9]*\.?[0-9]*'
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2, 
+                      maxWidth: { 
+                        xs: '100%',
+                        sm: '300px'
+                      } 
+                    }}
                   />
                   
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -773,6 +874,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       open={Boolean(esopVestingPopoverAnchor)}
                       anchorEl={esopVestingPopoverAnchor}
                       onClose={handleClose}
+                      disableScrollLock={true}
                       anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'left',
@@ -781,9 +883,15 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         vertical: 'bottom',
                         horizontal: 'left',
                       }}
-                      sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                      sx={{
+                        '& .MuiPopover-paper': {
+                          maxWidth: {
+                            md: POPOVER_MAX_WIDTH, // Max width for desktop
+                          },
+                        },
+                      }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Share price at the time of vesting.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Share price at the time of ESOP vesting.</Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -795,7 +903,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        handleEsopChange(idx, 'vestingPrice', value === '' ? '' : value); // Allow empty string
+                        handleEsopChange(idx, 'vestingPrice', value === '' ? '' : value);
                       }
                     }}
                     inputProps={{
@@ -805,7 +913,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2, 
+                      maxWidth: { 
+                        xs: '100%',
+                        sm: '300px'
+                      } 
+                    }}
                   />
 
                   <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
@@ -817,6 +931,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       open={Boolean(esopExercisePopoverAnchor)}
                       anchorEl={esopExercisePopoverAnchor}
                       onClose={handleClose}
+                      disableScrollLock={true}
                       anchorOrigin={{
                         vertical: 'top',
                         horizontal: 'left',
@@ -825,9 +940,17 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                         vertical: 'bottom',
                         horizontal: 'left',
                       }}
-                      sx={{ maxWidth: POPOVER_MAX_WIDTH }}
+                      sx={{
+                        '& .MuiPopover-paper': {
+                          maxWidth: {
+                            md: POPOVER_MAX_WIDTH, // Max width for desktop
+                          },
+                        },
+                      }}
                     >
-                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>Price per share you must pay to exercise your options, usually set during contract signing, grant date, or annual reviews.</Typography>
+                      <Typography sx={{ p: 2, fontSize: '0.8rem', fontStyle: 'italic' }}>
+                        Price per share you must pay to exercise your options, usually set during contract signing, grant date, or annual reviews.
+                      </Typography>
                     </Popover>
                   </Typography>
                   <TextField
@@ -839,7 +962,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                        handleEsopChange(idx, 'exercisePrice', value === '' ? '' : value); // Allow empty string
+                        handleEsopChange(idx, 'exercisePrice', value === '' ? '' : value);
                       }
                     }}
                     inputProps={{
@@ -849,14 +972,34 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     InputProps={{
                       startAdornment: <InputAdornment position="start">$</InputAdornment>
                     }}
-                    sx={{ mb: 2 }}
+                    sx={{ 
+                      mb: 2, 
+                      maxWidth: { 
+                        xs: '100%',
+                        sm: '300px'
+                      } 
+                    }}
                   />
                 </Box>
               </Collapse>
               {idx < esopCycles.length - 1 && <Divider sx={{ my: 2 }} />} {/* Divider between ESOP cycles */}
             </Box>
           ))}
-          <Button variant="outlined" onClick={addEsopCycle} sx={{ fontWeight: 'bold', color: '#6A5ACD', borderColor: '#6A5ACD' }}>+ ESOP Vesting Schedule</Button>
+          <Button 
+            variant="outlined" 
+            onClick={addEsopCycle} 
+            sx={{ 
+              fontWeight: 'bold', 
+              color: '#6A5ACD', 
+              borderColor: '#6A5ACD',
+              width: {
+                xs: '100%', // Full width on mobile
+                sm: '300px' // 300px on desktop
+              }
+            }}
+          >
+            + ESOP Vesting Cycle
+          </Button>
         </Box>
         <Divider sx={{ my: 4 }} /> {/* Divider added here */}
 
@@ -1184,6 +1327,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     value={parentRelief.dependants}
                     onChange={(e) => handleParentDependantsChange(e.target.value)}
                     sx={{ width: '120px' }}
+                    MenuProps={{ disableScrollLock: true }}
                   >
                     <MenuItem value="1">1</MenuItem>
                     <MenuItem value="2">2</MenuItem>
@@ -1251,6 +1395,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       dependants: e.target.value
                     }))}
                     sx={{ width: '120px' }}
+                    MenuProps={{ disableScrollLock: true }}
                   >
                     <MenuItem value="1">1</MenuItem>
                     <MenuItem value="2">2</MenuItem>
@@ -1324,6 +1469,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       count: e.target.value
                     }))}
                     sx={{ width: '120px' }}
+                    MenuProps={{ disableScrollLock: true }}
                   >
                     <MenuItem value="1">1</MenuItem>
                     <MenuItem value="2">2</MenuItem>
@@ -1374,6 +1520,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                       count: e.target.value
                     }))}
                     sx={{ width: '120px' }}
+                    MenuProps={{ disableScrollLock: true }}
                   >
                     <MenuItem value="1">1</MenuItem>
                     <MenuItem value="2">2</MenuItem>
@@ -1820,6 +1967,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                     onChange={(e) => handleTaxDeductionChange('parenthoodTaxRebateType', e.target.value)}
                     sx={{ width: '200px' }}
                     displayEmpty
+                    MenuProps={{ disableScrollLock: true }}
                   >
                     <MenuItem value="first_child">1st child</MenuItem>
                     <MenuItem value="second_child">2nd child</MenuItem>
@@ -2140,7 +2288,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
                     {/* Results */}
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Detailed Financial Breakdown
+            Income Breakdown
           </Typography>
 
           {/* Income Breakdown Section */}

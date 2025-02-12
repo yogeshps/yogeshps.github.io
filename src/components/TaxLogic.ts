@@ -1,3 +1,7 @@
+import { PIT_REBATE_CAP } from "../utils/constants";
+
+import { PIT_REBATE_PERCENTAGE } from "../utils/constants";
+
 // Function to calculate income tax based on progressive tax brackets
 export function calculateTax(annualIncome: number): number {
     const brackets = [
@@ -24,5 +28,11 @@ export function calculateTax(annualIncome: number): number {
       totalTax += taxableAmount * bracket.rate;
       remaining -= bracket.threshold;
     }
-    return Math.round(totalTax);
-  }
+
+    // Round tax to nearest dollar before applying rebate (IRAS convention)
+    totalTax = Math.floor(totalTax + 0.5);
+
+    // Calculate PIT Rebate for YA2024
+    const rebateAmount = Math.min(totalTax * PIT_REBATE_PERCENTAGE, PIT_REBATE_CAP);
+    return totalTax - rebateAmount;
+}

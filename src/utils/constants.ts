@@ -40,3 +40,7 @@ export const PARENTHOOD_TAX_REBATE = {
 } as const;
 
 export const FLAT_DEDUCTION_PERCENTAGE = 0.15; // 15%
+
+// PIT Rebate for YA2024
+export const PIT_REBATE_CAP = 200; // Maximum rebate amount
+export const PIT_REBATE_PERCENTAGE = 0.5; // 50% rebate
