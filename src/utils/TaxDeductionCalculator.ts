@@ -1,5 +1,5 @@
 import { CHARITABLE_DEDUCTION_MULTIPLIER } from './constants';
-import { TaxDeductions, TaxDeductionResult } from '../types/tax';
+import { TaxDeductionResult } from '../types/tax';
 import { PARENTHOOD_TAX_REBATE } from './constants';
 import { FLAT_DEDUCTION_PERCENTAGE } from './constants';
 

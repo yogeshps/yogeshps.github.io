@@ -1,4 +1,3 @@
-import { Dispatch, SetStateAction } from 'react';
 
 // Tax Deduction Types
 export interface TaxDeductions {

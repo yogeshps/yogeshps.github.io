@@ -2,7 +2,7 @@
   "name": "sg-calculator",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://yogeshps.github.io",
+  "homepage": "https://moneygowhere.sg",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -39,5 +39,9 @@
     "typescript": "~5.6.2",
     "typescript-eslint": "^8.18.2",
     "vite": "^6.0.5"
+  },
+    "repository": {
+      "type": "git",
+      "url": "https://github.com/yogeshps/yogeshps.github.io.git"
+    }
   }
-}
