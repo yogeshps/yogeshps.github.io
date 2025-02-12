@@ -37,6 +37,8 @@ import type {
 } from '../types/tax';
 import { POPOVER_MAX_WIDTH } from '../utils/constants';
 import { useMediaQuery, useTheme } from '@mui/material';
+import TakeHomePieChart from './TakeHomePieChart';
+import IncomeSourcesPieChart from './IncomeSourcesPieChart';
 
 export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProps> = ({
   extraInputs,
@@ -2169,9 +2171,24 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
         <Divider orientation="vertical" sx={{ mr: 4, display: { xs: 'none', md: 'block' }}} />
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           {/* Results */}
+          {results.annualTakeHome > 0 && (
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+              Income Analysis
+            </Typography>
+          )}
+          
+          {results.annualTakeHome > 0 && (
+            <TakeHomePieChart
+              takeHome={results.annualTakeHome}
+              cpf={results.totalEmployeeCPF}
+              tax={results.annualTax}
+            />
+          )}
+
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
             Take-Home Pay
           </Typography>
+
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
               <Box>
@@ -2295,10 +2312,23 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             Income Breakdown
           </Typography>
 
+          {results.annualTakeHome > 0 && (
+            <IncomeSourcesPieChart
+              salary={results.annualSalary || 0}
+              bonus={results.annualBonus || 0}
+              rsus={results.totalRsuGains || 0}
+              esops={results.totalEsopGains || 0}
+              pension={results.pensionIncome || 0}
+              businessIncome={results.businessIncome || 0}
+              rentIncome={results.rentalIncome || 0}
+              royalties={results.royaltiesIncome || 0}
+            />
+          )}
+
           {/* Income Breakdown Section */}
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography sx={{ fontWeight: 'bold', mb: 1, color: 'green' }}>
-              Income Streams
+              Income Sources
             </Typography>
 
             {/* Salary */}
@@ -2337,32 +2367,14 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
               <Typography>{formatCurrency(results.royaltiesIncome || 0)}</Typography>
             </Box>
 
-            {/* RSU Gains */}
-            {rsuCycles.map((cycle, idx) => {
-              const shares = Number(cycle.shares) || 0;
-              const vestingPrice = Number(cycle.vestingPrice) || 0;
-              const gain = shares * vestingPrice;
-              return (
-                <Box key={`rsu-${idx}`} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography>RSU Vesting Cycle {idx + 1}</Typography>
-                  <Typography>{formatCurrency(gain || 0)}</Typography>
-                </Box>
-              );
-            })}
-
-            {/* ESOP Gains */}
-            {esopCycles.map((cycle, idx) => {
-              const shares = Number(cycle.shares) || 0;
-              const exercisePrice = Number(cycle.exercisePrice) || 0;
-              const vestingPrice = Number(cycle.vestingPrice) || 0;
-              const gain = Math.max(shares * (vestingPrice - exercisePrice), 0);
-              return (
-                <Box key={`esop-${idx}`} sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <Typography>ESOP Vesting Cycle {idx + 1}</Typography>
-                  <Typography>{formatCurrency(gain || 0)}</Typography>
-                </Box>
-              );
-            })}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>RSU Gains</Typography>
+              <Typography>{formatCurrency(results.totalRsuGains || 0)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>ESOP Gains</Typography>
+              <Typography>{formatCurrency(results.totalEsopGains || 0)}</Typography>
+            </Box>
 
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
