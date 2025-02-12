@@ -36,6 +36,7 @@ import type {
   Inputs
 } from '../types/tax';
 import { POPOVER_MAX_WIDTH } from '../utils/constants';
+import { useMediaQuery, useTheme } from '@mui/material';
 
 export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProps> = ({
   extraInputs,
@@ -118,9 +119,12 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
   handleTaxDeductionChange,
   taxDeductions
 }) => {
-  // Add state for tax relief section expansion
-  const [taxReliefExpanded, setTaxReliefExpanded] = useState(false);
-  const [taxDeductionsExpanded, setTaxDeductionsExpanded] = useState(false);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  
+  // Initialize expanded states based on screen size
+  const [taxReliefExpanded, setTaxReliefExpanded] = useState(!isMobile);
+  const [taxDeductionsExpanded, setTaxDeductionsExpanded] = useState(!isMobile);
   const [employmentExpenseAmount, setEmploymentExpenseAmount] = useState(''); // State for the amount
 
   // Render
