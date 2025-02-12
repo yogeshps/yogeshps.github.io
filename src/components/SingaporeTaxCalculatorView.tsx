@@ -143,7 +143,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
       }}>
         <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
-          🇸🇬 Singapore Salary Calculator
+          🇸🇬 Singapore Tax Calculator 2025
         </Typography>
         <Typography>Best calculator on the internet to easily understand your take-home pay, tax and CPF contributions accurately.</Typography>
         <Divider sx={{ my: 4 }} />
@@ -2654,6 +2654,9 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           <Box sx={{ mb: 3 }} />
       
       </CardContent>
+    <Typography sx={{ textAlign: 'center', fontStyle: 'italic', color: 'primary-main', mt: 2 }}>
+     Built by <a href="https://www.linkedin.com/in/yogeshp123/" target="_blank" rel="noopener noreferrer"><strong>Yogesh P</strong></a> with ❤️, blood, sweat, tears, protein shakes and hatred of Excel sheets.
+    </Typography>
     </Card>
     </Box>
   );

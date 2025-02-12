@@ -74,7 +74,7 @@ const TakeHomePieChart: React.FC<TakeHomePieChartProps> = ({ takeHome, tax, cpf 
           label: (context: any) => {
             const label = context.label || '';
             const value = context.raw || 0;
-            return `${label}: $${value.toLocaleString()}`;
+            return ` ${label}: $${value.toLocaleString()}`;
           },
         },
       },
