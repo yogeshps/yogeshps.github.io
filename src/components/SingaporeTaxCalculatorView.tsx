@@ -2173,7 +2173,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           {/* Results */}
           {results.annualTakeHome > 0 && (
             <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Income Analysis
+              Income Overview
             </Typography>
           )}
           
