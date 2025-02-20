@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://moneygowhere.sg/sitemap.xml
