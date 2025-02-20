@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -143,7 +143,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
       }}>
         <CardContent>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold', fontFamily: 'Helvetica' }}>
-          🇸🇬 Singapore Tax Calculator 2025
+          🇸🇬 Singapore Income Tax Calculator 2025
         </Typography>
         <Typography>Best calculator on the internet to easily understand your take-home pay, tax and CPF contributions accurately.</Typography>
         <Divider sx={{ my: 4 }} />
@@ -1640,10 +1640,19 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
                             amount: value,
                           }));
                         } else {
-                          setSrsContributionRelief((prev: SrsContributionRelief) => ({
-                            ...prev,
-                            error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
-                          }));
+                          setSrsContributionRelief((prev: SrsContributionRelief) => {
+                            const newState = {
+                              ...prev,
+                              error: `Max contribution allowed is ${formatCurrency(maxAmount)}`
+                            };
+                            
+                            // Clear error after 3 seconds
+                            setTimeout(() => {
+                              setSrsContributionRelief((prev: SrsContributionRelief) => ({ ...prev, error: '' }));
+                            }, 3000);
+
+                            return newState;
+                          });
                         }
                       }
                     }}
@@ -2229,81 +2238,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
           </Box>
 
-          <Divider sx={{ my: 4 }} />  {/* Increased spacing for better separation */}
-
-          {extraInputs.sprStatus !== 'ep_pep_spass' && ( // Adjust the condition based on your actual status for foreigners
-            <>
-
-              {/* CPF Overview */}
-              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-                CPF Contributions
-              </Typography>
-              <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
-                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
-                  <Box>
-                    <Typography sx={{ fontWeight: 'bold' }}>Employee</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography sx={{ fontWeight: 'bold' }}>Employer</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography sx={{ fontWeight: 'bold' }}>Total</Typography>
-                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalCPF)}</Typography>
-                  </Box>
-                </Box>
-              </Box>
-
-              <Divider sx={{ my: 4 }} />  {/* Increased spacing for better separation */}
-            </>
-          )}
-
-          {/* Tax */}
-          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Tax
-          </Typography>
-          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
-              <Box>
-                <Typography sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
-                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
-              </Box>
-              <Box>
-                <Typography sx={{ fontWeight: 'bold' }}>Annual Tax</Typography>
-                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax)}</Typography>
-              </Box>
-              <Box>
-                <Typography sx={{ fontWeight: 'bold' }}>Monthly Tax</Typography>
-                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax / 12)}</Typography>
-              </Box>
-            </Box>
-    
-          </Box>
-
-          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
-            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
-            How is it calculated?
-            </Typography>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Total Income</Typography>
-              <Typography>{formatCurrency(results.totalIncome || 0)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Tax Deductions</Typography>
-              <Typography>— {formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Tax Reliefs</Typography>
-              <Typography>— {formatCurrency(taxReliefResults.totalReliefs)}</Typography>
-            </Box>
-            <Divider sx={{ my: 1 }} />
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
-              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
-            </Box>
-          </Box>
-
+  
           <Divider sx={{ my: 4 }} />  {/* Increased spacing for better separation */}
 
 
@@ -2332,59 +2267,103 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Typography>
 
             {/* Salary */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Annual Salary</Typography>
-              <Typography>{formatCurrency(results.annualSalary || 0)}</Typography>
-            </Box>
+            {results.annualSalary > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Annual Salary</Typography>
+                <Typography>{formatCurrency(results.annualSalary)}</Typography>
+              </Box>
+            )}
 
             {/* Bonus */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Annual Bonus</Typography>
-              <Typography>{formatCurrency(results.annualBonus || 0)}</Typography>
-            </Box>
+            {results.annualBonus > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Annual Bonus</Typography>
+                <Typography>{formatCurrency(results.annualBonus)}</Typography>
+              </Box>
+            )}
 
             {/* Pension */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Pension</Typography>
-              <Typography>{formatCurrency(results.pensionIncome || 0)}</Typography>
-            </Box>
+            {results.pensionIncome > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Pension</Typography>
+                <Typography>{formatCurrency(results.pensionIncome)}</Typography>
+              </Box>
+            )}
 
             {/* Business Income */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Business Income</Typography>
-              <Typography>{formatCurrency(results.businessIncome || 0)}</Typography>
-            </Box>
+            {results.businessIncome > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Business Income</Typography>
+                <Typography>{formatCurrency(results.businessIncome)}</Typography>
+              </Box>
+            )}
 
             {/* Rental Income */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Rental Income</Typography>
-              <Typography>{formatCurrency(results.rentalIncome || 0)}</Typography>
-            </Box>
+            {results.rentalIncome > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Rental Income</Typography>
+                <Typography>{formatCurrency(results.rentalIncome)}</Typography>
+              </Box>
+            )}
 
             {/* Royalties */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>Royalties, Charge, Estate, Trust</Typography>
-              <Typography>{formatCurrency(results.royaltiesIncome || 0)}</Typography>
-            </Box>
+            {results.royaltiesIncome > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>Royalties, Charge, Estate, Trust</Typography>
+                <Typography>{formatCurrency(results.royaltiesIncome)}</Typography>
+              </Box>
+            )}
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>RSU Gains</Typography>
-              <Typography>{formatCurrency(results.totalRsuGains || 0)}</Typography>
-            </Box>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography>ESOP Gains</Typography>
-              <Typography>{formatCurrency(results.totalEsopGains || 0)}</Typography>
-            </Box>
+            {results.totalRsuGains > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>RSU Gains</Typography>
+                <Typography>{formatCurrency(results.totalRsuGains)}</Typography>
+              </Box>
+            )}
 
+            {results.totalEsopGains > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography>ESOP Gains</Typography>
+                <Typography>{formatCurrency(results.totalEsopGains)}</Typography>
+              </Box>
+            )}
+
+            {/* Always show Total Income */}
             <Box sx={{ borderTop: 1, borderColor: 'divider', mt: 1, pt: 1 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Total Income</Typography>
                 <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                  <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(Number(results.totalIncome) || 0)}</Typography>
+                  <Typography sx={{ color: 'green', fontWeight: 'bold' }}>{formatCurrency(results.totalIncome)}</Typography>
                 </Typography>
               </Box>
             </Box>
-          </Box>
+          </Box>        
+
+          <Divider sx={{ my: 4 }} />  {/* Increased spacing for better separation */}
+
+          {extraInputs.sprStatus !== 'ep_pep_spass' && ( // Adjust the condition based on your actual status for foreigners
+            <>
+
+              {/* CPF Overview */}
+              <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+                CPF Contributions
+              </Typography>
+              <Box sx={{ bgcolor: 'rgb(242, 247, 255)', p: 2, borderRadius: 1, mb: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
+                  <Box>
+                    <Typography sx={{ fontWeight: 'bold' }}>Employee</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployeeCPF)}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 'bold' }}>Employer</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalEmployerCPF)}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography sx={{ fontWeight: 'bold' }}>Total</Typography>
+                    <Typography sx={{ color: 'primary.main', fontWeight: 'bold' }}>{formatCurrency(results.totalCPF)}</Typography>
+                  </Box>
+                </Box>
+              </Box>
 
           {extraInputs.sprStatus !== 'ep_pep_spass' && (
             <>
@@ -2466,6 +2445,55 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </>
           )}
 
+
+<Divider sx={{ my: 4 }} />  {/* Increased spacing for better separation */}
+            </>
+          )}
+
+          {/* Tax */}
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
+            Tax
+          </Typography>
+          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
+              <Box>
+                <Typography sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
+                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 'bold' }}>Annual Tax</Typography>
+                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax)}</Typography>
+              </Box>
+              <Box>
+                <Typography sx={{ fontWeight: 'bold' }}>Monthly Tax</Typography>
+                <Typography sx={{ color: 'darkgoldenrod', fontWeight: 'bold' }}>{formatCurrency(results.annualTax / 12)}</Typography>
+              </Box>
+            </Box>
+    
+          </Box>
+
+          <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
+            How is it calculated?
+            </Typography>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>Total Income</Typography>
+              <Typography>{formatCurrency(results.totalIncome || 0)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>Tax Deductions</Typography>
+              <Typography>— {formatCurrency(taxDeductionResults.totalDeductions)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography>Tax Reliefs</Typography>
+              <Typography>— {formatCurrency(taxReliefResults.totalReliefs)}</Typography>
+            </Box>
+            <Divider sx={{ my: 1 }} />
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>Taxable Income</Typography>
+              <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'darkgoldenrod' }}>{formatCurrency(results.totalTaxableIncome)}</Typography>
+            </Box>
+          </Box>
       
           {/* Tax Deductions & Rebates Box */}
           <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
