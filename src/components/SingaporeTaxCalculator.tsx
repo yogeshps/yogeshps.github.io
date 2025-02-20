@@ -1077,6 +1077,19 @@ const SingaporeTakeHomeCalculator = () => {
 
   // Inside your component
 
+  useEffect(() => {
+    // Clear SRS contribution when SPR status changes
+    setSrsContributionRelief(prev => ({
+      ...prev,
+      amount: '',
+      error: '',
+      enabled: false
+    }));
+    
+    // Recalculate results with cleared SRS
+    calculateAllResults();
+  }, [extraInputs.sprStatus]);
+
   return (
     <SingaporeTaxCalculatorView
       extraInputs={extraInputs}
