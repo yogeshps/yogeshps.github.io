@@ -2474,7 +2474,13 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
 
           <Box sx={{ bgcolor: 'lightyellow', p: 2, borderRadius: 1, mb: 2 }}>
             <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: 'darkgoldenrod', mb: 1 }}>
-            How is it calculated?
+              How is it calculated?
+              <IconButton
+                size="small"
+                onClick={() => window.open('https://www.iras.gov.sg/taxes/individual-income-tax/basics-of-individual-income-tax/tax-residency-and-tax-rates/individual-income-tax-rates', '_blank')}
+              >
+                <InfoIcon fontSize="inherit" />
+              </IconButton>
             </Typography>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Total Income</Typography>
