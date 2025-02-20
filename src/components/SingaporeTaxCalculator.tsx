@@ -1078,16 +1078,19 @@ const SingaporeTakeHomeCalculator = () => {
   // Inside your component
 
   useEffect(() => {
-    // Clear SRS contribution when SPR status changes
-    setSrsContributionRelief(prev => ({
-      ...prev,
-      amount: '',
-      error: '',
-      enabled: false
-    }));
-    
-    // Recalculate results with cleared SRS
-    calculateAllResults();
+    const maxAmount = extraInputs.sprStatus === 'ep_pep_spass' 
+      ? constants.MAX_SRS_CONTRIBUTION_EP 
+      : constants.MAX_SRS_CONTRIBUTION_CITIZEN_PR;
+
+    // Only clear if current amount exceeds the new maximum
+    if (Number(srsContributionRelief.amount) > maxAmount) {
+      setSrsContributionRelief(prev => ({
+        ...prev,
+        amount: '',
+        error: ''
+      }));
+      calculateAllResults();
+    }
   }, [extraInputs.sprStatus]);
 
   return (
