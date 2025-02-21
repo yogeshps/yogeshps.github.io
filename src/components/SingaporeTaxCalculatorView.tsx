@@ -2225,7 +2225,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Employee CPF</Typography>
-              <Typography>{`— ${formatCurrency(Math.abs(results.employeeAnnualCPF))}`}</Typography>
+              <Typography>{`— ${formatCurrency(Math.abs(results.totalEmployeeCPF))}`}</Typography>
             </Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography>Tax</Typography>
