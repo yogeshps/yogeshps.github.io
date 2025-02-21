@@ -2233,7 +2233,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
             </Box>
             <Divider sx={{ my: 1 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Typography sx={{ fontWeight: 'bold' }}>Take-Home Pay</Typography>
+              <Typography sx={{ fontWeight: 'bold' }}>Net Take-Home Pay</Typography>
               <Typography sx={{ fontWeight: 'bold', color: 'green' }}>{formatCurrency(results.annualTakeHome)}</Typography>
             </Box>
           </Box>
