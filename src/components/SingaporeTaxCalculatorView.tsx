@@ -2195,7 +2195,7 @@ export const SingaporeTaxCalculatorView: React.FC<SingaporeTaxCalculatorViewProp
           )}
 
           <Typography variant="h6" gutterBottom sx={{ fontWeight: 'bold' }}>
-            Take-Home Pay
+            Net Take-Home Pay
           </Typography>
 
           <Box sx={{ bgcolor: 'rgb(242, 255, 242)', p: 2, borderRadius: 1, mb: 2 }}>
