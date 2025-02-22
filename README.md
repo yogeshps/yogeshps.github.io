@@ -1,7 +1,3 @@
-Below is an example of an ultra‐detailed README for your Singapore Tax Calculator project. You can use this as a starting point and modify it as needed:
-
----
-
 # SG Calculator
 
 **Singapore Tax Calculator** is a web application that computes Singaporean income tax, CPF contributions, tax reliefs, deductions, and take-home pay based on user inputs. Built with React and Vite, the application offers a modern, responsive interface using Material UI and Tailwind CSS, while leveraging TypeScript for type safety and ESLint for code quality.
