@@ -408,7 +408,7 @@ const SingaporeTakeHomeCalculator = () => {
     const erAnnualBase = erMonth * 12;
 
     // Bonus CPF calculation
-    const cappedOW = Math.min(monthlyBase, 7400);
+    const cappedOW = Math.min(monthlyBase, 8000);
     const annualOW = cappedOW * 12;
     const bonusCpf = computeCpfOnBonus(sprTable, ageNum, monthlyBase, bonus, annualOW);
     const empBonus = bonusCpf.empCPF;

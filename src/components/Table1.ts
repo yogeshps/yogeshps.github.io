@@ -39,11 +39,11 @@ export const TABLE1_2025 = {
       },
       '750_up': {
         // > $750 => 37% total, 20% employee
-        // Max. of $2,738 total, $1,480 for employee
+        // Max. of $2,960 total, $1,600 for employee (OW cap $8,000)
         totalOWPct: 37,
         empOWPct:   20,
-        maxTotalOW: 2738,
-        maxEmpOW:   1480,
+        maxTotalOW: 2960,
+        maxEmpOW:   1600,
         // AW = 37/20
         awTotalPct: 37,
         awEmpPct:   20
@@ -73,11 +73,11 @@ export const TABLE1_2025 = {
       },
       '750_up': {
         // 32.5% total, 17% employee
-        // Max total: $2,405; Max emp: $1,258
+        // Max total: $2,600; Max emp: $1,360 (OW cap $8,000)
         totalOWPct: 32.5,
         empOWPct:   17,
-        maxTotalOW: 2405,
-        maxEmpOW:   1258,
+        maxTotalOW: 2600,
+        maxEmpOW:   1360,
         // AW
         awTotalPct: 32.5,
         awEmpPct:   17
@@ -107,11 +107,11 @@ export const TABLE1_2025 = {
       },
       '750_up': {
         // 23.5% total, 11.5% employee
-        // Max: $1,739 total, $851 employee
+        // Max: $1,880 total, $920 employee (OW cap $8,000)
         totalOWPct: 23.5,
         empOWPct:   11.5,
-        maxTotalOW: 1739,
-        maxEmpOW:   851,
+        maxTotalOW: 1880,
+        maxEmpOW:   920,
         awTotalPct: 23.5,
         awEmpPct:   11.5
       }
@@ -140,11 +140,11 @@ export const TABLE1_2025 = {
       },
       '750_up': {
         // 16.5% total, 7.5% employee
-        // Max total: $1,221, max emp: $555
+        // Max total: $1,320, max emp: $600 (OW cap $8,000)
         totalOWPct: 16.5,
         empOWPct:   7.5,
-        maxTotalOW: 1221,
-        maxEmpOW:   555,
+        maxTotalOW: 1320,
+        maxEmpOW:   600,
         awTotalPct: 16.5,
         awEmpPct:   7.5
       }
@@ -173,11 +173,11 @@ export const TABLE1_2025 = {
       },
       '750_up': {
         // 12.5% total, 5% employee
-        // Max total: $925, max emp: $370
+        // Max total: $1,000, max emp: $400 (OW cap $8,000)
         totalOWPct: 12.5,
         empOWPct:   5,
-        maxTotalOW: 925,
-        maxEmpOW:   370,
+        maxTotalOW: 1000,
+        maxEmpOW:   400,
         awTotalPct: 12.5,
         awEmpPct:   5
       }
@@ -209,7 +209,7 @@ function getWageBracket(tw: number): '0_50' | '50_500' | '500_750' | '750_up' {
 /*******************************************************
  * computeMonthlyCpfTable1
  *  - monthlyOW: the month's ordinary wages (not AW),
- *    which we will cap at $7,400 if it exceeds that.
+ *    which we will cap at $8,000 if it exceeds that.
  *  - age: integer
  * Returns an object:
  * {
@@ -234,8 +234,8 @@ export function computeMonthlyCpfTable1(
   monthlyOW: number,
   age: number
 ): CpfCalculationResult {
-  // Cap OW at 7400
-  const owCapped = Math.min(monthlyOW, 7400);
+  // Cap OW at 8000
+  const owCapped = Math.min(monthlyOW, 8000);
   
   // Get bracket based on wage
   const bracketKey = getWageBracket(owCapped);

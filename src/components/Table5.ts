@@ -233,7 +233,7 @@ export const TABLE5_2025 = {
    * computeMonthlyCpfTable5(monthlyOW, age)
    *  For SPR 2nd year (F/G) from Table 5 (2025).
    *
-   *  1) Caps monthlyOW at $7,400
+   *  1) Caps monthlyOW at $8,000
    *  2) Picks bracket
    *  3) Applies partial formula or full rate
    *  4) Enforces "max" total/employee

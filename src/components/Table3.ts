@@ -204,7 +204,7 @@ export const TABLE3_2025 = {
   /********************************************************
    * computeMonthlyCpfTable3(monthlyOW, age)
    *  For SPR 2nd year, G/G rates, Table 3 (2025).
-   *  1) Caps monthlyOW at 7,400
+   *  1) Caps monthlyOW at 8,000
    *  2) Looks up the bracket
    *  3) Applies formula or % with monthly max
    *  4) Returns { empCPF, erCPF, totalCPF, rawEmp, rawTotal }

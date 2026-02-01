@@ -207,7 +207,7 @@ export const TABLE2_2025 = {
   /********************************************************
    * computeMonthlyCpfTable2(monthlyOW, age)
    *   For 1st-year SPR (G/G) from Table 2 (2025).
-   *   - Caps monthlyOW at $7,400
+   *   - Caps monthlyOW at $8,000
    *   - Looks up the bracket data
    *   - Returns { empCPF, erCPF, totalCPF, rawEmp, rawTotal }
    ********************************************************/
