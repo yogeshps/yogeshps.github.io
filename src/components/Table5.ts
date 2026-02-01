@@ -243,8 +243,8 @@ export const TABLE5_2025 = {
     monthlyOW: number,
     age: number
   ): CpfCalculationResult {
-    // Cap OW at 7400
-    const owCapped = Math.min(monthlyOW, 7400);
+    // Cap OW at 8000
+    const owCapped = Math.min(monthlyOW, 8000);
     
     const bracketKey = getWageBracket(owCapped);
     const ageKey = getAgeKeyForTable5(age);
